@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Articles of Impeachment — A Political Simulation</title>
+<meta name="description" content="Build the case, count the votes, and beat the calendar in a fictional political strategy game.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1>Articles of Impeachment</h1>
+    <div class="sub">A Political Simulation &nbsp;·&nbsp; All Persons Fictitious</div>
+  </header>
+
+
+
+  <section id="calendarPanel">
+    <div class="cal-row">
+      <div class="cal-block">
+        <span class="cal-cap">The Calendar</span>
+        <span class="cal-date" id="calMonth">January 2025</span>
+        <span class="cal-year" id="calYear">Year 1 of 2</span>
+      </div>
+      <div class="cal-block">
+        <span class="cal-cap">Session Days <b id="calDaysText">10 / 10</b></span>
+        <div class="daypips" id="dayPips"></div>
+      </div>
+      <div class="cal-block">
+        <span class="cal-cap">Term Remaining</span>
+        <span class="cal-rem" id="calRemaining">24 months left</span>
+      </div>
+      <div class="cal-block clock-block" aria-label="Active-play calendar clock">
+        <span class="cal-cap">Next day expires in</span>
+        <div class="clock-row">
+          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires">00:24</strong>
+          <button type="button" id="clockPause" aria-pressed="false" disabled>Pause</button>
+        </div>
+        <div class="clock-meter" aria-hidden="true"><i id="clockFill"></i></div>
+        <span id="clockStatus" role="status">24 seconds = 1 session day</span>
+      </div>
+    </div>
+    <div class="term-wrap">
+      <div class="term-bar"><i id="termFill"></i></div>
+      <div class="term-ticks" id="termTicks"></div>
+    </div>
+    <div class="cal-foot">
+      <span id="calFatigue">Public fatigue: −1 support / month</span>
+      <span id="blowbackRisk">Blowback risk: 65% / turn</span>
+      <span id="calEnd">Term ends December 2026</span>
+    </div>
+  </section>
+
+  <section id="dashboard">
+    <div class="stat">
+      <div class="label"><span>Evidence</span><b id="vEvidence">0</b></div>
+      <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span>Public Support</span><b id="vSupport">0%</b></div>
+      <div class="bar"><i class="fill-support" id="bSupport"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span>Political Capital</span><b id="vCapital">0</b></div>
+      <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span>House Votes</span><b id="vHouse">0 / 218</b></div>
+      <div class="bar"><i class="fill-house" id="bHouse"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span>Senate Votes</span><b id="vSenate">0 / 67</b></div>
+      <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
+    </div>
+  </section>
+
+    <section id="feedPanel">
+    <div class="feed-head">
+      <span class="live"><i></i> Live — War Room Feed</span>
+      <span id="feedHint">No dispatches yet</span>
+    </div>
+    <div id="feed" aria-live="polite"></div>
+  </section>
+
+  <main>
+    <div id="phaseBanner">
+      <span class="phase-name" id="phaseName">Phase I — Oversight</span>
+      <span class="objective" id="objective"></span>
+    </div>
+
+    <section id="movesPanel" aria-labelledby="movesTitle" aria-roledescription="carousel">
+      <div class="moves-head">
+        <div>
+          <h2 id="movesTitle">Your next move</h2>
+          <p id="movesSummary" aria-live="polite"></p>
+        </div>
+        <div class="moves-controls">
+          <button type="button" id="movesPrev" class="carousel-arrow" aria-label="Previous moves" aria-controls="actions" disabled>←</button>
+          <span id="movesRange" aria-live="polite"></span>
+          <button type="button" id="movesNext" class="carousel-arrow" aria-label="Next moves" aria-controls="actions" disabled>→</button>
+        </div>
+      </div>
+      <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
+      <div class="carousel-bottom">
+        <div id="moveDots" class="move-dots" role="group" aria-label="Jump to a move"></div>
+        <span class="carousel-hint">Swipe or use the arrows · moves update with your campaign</span>
+      </div>
+    </section>
+
+    <button id="endTurn" onclick="endTurn()">
+      <span class="et-main">Adjourn — Advance the Calendar</span>
+      <span class="et-sub" id="endTurnSub"></span>
+    </button>
+  </main>
+
+  <footer>
+    A work of political fiction. Every president, scandal, witness and senator in this game is invented.<br>
+    The constitutional mechanics are real. The fun is not.
+  </footer>
+</div>
+
+<div id="startScreen" class="show">
+  <div class="start-modal">
+    <h2>Choose Your Calendar</h2>
+    <p class="start-sub">The term length changes everything. The rules do not.</p>
+    <p class="clock-rules">The clock is live: <b>24 seconds of active play = 1 session day.</b><br>
+      Moves also spend their listed days. When the 10 days run out, the month advances.<br>
+      Paused, hidden-tab and dialog time does not count.</p>
+    <div class="mode-grid">
+      <button class="mode-card" onclick="startGame('hard')">
+        <span class="mode-tag">HARD</span>
+        <span class="mode-name">2 Years</span>
+        <span class="mode-months">24 months · 240 session days</span>
+        <span class="mode-desc">A single term. The window is narrow, but the public still remembers why they're angry.</span>
+        <span class="mode-meta">
+          Evidence target <b>75</b> · Support decay −1/mo (+fatigue)<br>
+          Capital 20–26 · 7 moves per phase<br>
+          <span class="hl">Blowback: 65% after each monthly turn</span>
+        </span>
+      </button>
+      <button class="mode-card harder" onclick="startGame('harder')">
+        <span class="mode-tag">HARDER</span>
+        <span class="mode-name">4 Years</span>
+        <span class="mode-months">48 months · 480 session days</span>
+        <span class="mode-desc">Four years is a long time to keep a scandal alive. The record rots. The country moves on.</span>
+        <span class="mode-meta">
+          Evidence target <b>75</b> · Support decay −2/mo (+fatigue) · Record rot −2/mo<br>
+          Capital 16–22 · <span class="hl">Extended Toolkit: 14 moves per phase</span><br>
+          <span class="hl">Blowback: 80% after each monthly turn</span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="modal">
+    <div class="verdict" id="verdictText"></div>
+    <p id="verdictBody"></p>
+    <button onclick="location.reload()">Run It Back</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
+

@@ -8,34 +8,38 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="app">
+<div id="app" inert>
 
   <header>
-    <h1>Articles of Impeachment</h1>
-    <div class="sub">A Political Simulation &nbsp;·&nbsp; All Persons Fictitious</div>
+    <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
+<option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
+</select></label>
+    <h1 data-i18n="Articles of Impeachment">Articles of Impeachment</h1>
+    <div class="sub" data-i18n="A Political Simulation · All Persons Fictitious">A Political Simulation · All Persons Fictitious</div>
   </header>
+  <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
 
 
 
   <section id="calendarPanel">
     <div class="cal-row">
       <div class="cal-block">
-        <span class="cal-cap">The Calendar</span>
-        <span class="cal-date" id="calMonth">January 2025</span>
-        <span class="cal-year" id="calYear">Year 1 of 2</span>
+        <span class="cal-cap" data-i18n="The Calendar">The Calendar</span>
+        <span class="cal-date" id="calMonth">—</span>
+        <span class="cal-year" id="calYear">—</span>
       </div>
       <div class="cal-block">
-        <span class="cal-cap">Session Days <b id="calDaysText">10 / 10</b></span>
+        <span class="cal-cap"><span data-i18n="Session Days">Session Days</span> <b id="calDaysText">10 / 10</b></span>
         <div class="daypips" id="dayPips"></div>
       </div>
       <div class="cal-block">
-        <span class="cal-cap">Term Remaining</span>
-        <span class="cal-rem" id="calRemaining">24 months left</span>
+        <span class="cal-cap" data-i18n="Term Remaining">Term Remaining</span>
+        <span class="cal-rem" id="calRemaining">—</span>
       </div>
-      <div class="cal-block clock-block" aria-label="Active-play calendar clock">
-        <span class="cal-cap">Next day expires in</span>
+      <div class="cal-block clock-block" aria-label="Active-play calendar clock" data-i18n-aria="Active-play calendar clock">
+        <span class="cal-cap" data-i18n="Next day expires in">Next day expires in</span>
         <div class="clock-row">
-          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires">00:12</strong>
+          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires" data-i18n-aria="Time until a session day expires">00:12</strong>
           <button type="button" id="clockPause" aria-pressed="false" disabled>Pause</button>
         </div>
         <div class="clock-meter" aria-hidden="true"><i id="clockFill"></i></div>
@@ -47,125 +51,132 @@
       <div class="term-ticks" id="termTicks"></div>
     </div>
     <div class="cal-foot">
-      <span id="calFatigue">Public fatigue: −1 support / month</span>
-      <span id="blowbackRisk">Blowback risk: 65% / turn</span>
-      <span id="calEnd">Term ends December 2026</span>
+      <span id="calFatigue">—</span>
+      <span id="blowbackRisk">—</span>
+      <span id="calEnd">—</span>
     </div>
   </section>
 
   <section id="dashboard">
     <div class="stat">
-      <div class="label"><span>Evidence</span><b id="vEvidence">0</b></div>
+      <div class="label"><span data-i18n="Evidence">Evidence</span><b id="vEvidence">0</b></div>
       <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
     </div>
     <div class="stat">
-      <div class="label"><span>Public Support</span><b id="vSupport">0%</b></div>
+      <div class="label"><span data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
       <div class="bar"><i class="fill-support" id="bSupport"></i></div>
     </div>
     <div class="stat">
-      <div class="label"><span>Political Capital</span><b id="vCapital">0</b></div>
+      <div class="label"><span data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
       <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
     </div>
     <div class="stat">
-      <div class="label"><span>House Votes</span><b id="vHouse">0 / 218</b></div>
+      <div class="label"><span data-i18n="House Votes">House Votes</span><b id="vHouse">0 / 218</b></div>
       <div class="bar"><i class="fill-house" id="bHouse"></i></div>
     </div>
     <div class="stat">
-      <div class="label"><span>Senate Votes</span><b id="vSenate">0 / 67</b></div>
+      <div class="label"><span data-i18n="Senate Votes">Senate Votes</span><b id="vSenate">0 / 67</b></div>
       <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
     </div>
   </section>
 
     <section id="feedPanel">
     <div class="feed-head">
-      <span class="live"><i></i> Live — War Room Feed</span>
-      <span id="feedHint">No dispatches yet</span>
+      <span class="live"><i></i><span data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
+      <span id="feedHint" data-i18n="No dispatches yet">No dispatches yet</span>
     </div>
     <div id="feed" aria-live="polite"></div>
   </section>
 
   <main>
     <div id="phaseBanner">
-      <span class="phase-name" id="phaseName">Phase I — Oversight</span>
+      <span class="phase-name" id="phaseName">—</span>
       <span class="objective" id="objective"></span>
     </div>
 
     <section id="movesPanel" aria-labelledby="movesTitle" aria-roledescription="carousel">
       <div class="moves-head">
         <div>
-          <h2 id="movesTitle">Your next move</h2>
+          <h2 id="movesTitle" data-i18n="Your next move">Your next move</h2>
           <p id="movesSummary" aria-live="polite"></p>
         </div>
         <div class="moves-controls">
-          <button type="button" id="movesPrev" class="carousel-arrow" aria-label="Previous moves" aria-controls="actions" disabled>←</button>
+          <button type="button" id="movesPrev" class="carousel-arrow" aria-label="Previous moves" data-i18n-aria="Previous moves" aria-controls="actions" disabled>←</button>
           <span id="movesRange" aria-live="polite"></span>
-          <button type="button" id="movesNext" class="carousel-arrow" aria-label="Next moves" aria-controls="actions" disabled>→</button>
+          <button type="button" id="movesNext" class="carousel-arrow" aria-label="Next moves" data-i18n-aria="Next moves" aria-controls="actions" disabled>→</button>
         </div>
       </div>
-      <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
+      <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys." data-i18n-aria="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
       <div class="carousel-bottom">
         <div class="move-pagination">
-          <span id="moveOptionsLabel">Move Options</span>
+          <span id="moveOptionsLabel" data-i18n="Move Options">Move Options</span>
           <div id="moveDots" class="move-dots" role="group" aria-labelledby="moveOptionsLabel"></div>
         </div>
-        <span class="carousel-hint">Swipe or use the arrows · moves update with your campaign</span>
+        <span class="carousel-hint" data-i18n="Swipe or use the arrows · moves update with your campaign">Swipe or use the arrows · moves update with your campaign</span>
       </div>
     </section>
 
-    <button id="endTurn" onclick="endTurn()">
-      <span class="et-main">Adjourn — Advance the Calendar</span>
+    <button id="endTurn" onclick="endTurn()" disabled>
+      <span class="et-main" data-i18n="Adjourn — Advance the Calendar">Adjourn — Advance the Calendar</span>
       <span class="et-sub" id="endTurnSub"></span>
     </button>
   </main>
 
   <footer>
-    A work of political fiction. Every president, scandal, witness and senator in this game is invented.<br>
-    The constitutional mechanics are real. The fun is not.
+    <span data-i18n="Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.">Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.</span>
   </footer>
 </div>
 
-<div id="startScreen" class="show">
+<div id="startScreen" class="show" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startIntro">
   <div class="start-modal">
-    <h2>Choose Your Calendar</h2>
-    <p class="start-sub">The term length changes everything. The rules do not.</p>
-    <p class="clock-rules">The clock is live: <b>12 seconds of active play = 1 session day.</b><br>
-      Moves also spend their listed days. When the 10 days run out, the month advances.<br>
-      Paused, hidden-tab and dialog time does not count.</p>
-    <div class="mode-grid">
-      <button class="mode-card" onclick="startGame('hard')">
-        <span class="mode-tag">HARD</span>
-        <span class="mode-name">2 Years</span>
-        <span class="mode-months">24 months · 240 session days</span>
-        <span class="mode-desc">A single term. The window is narrow, but the public still remembers why they're angry.</span>
-        <span class="mode-meta">
-          Evidence target <b>75</b> · Support decay −1/mo (+fatigue)<br>
-          Capital 20–26 · 7 moves per phase<br>
-          <span class="hl">Blowback: 65% after each monthly turn</span>
-        </span>
+    <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
+<option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
+</select></label>
+    <h2 id="startTitle" data-i18n="Call the House to Order">Call the House to Order</h2>
+    <p id="startIntro" data-i18n="Choose your calendar. Read the brief. You control when the clock starts.">Choose your calendar. Read the brief. You control when the clock starts.</p>
+    <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
+    <div class="mode-grid" role="group" aria-label="Choose your campaign" data-i18n-aria="Choose your campaign">
+      <button type="button" class="mode-card" data-mode="hard" aria-pressed="false" onclick="selectMode('hard')">
+        <span class="mode-tag" data-i18n="HARD">HARD</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
+        <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
+        <span class="mode-desc" data-i18n="A shorter term. Less public fatigue. Seven moves per phase.">A shorter term. Less public fatigue. Seven moves per phase.</span>
+        <span class="mode-meta" data-i18n="Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk">Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk</span>
       </button>
-      <button class="mode-card harder" onclick="startGame('harder')">
-        <span class="mode-tag">HARDER</span>
-        <span class="mode-name">4 Years</span>
-        <span class="mode-months">48 months · 480 session days</span>
-        <span class="mode-desc">Four years is a long time to keep a scandal alive. The record rots. The country moves on.</span>
-        <span class="mode-meta">
-          Evidence target <b>75</b> · Support decay −2/mo (+fatigue) · Record rot −2/mo<br>
-          Capital 16–22 · <span class="hl">Extended Toolkit: 14 moves per phase</span><br>
-          <span class="hl">Blowback: 80% after each monthly turn</span>
-        </span>
+      <button type="button" class="mode-card harder" data-mode="harder" aria-pressed="false" onclick="selectMode('harder')">
+        <span class="mode-tag" data-i18n="HARDER">HARDER</span><span class="mode-name" data-i18n="4 Years">4 Years</span>
+        <span class="mode-months" data-i18n="48 months · 480 session days">48 months · 480 session days</span>
+        <span class="mode-desc" data-i18n="A longer term. More public fatigue. Fourteen moves per phase.">A longer term. More public fatigue. Fourteen moves per phase.</span>
+        <span class="mode-meta" data-i18n="Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk">Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk</span>
       </button>
     </div>
+    <section class="quickstart" aria-labelledby="quickstartTitle">
+      <h3 id="quickstartTitle" data-i18n="Quickstart · Your path to a verdict">Quickstart · Your path to a verdict</h3>
+      <ol>
+        <li data-i18n="Build 75 Evidence to bring articles to the House.">Build 75 Evidence to bring articles to the House.</li>
+        <li data-i18n="Win 218 House votes to impeach, then 67 Senate votes to convict and remove.">Win 218 House votes to impeach, then 67 Senate votes to convict and remove.</li>
+        <li data-i18n="Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.">Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.</li>
+        <li data-i18n="Adjourn skips unused days. Each month restores capital but brings fatigue and a chance of blowback.">Adjourn skips unused days. Each month restores capital but brings fatigue and a chance of blowback.</li>
+        <li data-i18n="Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.">Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.</li>
+      </ol>
+    </section>
+    <button type="button" id="startButton" disabled>
+      <svg class="gavel-scene" viewBox="0 0 90 72" aria-hidden="true"><g class="gavel"><rect x="41" y="13" width="9" height="40" rx="3" transform="rotate(-42 45 17)"/><rect x="26" y="9" width="33" height="18" rx="4" transform="rotate(-42 43 18)"/></g><rect class="gavel-block" x="21" y="58" width="47" height="7" rx="3"/><path class="gavel-impact" d="M14 48l-6-5m67 5 6-5M45 52v-7"/></svg>
+      <span id="startButtonText" data-i18n="Start the Session">Start the Session</span>
+    </button>
+    <p id="startHint" role="status"></p>
   </div>
 </div>
 
-<div id="overlay">
+<div id="overlay" role="dialog" aria-modal="true" aria-labelledby="verdictText" aria-describedby="verdictBody">
   <div class="modal">
     <div class="verdict" id="verdictText"></div>
     <p id="verdictBody"></p>
-    <button onclick="location.reload()">Run It Back</button>
+    <button onclick="location.reload()" data-i18n="Run It Back">Run It Back</button>
   </div>
 </div>
 
+<script src="locales.js"></script>
+<script src="i18n.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

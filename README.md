@@ -16,7 +16,8 @@ Then open <http://localhost:8000>.
 
 ## Gameplay
 
-- Choose a two-year **Hard** campaign or a four-year **Harder** campaign.
+- Choose a language and a two-year **Hard** or four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
+- The gavel animates before play begins; reduced-motion preferences skip the animation.
 - Browse the move carousel to build evidence and political support.
 - Every 12 seconds of active play consumes one session day. Moves also spend their listed days.
 - The calendar pauses when you pause the game, hide the tab, or open a campaign dialog.
@@ -24,13 +25,22 @@ Then open <http://localhost:8000>.
 
 This is a fictional simulation, not legal advice or a factual account of an impeachment proceeding.
 
+## Languages
+
+English, Spanish, French, Korean, Persian, Hebrew, Simplified Chinese, and Japanese are included. The language picker is available in the opening brief and during play. It updates controls, move cards, historical feed entries, dates, and outcomes without resetting the campaign. Persian and Hebrew use right-to-left layouts and carousel navigation. Dates retain the Gregorian calendar because the game is set in the United States.
+
+The selected language is remembered on this device when browser storage is available. Game progress is not saved on reload. All translations are bundled locally; no translation service or network request is needed.
+
 ## Project files
 
 | File | Purpose |
 | --- | --- |
 | `index.html` | Game interface and page structure |
 | `styles.css` | Layout, theme, and responsive styles |
-| `game.js` | Game rules, rendering, move carousel, and calendar clock |
+| `game.js` | Game rules, start flow, move carousel, and calendar clock |
+| `i18n.js` | Language preference, message formatting, and text direction |
+| `locales.js` | Seven translation catalogs keyed by English source messages |
+| `tests/smoke.cjs` | Translation coverage, start-flow, and clock regression checks |
 
 The initial import preserves the October 29, 2026 New Edition game, with its inline styles and script separated into files for editing.
 
@@ -38,10 +48,15 @@ The initial import preserves the October 29, 2026 New Edition game, with its inl
 
 ```sh
 node --check game.js
+node --check i18n.js
+node --check locales.js
+node tests/smoke.cjs
 ```
 
 No Node dependencies are needed. For a browser smoke check, start each campaign, select a move, use the carousel arrows, and verify that Pause/Resume and hidden-tab behavior preserve the day countdown.
 
 ## Hosting
 
-Serve the repository root with any static web host. Keep `index.html`, `styles.css`, and `game.js` together. Creating this repository does not publish a live website.
+Serve the repository root with any static web host. Keep `index.html`, `styles.css`, `game.js`, `i18n.js`, and `locales.js` together.
+
+Live game: <https://articles-of-impeachment-play.proudpeach18.chatgpt.site>

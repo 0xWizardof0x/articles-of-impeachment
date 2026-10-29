@@ -106,7 +106,7 @@ const ACTIONS = {
       desc: 'Compel documents from the executive branch. Slow, unglamorous, decisive.',
       run() {
         const n = rand(8, 12); S.evidence += n;
-        return { text: `Subpoena compliance produces ${n} new documents. ${OPENERS[rand(0,OPENERS.length-1)]}`, kind: 'good' };
+        return { text: msg`Subpoena compliance produces ${n} new documents. ${OPENERS[rand(0,OPENERS.length-1)]}`, kind: 'good' };
       }
     },
     {
@@ -122,7 +122,7 @@ const ACTIONS = {
       desc: 'Sworn testimony from inside the building. Highest evidentiary value.',
       run() {
         const n = rand(11, 16); S.evidence += n;
-        return { text: `A career official testifies for six hours. ${n} new evidentiary items entered into the record.`, kind: 'good' };
+        return { text: msg`A career official testifies for six hours. ${n} new evidentiary items entered into the record.`, kind: 'good' };
       }
     },
     {
@@ -131,7 +131,7 @@ const ACTIONS = {
       run() {
         if (Math.random() < 0.72) {
           const n = rand(14, 20); S.evidence += n;
-          return { text: `The judge rejects the blanket privilege claim and orders production. ${n} new items land.`, kind: 'good' };
+          return { text: msg`The judge rejects the blanket privilege claim and orders production. ${n} new items land.`, kind: 'good' };
         }
         S.capital = clamp(S.capital - 6, 0, 120);
         return { text: 'The court kicks it to a slower track. You lose the calendar and six points of capital.', kind: 'bad' };
@@ -154,7 +154,7 @@ const ACTIONS = {
       desc: 'Accountants, not cameras. Quiet evidence, modest headlines.',
       run() {
         const n = rand(6, 9); S.evidence += n; S.support += 2;
-        return { text: `The auditors find ${n} irregularities. Nobody tweets about it, but it holds up in court.`, kind: 'good' };
+        return { text: msg`The auditors find ${n} irregularities. Nobody tweets about it, but it holds up in court.`, kind: 'good' };
       }
     },
     {
@@ -162,7 +162,7 @@ const ACTIONS = {
       desc: 'A senior official who would rather not be there. Steady, unspectacular evidence.',
       run() {
         const n = rand(8, 11); S.evidence += n; S.support += 2;
-        return { text: `The Deputy AG is deposed for five hours. ${n} new items, and one very long silence.`, kind: 'good' };
+        return { text: msg`The Deputy AG is deposed for five hours. ${n} new items, and one very long silence.`, kind: 'good' };
       }
     },
 
@@ -174,9 +174,9 @@ const ACTIONS = {
         const n = rand(13, 18); S.evidence += n;
         if (Math.random() < 0.30) {
           S.support = clamp(S.support - 5, 0, 100);
-          return { text: `${n} new items secured — but the contempt fight dominates the news and costs you five points.`, kind: 'bad' };
+          return { text: msg`${n} new items secured — but the contempt fight dominates the news and costs you five points.`, kind: 'bad' };
         }
-        return { text: `The Chief of Staff testifies for seven hours. ${n} new evidentiary items.`, kind: 'good' };
+        return { text: msg`The Chief of Staff testifies for seven hours. ${n} new evidentiary items.`, kind: 'good' };
       }
     },
     {
@@ -185,7 +185,7 @@ const ACTIONS = {
       run() {
         if (Math.random() < 0.60) {
           const n = rand(18, 24); S.evidence += n;
-          return { text: `A second counsel is appointed. The ${n} documents that follow are the best of the entire inquiry.`, kind: 'gold' };
+          return { text: msg`A second counsel is appointed. The ${n} documents that follow are the best of the entire inquiry.`, kind: 'gold' };
         }
         S.capital = clamp(S.capital - 8, 0, 120);
         return { text: 'The appointment stalls in committee. Eight days and eight points of capital, gone.', kind: 'bad' };
@@ -196,7 +196,7 @@ const ACTIONS = {
       desc: 'Bring in outside expertise to trace the money. Unflashy, unimpeachable.',
       run() {
         const n = rand(9, 13); S.evidence += n;
-        return { text: `The outside accountant follows the money through three shell entities. ${n} new items.`, kind: 'good' };
+        return { text: msg`The outside accountant follows the money through three shell entities. ${n} new items.`, kind: 'good' };
       }
     },
     {
@@ -215,7 +215,7 @@ const ACTIONS = {
       id: 'intl', name: '🌍 International Records Request', cost: 14, days: 6, extended: true,
       desc: 'Foreign banking records take months but travel well in the record.',      run() {
         const n = rand(10, 15); S.evidence += n; S.support += 3;
-        return { text: `Two foreign ministries comply. ${n} new items, and a very good photograph of a courier van.`, kind: 'good' };
+        return { text: msg`Two foreign ministries comply. ${n} new items, and a very good photograph of a courier van.`, kind: 'good' };
       }
     },
     {
@@ -223,7 +223,7 @@ const ACTIONS = {
       desc: 'Protect a source, earn testimony. Also earns you a very angry letter from counsel.',
       run() {
         const n = rand(12, 18); S.evidence += n;
-        return { text: `A second whistleblower is secured and sequestered. ${n} new items entered under seal.`, kind: 'good' };
+        return { text: msg`A second whistleblower is secured and sequestered. ${n} new items entered under seal.`, kind: 'good' };
       }
     },
     {
@@ -248,7 +248,7 @@ const ACTIONS = {
       desc: 'Work the vote count. Effectiveness scales with public support.',
       run() {
         const n = 15 + Math.floor(S.support / 3); S.house += n;
-        return { text: `The whip count moves by ${n}. Three members who were "undecided" are no longer undecided.`, kind: 'good' };
+        return { text: msg`The whip count moves by ${n}. Three members who were "undecided" are no longer undecided.`, kind: 'good' };
       }
     },
     {
@@ -366,7 +366,7 @@ const ACTIONS = {
       desc: 'The whole trial comes down to six senators. Work them individually.',
       run() {
         const n = 4 + Math.floor(S.support / 10); S.senate += n;
-        return { text: `You secure ${n} more votes. One senator asks, twice, whether this is "really worth it."`, kind: 'good' };
+        return { text: msg`You secure ${n} more votes. One senator asks, twice, whether this is "really worth it."`, kind: 'good' };
       }
     },
     {
@@ -521,12 +521,12 @@ function currentDate() {
 
 function termEndString() {
   const i = S.maxTurns - 1;
-  return `${MONTHS[i % 12]} ${2025 + Math.floor(i / 12)}`;
+  return dateMessage(2025 + Math.floor(i / 12), i % 12);
 }
 
 function nextMonthString() {
   const i = S.turn;
-  return `${MONTHS[i % 12]} ${2025 + Math.floor(i / 12)}`;
+  return dateMessage(2025 + Math.floor(i / 12), i % 12);
 }
 
 function fatigueNow() {
@@ -552,10 +552,13 @@ function renderFeed() {
   const pinned = fromBottom < FEED_PIN_THRESHOLD;
 
   const visible = S.log.slice(-FEED_RETAINED);
-  feedEl.innerHTML = visible.map(e => {
-    const safe = e.text.replace(/"/g, '&quot;');
-    return `<p class="${e.kind || ''}" title="${safe}">${e.text}</p>`;
-  }).join('');
+  feedEl.replaceChildren(...visible.map(e => {
+    const line = document.createElement('p');
+    line.className = e.kind || '';
+    line.textContent = t(e.text);
+    line.title = line.textContent;
+    return line;
+  }));
 
   feedEl.scrollTop = pinned
     ? feedEl.scrollHeight
@@ -564,8 +567,8 @@ function renderFeed() {
   const hint = document.getElementById('feedHint');
   const shown = Math.min(FEED_RETAINED, S.log.length);
   hint.textContent = S.log.length === 0
-    ? 'No dispatches yet'
-    : `last ${shown} of ${S.log.length} dispatches · scroll up 2`;
+    ? t('No dispatches yet')
+    : tr`Dispatches: ${shown} of ${S.log.length} · scroll for more`;
 }
 
 /* =========================================================
@@ -577,8 +580,8 @@ function renderCalendar() {
   const d = currentDate();
   const years = m.months / 12;
 
-  document.getElementById('calMonth').textContent = `${MONTHS[d.month]} ${d.year}`;
-  document.getElementById('calYear').textContent = `Year ${d.yearOfTerm} of ${years}`;
+  document.getElementById('calMonth').textContent = t(dateMessage(d.year, d.month));
+  document.getElementById('calYear').textContent = tr`Year ${d.yearOfTerm} of ${years}`;
 
   const pips = [];
   for (let i = 0; i < S.daysMax; i++) {
@@ -592,24 +595,24 @@ function renderCalendar() {
 
   let ticks = '';
   for (let y = 0; y < years; y++) {
-    ticks += `<span class="tick" style="left:${(y / years) * 100}%">Y${y + 1}</span>`;
+    ticks += `<span class="tick" style="left:${(y / years) * 100}%">${tr`Year ${y + 1}`}</span>`;
   }
   document.getElementById('termTicks').innerHTML = ticks;
 
   const rem = m.months - (S.turn - 1);
-  document.getElementById('calRemaining').textContent = `${rem} month${rem !== 1 ? 's' : ''} left`;
+  document.getElementById('calRemaining').textContent = tr`Months remaining: ${rem}`;
 
-  const rot = m.evidenceDecay && S.phase !== 'investigation' ? ` · record rot −${m.evidenceDecay}/mo` : '';
-  document.getElementById('calFatigue').textContent = `Public fatigue: −${decayNow()} support / month${rot}`;
-  document.getElementById('calEnd').textContent = `Term ends ${termEndString()}`;
-  document.getElementById('blowbackRisk').textContent = `Blowback risk: ${Math.round(m.blowbackChance * 100)}% / turn`;
+  const rot = m.evidenceDecay && S.phase !== 'investigation' ? msg` · evidence decay −${m.evidenceDecay}/month` : '';
+  document.getElementById('calFatigue').textContent = tr`Public fatigue: −${decayNow()} support / month${rot}`;
+  document.getElementById('calEnd').textContent = tr`Term ends ${termEndString()}`;
+  document.getElementById('blowbackRisk').textContent = tr`Blowback risk: ${Math.round(m.blowbackChance * 100)}% / turn`;
 }
 
 function renderEndTurnSub() {
   if (!S.mode) return;
   const sub = document.getElementById('endTurnSub');
-  if (S.turn >= S.maxTurns) { sub.textContent = '→ The term ends. This is the final month.'; return; }
-  sub.textContent = `→ ${nextMonthString()} · public fatigue −${decayNow()} support · ${Math.round(MODES[S.mode].blowbackChance * 100)}% blowback risk`;
+  if (S.turn >= S.maxTurns) { sub.textContent = t('→ The term ends. This is the final month.'); return; }
+  sub.textContent = tr`→ ${nextMonthString()} · public fatigue −${decayNow()} support · ${Math.round(MODES[S.mode].blowbackChance * 100)}% blowback risk`;
 }
 
 function render() {
@@ -636,12 +639,12 @@ function render() {
     senate: 'Phase III — The Senate Trial'
   };
   const objectives = {
-    investigation: `Objective: reach ${MODES[S.mode].evidenceThreshold} Evidence to report articles out of committee.`,
+    investigation: msg`Objective: reach ${MODES[S.mode].evidenceThreshold} Evidence to report articles out of committee.`,
     house: 'Objective: reach 218 House votes to impeach.',
     senate: 'Objective: reach 67 Senate votes to convict and remove.'
   };
-  document.getElementById('phaseName').textContent = names[S.phase];
-  document.getElementById('objective').textContent = objectives[S.phase];
+  document.getElementById('phaseName').textContent = t(names[S.phase]);
+  document.getElementById('objective').textContent = t(objectives[S.phase]);
 
   renderMoves();
 
@@ -674,8 +677,13 @@ function settleCarousel() {
   scheduleCarouselUpdate();
 }
 
+function carouselIsRTL() { return document.documentElement.dir === 'rtl'; }
+function carouselPosition() { return Math.abs(moveTrack.scrollLeft); }
+function cardStart(card) {
+  return carouselIsRTL() ? moveTrack.clientWidth - card.offsetLeft - card.offsetWidth : card.offsetLeft;
+}
 function moveDestination(card) {
-  return Math.max(0, Math.min(card.offsetLeft, moveTrack.scrollWidth - moveTrack.clientWidth));
+  return Math.max(0, Math.min(cardStart(card), moveTrack.scrollWidth - moveTrack.clientWidth));
 }
 
 // Keep the feed immediately after the campaign-stat dashboard.
@@ -693,11 +701,11 @@ function scheduleCarouselUpdate() {
 
 function updateCarouselControls() {
   const cards = Array.from(moveTrack.children);
-  const left = moveTrack.scrollLeft;
+  const left = carouselPosition();
   const right = left + moveTrack.clientWidth;
   const max = Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth);
   const visible = cards.map((card, index) => ({ card, index })).filter(({ card }) =>
-    card.offsetLeft + card.offsetWidth > left + 3 && card.offsetLeft < right - 3
+    cardStart(card) + card.offsetWidth > left + 3 && cardStart(card) < right - 3
   );
   const navigationLeft = carouselTarget?.left ?? left;
   document.getElementById('movesPrev').disabled = navigationLeft <= 2;
@@ -727,7 +735,7 @@ function scrollToMove(index) {
   moveTrack.dataset.selectedIndex = String(index);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   moveTrack.scrollTo({
-    left: carouselTarget.left,
+    left: (carouselIsRTL() ? -1 : 1) * carouselTarget.left,
     behavior: reduceMotion ? 'instant' : 'smooth'
   });
   // Also settle when the destination is already in view and no scroll event fires.
@@ -739,7 +747,7 @@ function scrollMoves(direction) {
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   // Rapid clicks continue from the requested destination, not an in-flight frame.
-  const left = carouselTarget?.left ?? moveTrack.scrollLeft;
+  const left = carouselTarget?.left ?? carouselPosition();
   let index;
   if (direction > 0) {
     index = cards.findIndex(card => moveDestination(card) > left + 3);
@@ -753,7 +761,7 @@ function scrollMoves(direction) {
 
 function renderMoves() {
   const actions = availableActions();
-  const phaseKey = `${S.mode}:${S.phase}`;
+  const phaseKey = `${S.mode}:${S.phase}:${language}`;
   if (movePhaseKey !== phaseKey) {
     const hadFocus = moveTrack.contains(document.activeElement);
     movePhaseKey = phaseKey;
@@ -767,18 +775,18 @@ function renderMoves() {
       button.className = 'action';
       button.dataset.moveId = action.id;
       button.innerHTML = `
-        ${action.extended ? '<span class="ext">EXT</span>' : ''}
-        <span class="name">${action.name}</span>
+        ${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}
+        <span class="name">${t(action.name)}</span>
         <span class="desc"></span>
-        <span class="cost">◈ ${action.cost} Capital <span class="sep">·</span> <span class="days">⏱ ${action.days} Day${action.days > 1 ? 's' : ''}</span></span>
+        <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span>`;
       button.onclick = () => doAction(action);
       moveTrack.appendChild(button);
       const dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'move-dot';
-      dot.setAttribute('aria-label', `Show move ${index + 1}: ${action.name}`);
-      dot.title = `Move ${index + 1}: ${action.name}`;
+      dot.setAttribute('aria-label', tr`Show move ${index + 1}: ${action.name}`);
+      dot.title = tr`Move ${index + 1}: ${action.name}`;
       dot.setAttribute('aria-controls', 'actions');
       dot.onclick = () => scrollToMove(index);
       moveDots.appendChild(dot);
@@ -802,15 +810,15 @@ function renderMoves() {
     else if (locked) status = action.lockedMsg;
     else if (!affordable) {
       const needs = [];
-      if (S.capital < action.cost) needs.push(`${action.cost - S.capital} more capital`);
-      if (S.daysLeft < action.days) needs.push(`${action.days - S.daysLeft} more session day${action.days - S.daysLeft === 1 ? '' : 's'}`);
-      status = `Needs ${needs.join(' · ')}`;
+      if (S.capital < action.cost) needs.push(tr`More capital needed: ${action.cost - S.capital}`);
+      if (S.daysLeft < action.days) needs.push(tr`More session days needed: ${action.days - S.daysLeft}`);
+      status = needs.join(' · ');
     } else playable++;
-    button.querySelector('.desc').textContent = action.desc;
-    button.querySelector('.move-status').textContent = status;
-    button.setAttribute('aria-label', `${action.name}. Move ${index + 1} of ${actions.length}. ${status}. ${action.cost} capital, ${action.days} days. ${action.desc}`);
+    button.querySelector('.desc').textContent = t(action.desc);
+    button.querySelector('.move-status').textContent = t(status);
+    button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}`);
   });
-  document.getElementById('movesSummary').textContent = `${actions.length} moves · ${playable} playable now`;
+  document.getElementById('movesSummary').textContent = tr`Moves: ${actions.length} · Available: ${playable}`;
   scheduleCarouselUpdate();
 }
 
@@ -822,7 +830,7 @@ moveTrack.addEventListener('scroll', () => {
   scheduleCarouselUpdate();
 }, { passive: true });
 moveTrack.addEventListener('scrollend', () => {
-  if (!carouselTarget || Math.abs(moveTrack.scrollLeft - carouselTarget.left) <= 2) settleCarousel();
+  if (!carouselTarget || Math.abs(carouselPosition() - carouselTarget.left) <= 2) settleCarousel();
 });
 // Hand control back immediately when the player swipes or scrolls directly.
 for (const eventName of ['pointerdown', 'touchstart', 'wheel']) {
@@ -835,7 +843,7 @@ moveTrack.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
     event.preventDefault();
-    scrollMoves(event.key === 'ArrowRight' ? 1 : -1);
+    scrollMoves((event.key === 'ArrowRight' ? 1 : -1) * (carouselIsRTL() ? -1 : 1));
   } else if (event.key === 'Home' || event.key === 'End') {
     event.preventDefault();
     scrollToMove(event.key === 'Home' ? 0 : moveTrack.children.length - 1);
@@ -883,17 +891,17 @@ function renderCalendarClock() {
     `${clamp(100 * (1 - CALENDAR_CLOCK.elapsedMs / DAY_DURATION_MS), 0, 100)}%`;
   const pause = document.getElementById('clockPause');
   pause.disabled = !S.mode || S.over;
-  pause.textContent = CALENDAR_CLOCK.manuallyPaused ? 'Resume' : 'Pause';
+  pause.textContent = t(CALENDAR_CLOCK.manuallyPaused ? 'Resume' : 'Pause');
   pause.setAttribute('aria-pressed', String(CALENDAR_CLOCK.manuallyPaused));
   let message = '12 seconds = 1 session day';
   if (S.over) message = 'Campaign ended · clock stopped';
-  else if (!S.mode) message = 'Choose a campaign to start the clock';
+  else if (!S.mode) message = 'The clock starts when you press Start the Session';
   else if (CALENDAR_CLOCK.manuallyPaused) message = 'Paused · no calendar time lost';
   else if (document.hidden) message = 'Paused while this tab is hidden';
   else if (hasOpenCampaignDialog()) message = 'Paused while a dialog is open';
   const status = document.getElementById('clockStatus');
   // Avoid announcing the same message on each 100ms clock sample.
-  if (status.textContent !== message) status.textContent = message;
+  if (status.textContent !== t(message)) status.textContent = t(message);
 }
 
 function stopCalendarClock() {
@@ -924,7 +932,7 @@ function consumeActiveCalendarTime(elapsedMs) {
   while (CALENDAR_CLOCK.elapsedMs >= DAY_DURATION_MS && !S.over) {
     CALENDAR_CLOCK.elapsedMs -= DAY_DURATION_MS;
     S.daysLeft = Math.max(0, S.daysLeft - 1);
-    log(`CLOCK — A session day expires. ${S.daysLeft} day${S.daysLeft === 1 ? '' : 's'} remain this month.`, 'sys');
+    log(msg`CLOCK — A session day expires. Days remaining this month: ${S.daysLeft}.`, 'sys');
     if (S.daysLeft === 0) endTurn('clock');
     else render();
   }
@@ -1011,20 +1019,18 @@ function checkPhase() {
   if (S.phase === 'investigation' && S.evidence >= threshold) {
     S.phase = 'house';
     S.house = Math.floor(S.support / 4);
-    log(`🏛️ Evidence threshold of ${threshold} met. Articles reported to the floor. You begin with ${S.house} committed votes.`, 'gold');
+    log(msg`🏛️ Evidence threshold of ${threshold} met. Articles reported to the floor. You begin with ${S.house} committed votes.`, 'gold');
   }
 
   if (S.phase === 'house' && S.house >= 218) {
     S.phase = 'senate';
     S.senate = Math.floor(S.support / 8);
-    log(`⚖️ The House votes to impeach. The Senate trial begins. You begin with ${S.senate} votes in the chamber.`, 'gold');
+    log(msg`⚖️ The House votes to impeach. The Senate trial begins. You begin with ${S.senate} votes in the chamber.`, 'gold');
   }
 
   if (S.phase === 'senate' && S.senate >= 67) {
     finish(true, 'CONVICTED',
-      'The Senate votes to convict. The Chief Justice administers the oath of removal. ' +
-      'You did not change anyone\'s mind in a single afternoon — you built a record, ' +
-      'one document at a time, until the record became impossible to ignore.');
+      'The Senate votes to convict. The Chief Justice administers the oath of removal. You did not change anyone\'s mind in a single afternoon — you built a record, one document at a time, until the record became impossible to ignore.');
   }
 }
 
@@ -1041,7 +1047,7 @@ function rollEvent(tone) {
   S.support = clamp(S.support, 0, 100);
   S.capital = clamp(S.capital, 0, 120);
   const label = tone === 'bad' ? 'BLOWBACK' : 'BREAKTHROUGH';
-  log(`${label} — ${result.text}`, result.kind);
+  log(msg`${label} — ${result.text}`, result.kind);
 }
 
 function resolveTurnEvents() {
@@ -1091,7 +1097,7 @@ function endTurn(source = 'manual') {
   S.turn++;
   S.daysLeft = S.daysMax;
   S.capital = clamp(S.capital + rand(m.capitalRegen[0], m.capitalRegen[1]), 0, 120);
-  log(`CALENDAR — ${MONTHS[currentDate().month]} ${currentDate().year}. ${S.daysMax} fresh session days.`, 'sys');
+  log(msg`CALENDAR — ${dateMessage(currentDate().year, currentDate().month)}. New session days: ${S.daysMax}.`, 'sys');
 
   // One per-turn risk roll, regardless of whether clock, move or Adjourn
   // caused the rollover. Individual clock days do NOT stack extra blowback.
@@ -1099,25 +1105,27 @@ function endTurn(source = 'manual') {
   checkPhase();
   if (!S.over && S.support < 12) {
     finish(false, 'THE CASE COLLAPSES',
-      'Public support falls below the floor. Members start avoiding the cameras. ' +
-      'The articles are tabled indefinitely, and the whole thing becomes a cautionary tale ' +
-      'told at staff retreats.');
+      'Public support falls below the floor. Members start avoiding the cameras. The articles are tabled indefinitely, and the whole thing becomes a cautionary tale told at staff retreats.');
     return;
   }
   render();
 }
 
+let lastVerdict = null;
 function finish(won, headline, body) {
+  lastVerdict = { won, headline, body };
   S.over = true;
   stopCalendarClock();
   render();
 
   const overlay = document.getElementById('overlay');
   const vt = document.getElementById('verdictText');
-  vt.textContent = headline;
+  vt.textContent = t(headline);
   vt.className = 'verdict ' + (won ? 'win' : 'lose');
-  document.getElementById('verdictBody').textContent = body;
+  document.getElementById('verdictBody').textContent = t(body);
   overlay.classList.add('show');
+  document.getElementById('app').inert = true;
+  overlay.querySelector('button').focus();
 }
 
 /* =========================================================
@@ -1144,18 +1152,79 @@ function startGame(modeId) {
   movePhaseKey = '';
 
   document.getElementById('startScreen').classList.remove('show');
+  document.getElementById('app').inert = false;
   document.getElementById('overlay').classList.remove('show');
 
   const scandal = SCANDALS[rand(0, SCANDALS.length - 1)];
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');
-  log(`MODE: ${m.name} — ${m.tag}. The matter before the House: ${scandal}.`, 'sys');
-  log(`The term ends ${termEndString()}. ${m.months} months, ${m.daysPerMonth} session days a month.`, 'sys');
+  log(msg`MODE: ${m.name} — ${m.tag}. The matter before the House: ${scandal}.`, 'sys');
+  log(msg`The term ends ${termEndString()}. ${m.months} months, ${m.daysPerMonth} session days a month.`, 'sys');
   if (m.extendedToolkit) log('Extended Toolkit unlocked: 14 moves per phase instead of 7.', 'gold');
-  log(`Blowback is checked after each monthly turn: ${Math.round(m.blowbackChance * 100)}% risk. Breakthroughs roll separately.`, 'sys');
+  log(msg`Blowback is checked after each monthly turn: ${Math.round(m.blowbackChance * 100)}% risk. Breakthroughs roll separately.`, 'sys');
   log('The calendar is live: 12 seconds of active play costs one session day. Moves also spend their listed days.', 'sys');
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');
 
   render();
   startCalendarClock();
+  document.getElementById('clockPause').focus();
 }
 
+
+/* Mode selection is a briefing step; only the gavel starts gameplay. */
+let selectedMode = null;
+let startingSession = false;
+function renderStartHint() {
+  document.getElementById('startHint').textContent = startingSession
+    ? t('The House will come to order…')
+    : selectedMode ? tr`Selected: ${MODES[selectedMode].name}. The clock is stopped until you start.`
+    : t('Select a mode above to enable Start. The clock is stopped.');
+}
+function selectMode(modeId) {
+  if (startingSession || S.mode || !MODES[modeId]) return;
+  selectedMode = modeId;
+  document.querySelectorAll('[data-mode]').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.mode === modeId));
+  });
+  document.getElementById('startButton').disabled = false;
+  renderStartHint();
+}
+function beginSession() {
+  if (!selectedMode || startingSession || S.mode) return;
+  startingSession = true;
+  const button = document.getElementById('startButton');
+  button.disabled = true;
+  button.classList.add('striking');
+  document.querySelectorAll('#startScreen [data-mode], #startScreen select').forEach(el => { el.disabled = true; });
+  renderStartHint();
+  const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 740;
+  setTimeout(() => startGame(selectedMode), delay);
+}
+document.getElementById('startButton').addEventListener('click', beginSession);
+document.addEventListener('languagechange', () => {
+  // Treat translation as a pause boundary, preserving the partial day.
+  CALENDAR_CLOCK.lastNow = null;
+  settleCarousel();
+  if (S.mode) render();
+  else renderCalendarClock();
+  if (lastVerdict) {
+    document.getElementById('verdictText').textContent = t(lastVerdict.headline);
+    document.getElementById('verdictBody').textContent = t(lastVerdict.body);
+  }
+  renderStartHint();
+});
+// Both modal flows keep keyboard focus inside the active dialog.
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Tab') return;
+  const dialog = document.querySelector('#startScreen.show, #overlay.show');
+  if (!dialog) return;
+  const items = [...dialog.querySelectorAll('button:not(:disabled), select:not(:disabled), [tabindex="0"]')];
+  if (!items.length) { event.preventDefault(); return; }
+  const first = items[0], last = items[items.length - 1];
+  if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+    event.preventDefault(); last.focus();
+  } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+    event.preventDefault(); first.focus();
+  }
+});
+renderStartHint();
+document.querySelector('#startScreen select').focus();

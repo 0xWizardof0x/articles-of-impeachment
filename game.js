@@ -5185,6 +5185,7 @@ function endTurn(source = 'manual') {
 
 let lastVerdict = null;
 function finish(won, headline, body) {
+  if (S.over) return;
   lastVerdict = { won, headline, body };
   S.over = true;
   stopCalendarClock();
@@ -5195,6 +5196,7 @@ function finish(won, headline, body) {
   vt.textContent = t(headline);
   vt.className = 'verdict ' + (won ? 'win' : 'lose');
   document.getElementById('verdictBody').textContent = t(body);
+  window.Leaderboards?.onFinish(S, won);
   overlay.classList.add('show');
   document.getElementById('app').inert = true;
   overlay.querySelector('button').focus();
@@ -5263,11 +5265,12 @@ function selectMode(modeId) {
 }
 function beginSession() {
   if (!selectedMode || startingSession || S.mode) return;
+  if (window.Leaderboards && !window.Leaderboards.prepareProfile()) return;
   startingSession = true;
   const button = document.getElementById('startButton');
   button.disabled = true;
   button.classList.add('striking');
-  document.querySelectorAll('#startScreen [data-mode], #startScreen select').forEach(el => { el.disabled = true; });
+  document.querySelectorAll('#startScreen [data-mode], #startScreen select, #startScreen input').forEach(el => { el.disabled = true; });
   renderStartHint();
   const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 740;
   setTimeout(() => startGame(selectedMode), delay);
@@ -5287,10 +5290,10 @@ document.addEventListener('languagechange', () => {
 });
 // Both modal flows keep keyboard focus inside the active dialog.
 document.addEventListener('keydown', event => {
-  if (event.key !== 'Tab') return;
+  if (event.key !== 'Tab' || document.getElementById('leaderboardDialog')?.open) return;
   const dialog = document.querySelector('#startScreen.show, #overlay.show');
   if (!dialog) return;
-  const items = [...dialog.querySelectorAll('button:not(:disabled), select:not(:disabled), [tabindex="0"]')];
+  const items = [...dialog.querySelectorAll('button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex="0"]')];
   if (!items.length) { event.preventDefault(); return; }
   const first = items[0], last = items[items.length - 1];
   if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {

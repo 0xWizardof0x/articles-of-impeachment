@@ -65,3 +65,28 @@ No Node dependencies are needed. For a browser smoke check, confirm 28/56 moves 
 Serve the repository root with any static web host. Keep `index.html`, `styles.css`, `game.js`, `i18n.js`, and `locales.js` together.
 
 Live game: <https://articles-of-impeachment-play.proudpeach18.chatgpt.site>
+
+## Shared leaderboards
+
+Enter a nickname (2–24 characters) and choose a country or territory before starting. After a campaign ends, **Post score** publishes the result. The leaderboard has **Overall** and **By country** views, separate Hard/Harder rankings, and the top 100 best results per browser identity and difficulty. Country names and leaderboard controls follow the selected language. Opening the board pauses the active-play clock.
+
+Scores reward victory (10,000), evidence (10 each, capped at 75), House votes (10 each, capped at 218), Senate votes (30 each, capped at 67), support (10 each), capital (1 each), and, for wins only, remaining session days (5 each). The API calculates points; it never accepts a supplied score. These are casual, player-reported results, not server-replayed competitive records. Clearing browser cookies or changing devices creates a new identity. Names need not be unique.
+
+Shared scores live in Sites D1, not localStorage. A one-year HttpOnly/SameSite cookie groups best results; only the public nickname, country, score, and result are returned by the API. Local storage remembers the player's name/country preference. Submissions are explicit, idempotent per run, origin-checked, size-limited, input-validated, and limited to 20 per browser per hour. This cookie-based limit is a casual-use safeguard, not strong abuse prevention.
+
+### Full-stack development (Node 22.13+)
+
+The buildless files at the repository root remain the canonical game source. `server/` contains the Sites Vinext/D1 server. Sync game assets after frontend changes:
+
+```sh
+node server/scripts/sync-game.mjs
+cd server
+npm ci
+npm run build
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_furry_living_mummy.sql
+npm run dev -- --hostname 127.0.0.1 --port 5189
+```
+
+Apply the migration only once to each new local database. Sites applies committed migrations during deployment; preview records are not deployed. The source manifest uses `d1: "DB"` and no static-only setting. The root URL redirects to `/play.html` to preserve the existing game HTML and scripts.
+
+`node tests/smoke.cjs` covers game and translation behavior. With Node 22+ and a disposable local server running, `TEST_ORIGIN=http://127.0.0.1:5189 node tests/leaderboards.mjs` exercises D1 submission, best-score selection, retries, country filters, score validation, and privacy boundaries. It writes test scores to that local database only. Without `TEST_ORIGIN`, it runs pure validation tests.

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Articles of Impeachment — A Political Simulation</title>
+<meta name="description" content="Build the case, count the votes, and beat the calendar in a fictional political strategy game.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" inert>
+
+  <header>
+    <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
+    <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
+<option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
+</select></label>
+    <h1 data-i18n="Articles of Impeachment">Articles of Impeachment</h1>
+    <div class="sub" data-i18n="A Political Simulation · All Persons Fictitious">A Political Simulation · All Persons Fictitious</div>
+  </header>
+  <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
+
+
+
+  <section id="calendarPanel">
+    <div class="cal-row">
+      <div class="cal-block">
+        <span class="cal-cap" data-i18n="The Calendar">The Calendar</span>
+        <span class="cal-date" id="calMonth">—</span>
+        <span class="cal-year" id="calYear">—</span>
+      </div>
+      <div class="cal-block">
+        <span class="cal-cap"><span data-i18n="Session Days">Session Days</span> <b id="calDaysText">10 / 10</b></span>
+        <div class="daypips" id="dayPips"></div>
+      </div>
+      <div class="cal-block">
+        <span class="cal-cap" data-i18n="Term Remaining">Term Remaining</span>
+        <span class="cal-rem" id="calRemaining">—</span>
+      </div>
+      <div class="cal-block clock-block" aria-label="Active-play calendar clock" data-i18n-aria="Active-play calendar clock">
+        <span class="cal-cap" data-i18n="Next day expires in">Next day expires in</span>
+        <div class="clock-row">
+          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires" data-i18n-aria="Time until a session day expires">00:12</strong>
+          <button type="button" id="clockPause" aria-pressed="false" disabled>Pause</button>
+        </div>
+        <div class="clock-meter" aria-hidden="true"><i id="clockFill"></i></div>
+        <span id="clockStatus" role="status">12 seconds = 1 session day</span>
+      </div>
+    </div>
+    <div class="term-wrap">
+      <div class="term-bar"><i id="termFill"></i></div>
+      <div class="term-ticks" id="termTicks"></div>
+    </div>
+    <div class="cal-foot">
+      <span id="calFatigue">—</span>
+      <span id="blowbackRisk">—</span>
+      <span id="calEnd">—</span>
+    </div>
+  </section>
+
+  <section id="dashboard">
+    <div class="stat">
+      <div class="label"><span data-i18n="Evidence">Evidence</span><b id="vEvidence">0</b></div>
+      <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
+      <div class="bar"><i class="fill-support" id="bSupport"></i></div>
+      <span id="supportPulse"></span>
+    </div>
+    <div class="stat">
+      <div class="label"><span data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
+      <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span data-i18n="House Votes">House Votes</span><b id="vHouse">0 / 218</b></div>
+      <div class="bar"><i class="fill-house" id="bHouse"></i></div>
+    </div>
+    <div class="stat">
+      <div class="label"><span data-i18n="Senate Votes">Senate Votes</span><b id="vSenate">0 / 67</b></div>
+      <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
+    </div>
+  </section>
+
+    <section id="feedPanel">
+    <div class="feed-head">
+      <span class="live"><i></i><span data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
+      <span id="feedHint" data-i18n="No dispatches yet">No dispatches yet</span>
+    </div>
+    <div id="feed" aria-live="polite"></div>
+  </section>
+
+  <main>
+    <div id="phaseBanner">
+      <span class="phase-name" id="phaseName">—</span>
+      <span class="objective" id="objective"></span>
+    </div>
+
+    <section id="movesPanel" aria-labelledby="movesTitle" aria-roledescription="carousel">
+      <div class="moves-head">
+        <div>
+          <h2 id="movesTitle" data-i18n="Your next move">Your next move</h2>
+          <p id="movesSummary" aria-live="polite"></p>
+        </div>
+        <div class="moves-controls">
+          <button type="button" id="movesPrev" class="carousel-arrow" aria-label="Previous moves" data-i18n-aria="Previous moves" aria-controls="actions" disabled>←</button>
+          <span id="movesRange" aria-live="polite"></span>
+          <button type="button" id="movesNext" class="carousel-arrow" aria-label="Next moves" data-i18n-aria="Next moves" aria-controls="actions" disabled>→</button>
+        </div>
+      </div>
+      <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys." data-i18n-aria="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
+      <div class="carousel-bottom">
+        <div class="move-pagination">
+          <span id="moveOptionsLabel" data-i18n="Move Options">Move Options</span>
+          <div id="moveDots" class="move-dots" role="group" aria-labelledby="moveOptionsLabel"></div>
+        </div>
+        <span class="carousel-hint" data-i18n="Swipe or use the arrows · moves update with your campaign">Swipe or use the arrows · moves update with your campaign</span>
+      </div>
+    </section>
+
+    <button id="endTurn" onclick="endTurn()" disabled>
+      <span class="et-main" data-i18n="Adjourn — Advance the Calendar">Adjourn — Advance the Calendar</span>
+      <span class="et-sub" id="endTurnSub"></span>
+    </button>
+  </main>
+
+  <footer>
+    <span data-i18n="Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.">Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.</span>
+  </footer>
+</div>
+
+<div id="startScreen" class="show" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startIntro">
+  <div class="start-modal">
+    <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
+<option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
+</select></label>
+    <h2 id="startTitle" data-i18n="Call the House to Order">Call the House to Order</h2>
+    <p id="startIntro" data-i18n="Choose your calendar. Read the brief. You control when the clock starts.">Choose your calendar. Read the brief. You control when the clock starts.</p>
+    <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
+    <div class="player-fields">
+      <label><span data-i18n="Player name">Player name</span><input id="playerName" type="text" minlength="2" maxlength="24" autocomplete="nickname" dir="auto" aria-describedby="profileNote profileError"></label>
+      <label><span data-i18n="Country / territory">Country / territory</span><select id="playerCountry" aria-describedby="profileNote profileError"></select></label>
+    </div>
+    <p id="profileNote" class="board-note" data-i18n="Use a nickname. Your name, country and score become public only when you post a result.">Use a nickname. Your name, country and score become public only when you post a result.</p>
+    <p id="profileError" role="alert"></p>
+    <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
+    <div class="mode-grid" role="group" aria-label="Choose your campaign" data-i18n-aria="Choose your campaign">
+      <button type="button" class="mode-card" data-mode="hard" aria-pressed="false" onclick="selectMode('hard')">
+        <span class="mode-tag" data-i18n="HARD">HARD</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
+        <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
+        <span class="mode-desc" data-i18n="A shorter term. Less public fatigue. 28 moves per phase.">A shorter term. Less public fatigue. 28 moves per phase.</span>
+        <span class="mode-meta" data-i18n="Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk">Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk</span>
+      </button>
+      <button type="button" class="mode-card harder" data-mode="harder" aria-pressed="false" onclick="selectMode('harder')">
+        <span class="mode-tag" data-i18n="HARDER">HARDER</span><span class="mode-name" data-i18n="4 Years">4 Years</span>
+        <span class="mode-months" data-i18n="48 months · 480 session days">48 months · 480 session days</span>
+        <span class="mode-desc" data-i18n="A longer term. More public fatigue. 56 moves per phase, with lower success odds.">A longer term. More public fatigue. 56 moves per phase, with lower success odds.</span>
+        <span class="mode-meta" data-i18n="Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk">Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk</span>
+      </button>
+    </div>
+    <section class="quickstart" aria-labelledby="quickstartTitle">
+      <h3 id="quickstartTitle" data-i18n="Quickstart · Your path to a verdict">Quickstart · Your path to a verdict</h3>
+      <ol>
+        <li data-i18n="Build 75 Evidence to bring articles to the House.">Build 75 Evidence to bring articles to the House.</li>
+        <li data-i18n="Win 218 House votes to impeach, then 67 Senate votes to convict and remove.">Win 218 House votes to impeach, then 67 Senate votes to convict and remove.</li>
+        <li data-i18n="Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.">Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.</li>
+        <li data-i18n="Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.">Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.</li>
+        <li data-i18n="Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.">Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.</li>
+        <li data-i18n="Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.">Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.</li>
+        <li data-i18n="Public support shifts after every move and active-play day. Paused time does not affect it.">Public support shifts after every move and active-play day. Paused time does not affect it.</li>
+      </ol>
+    </section>
+    <button type="button" id="startButton" disabled>
+      <svg class="gavel-scene" viewBox="0 0 90 72" aria-hidden="true"><g class="gavel"><rect x="41" y="13" width="9" height="40" rx="3" transform="rotate(-42 45 17)"/><rect x="26" y="9" width="33" height="18" rx="4" transform="rotate(-42 43 18)"/></g><rect class="gavel-block" x="21" y="58" width="47" height="7" rx="3"/><path class="gavel-impact" d="M14 48l-6-5m67 5 6-5M45 52v-7"/></svg>
+      <span id="startButtonText" data-i18n="Start the Session">Start the Session</span>
+    </button>
+    <p id="startHint" role="status"></p>
+  </div>
+</div>
+
+<div id="overlay" role="dialog" aria-modal="true" aria-labelledby="verdictText" aria-describedby="verdictBody">
+  <div class="modal">
+    <div class="verdict" id="verdictText"></div>
+    <p id="verdictBody"></p>
+    <p id="finalScore" class="final-score"></p>
+    <p id="scoreIdentity" class="board-note"></p>
+    <button type="button" id="postScore" data-i18n="Post score">Post score</button>
+    <p id="scoreStatus" role="status"></p>
+    <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
+    <button onclick="location.reload()" data-i18n="Run It Back">Run It Back</button>
+  </div>
+</div>
+
+<dialog id="leaderboardDialog" aria-labelledby="leaderboardTitle">
+  <div class="board-heading"><h2 id="leaderboardTitle" data-i18n="Leaderboards">Leaderboards</h2><button type="button" id="closeLeaderboard" data-i18n="Close">Close</button></div>
+  <div class="board-filters">
+    <div class="board-tabs" role="group" aria-label="Leaderboard scope" data-i18n-aria="Leaderboard scope"><button type="button" id="boardOverall" aria-pressed="true" data-i18n="Overall">Overall</button><button type="button" id="boardByCountry" aria-pressed="false" data-i18n="By country">By country</button></div>
+    <label><span data-i18n="Difficulty">Difficulty</span><select id="boardMode"><option value="hard" data-i18n="HARD">HARD</option><option value="harder" data-i18n="HARDER">HARDER</option></select></label>
+    <label id="boardCountryLabel" hidden><span data-i18n="Country / territory">Country / territory</span><select id="boardCountry"></select></label>
+    <button type="button" id="refreshLeaderboard" data-i18n="Refresh">Refresh</button>
+  </div>
+  <p class="board-note" data-i18n="Top 100 · Best result per browser and difficulty. Casual, player-reported rankings.">Top 100 · Best result per browser and difficulty. Casual, player-reported rankings.</p>
+  <p id="boardStatus" role="status"></p>
+  <div class="board-table-wrap"><table><thead><tr><th data-i18n="Rank">Rank</th><th data-i18n="Player name">Player name</th><th data-i18n="Country / territory">Country / territory</th><th data-i18n="Score">Score</th><th data-i18n="Result">Result</th></tr></thead><tbody id="boardRows"></tbody></table></div>
+  <details class="score-rules"><summary data-i18n="How scoring works">How scoring works</summary><p data-i18n="Victory: 10,000. Evidence: 10 each (up to 75). House votes: 10 each (up to 218). Senate votes: 30 each (up to 67). Support: 10 each. Capital: 1 each. Wins also earn 5 per remaining session day.">Victory: 10,000. Evidence: 10 each (up to 75). House votes: 10 each (up to 218). Senate votes: 30 each (up to 67). Support: 10 each. Capital: 1 each. Wins also earn 5 per remaining session day.</p></details>
+</dialog>
+<script src="locales.js"></script>
+<script src="leaderboard-locales.js"></script>
+<script src="countries.js"></script>
+<script src="i18n.js"></script>
+<script src="game.js"></script>
+<script src="leaderboards.js"></script>
+</body>
+</html>
+

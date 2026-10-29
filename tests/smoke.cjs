@@ -55,7 +55,7 @@ const context = vm.createContext({document,Intl,console,Event:class {constructor
   setTimeout:(fn,ms)=>{const id=callbacks.push({fn,ms});timers.set(id,fn);return id;},
   setInterval:()=>99,clearInterval(){}
 });
-for (const file of ['locales.js','i18n.js','game.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for (const file of ['locales.js','leaderboard-locales.js','i18n.js','game.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const run = code => vm.runInContext(code,context);
 context.assert = assert;
 // Inspect all player-facing message paths, including both sides of random branches.

@@ -1,0 +1,6 @@
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+const server=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+mkdirSync(path.join(server,'public'),{recursive:true});
+for(const file of ['index.html','game.js','styles.css','i18n.js','locales.js','countries.js','leaderboard-locales.js','leaderboards.js']) copyFileSync(path.join(server,'..',file),path.join(server,'public',file==='index.html'?'play.html':file));

@@ -673,3 +673,11 @@ select:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 [dir="rtl"] .carousel-arrow { transform: scaleX(-1); }
 [dir="rtl"] .language-select { padding: 7px 12px 7px 30px; }
 @media (max-width: 700px) { .clock-block { margin-inline-start: 0; } .mode-grid { gap: 10px; } #startScreen { padding: 16px 12px; } .quickstart { padding: 14px; } }
+
+/* Risk and reward stay readable while browsing the expanded move pool. */
+.move-odds { display: block; color: #e3bf67; font-size: 11px; line-height: 1.55; margin-block: 0 7px; }
+.move-payoff { display: block; color: #a9b3c1; font-size: 10.5px; line-height: 1.55; margin-bottom: 14px; }
+#actions .action .desc { margin-bottom: 10px; }
+#supportPulse { display: block; font-size: 10px; margin-top: 6px; }
+.support-up { color: #9ed7b8; }
+.support-down { color: #e0a0a2; }

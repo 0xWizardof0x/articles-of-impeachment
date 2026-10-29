@@ -18,7 +18,11 @@ Then open <http://localhost:8000>.
 
 - Choose a language and a two-year **Hard** or four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
 - The gavel animates before play begins; reduced-motion preferences skip the animation.
-- Browse the move carousel to build evidence and political support.
+- Browse **28 moves per phase in Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
+- Every move has a success roll. Cards disclose the current success chance, progress rewards, support changes, failure losses, and any evidence cost. Higher support improves the odds; Harder applies an additional eight-percentage-point penalty before the probability bounds.
+- Quiet preparation, research, coalition work, public outreach, pressure, gambles, and compromises provide different costs, durations, odds, and consequences. Failed moves still spend their full listed capital and days.
+- Public support fluctuates after every move and every active-play calendar day, alongside monthly fatigue and events. The dashboard shows the latest net change. Paused and hidden-tab time never generates opinion shifts.
+- At month end, capital regenerates first. Breakthroughs resolve next, then the separate blowback roll. **Every blowback sets current political capital to half, rounded down**, regardless of the adverse event type. Repeated blows can require skipping action opportunities and adjourning to rebuild capital.
 - Every 12 seconds of active play consumes one session day. Moves also spend their listed days.
 - The calendar pauses when you pause the game, hide the tab, or open a campaign dialog.
 - Game state lives in the current page session; reloading starts over.
@@ -53,7 +57,7 @@ node --check locales.js
 node tests/smoke.cjs
 ```
 
-No Node dependencies are needed. For a browser smoke check, start each campaign, select a move, use the carousel arrows, and verify that Pause/Resume and hidden-tab behavior preserve the day countdown.
+No Node dependencies are needed. For a browser smoke check, confirm 28/56 moves in the two modes, select a move, inspect the displayed odds and support change, and adjourn until a blowback logs the exact capital halving. Check both LTR and RTL carousel navigation and verify that Pause/Resume and hidden-tab behavior preserve the countdown and public support.
 
 ## Hosting
 

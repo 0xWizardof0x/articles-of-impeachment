@@ -53,6 +53,7 @@ const S = {
   phase: 'investigation',
   evidence: 8,
   support: 38,
+  supportChange: 0,
   capital: 55,
   house: 0,
   senate: 0,
@@ -97,396 +98,4403 @@ const OPENERS = [
 /* =========================================================
    ACTIONS
    ========================================================= */
-const ACTIONS = {
-
-  investigation: [
-    /* ---- shared ---- */
+const MOVE_DATA = {
+  "investigation": [
     {
-      id: 'subpoena', name: '📁 Issue Subpoenas', cost: 12, days: 4,
-      desc: 'Compel documents from the executive branch. Slow, unglamorous, decisive.',
-      run() {
-        const n = rand(8, 12); S.evidence += n;
-        return { text: msg`Subpoena compliance produces ${n} new documents. ${OPENERS[rand(0,OPENERS.length-1)]}`, kind: 'good' };
-      }
+      "id": "subpoena",
+      "name": "📁 Issue Subpoenas",
+      "desc": "Compel documents from the executive branch. Slow, unglamorous, decisive.",
+      "cost": 12,
+      "days": 4,
+      "gain": [
+        8,
+        12
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 84,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'hearing', name: '🎙️ Televised Hearing', cost: 16, days: 5,
-      desc: 'Put witnesses under oath in prime time. Moves the needle both ways.',
-      run() {
-        S.evidence += 8; S.support += 7;
-        return { text: 'A four-hour hearing airs uninterrupted. The clip of the day is devastating.', kind: 'good' };
-      }
+      "id": "hearing",
+      "name": "🎙️ Televised Hearing",
+      "desc": "Put witnesses under oath in prime time. Moves the needle both ways.",
+      "cost": 16,
+      "days": 5,
+      "gain": [
+        6,
+        10
+      ],
+      "support": [
+        4,
+        8
+      ],
+      "chance": 76,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'whistle', name: '🧾 Whistleblower Deposition', cost: 14, days: 6,
-      desc: 'Sworn testimony from inside the building. Highest evidentiary value.',
-      run() {
-        const n = rand(11, 16); S.evidence += n;
-        return { text: msg`A career official testifies for six hours. ${n} new evidentiary items entered into the record.`, kind: 'good' };
-      }
+      "id": "whistle",
+      "name": "🧾 Whistleblower Deposition",
+      "desc": "Sworn testimony from inside the building. Highest evidentiary value.",
+      "cost": 14,
+      "days": 6,
+      "gain": [
+        11,
+        16
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 80,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'court', name: '⚖️ Litigate the Privilege Claim', cost: 14, days: 8,
-      desc: 'Take the administration to court. Cheap in capital, expensive on the calendar.',
-      run() {
-        if (Math.random() < 0.72) {
-          const n = rand(14, 20); S.evidence += n;
-          return { text: msg`The judge rejects the blanket privilege claim and orders production. ${n} new items land.`, kind: 'good' };
-        }
-        S.capital = clamp(S.capital - 6, 0, 120);
-        return { text: 'The court kicks it to a slower track. You lose the calendar and six points of capital.', kind: 'bad' };
-      }
+      "id": "court",
+      "name": "⚖️ Litigate the Privilege Claim",
+      "desc": "Take the administration to court. Cheap in capital, expensive on the calendar.",
+      "cost": 14,
+      "days": 8,
+      "gain": [
+        14,
+        20
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 72,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'leak', name: '📰 Background to the Times', cost: 6, days: 1,
-      desc: 'Trade a detail for a headline. Fast and cheap — but it can compromise the record.',
-      run() {
-        S.support += 6;
-        if (Math.random() < 0.35) {
-          S.evidence = clamp(S.evidence - 4, 0, 100);
-          return { text: 'The story lands big. Opposing counsel now argues the leak tainted the evidence chain.', kind: 'bad' };
-        }
-        return { text: 'The story lands big. Cable spends forty-eight hours on a single paragraph.', kind: 'good' };
-      }
+      "id": "leak",
+      "name": "📰 Background to the Times",
+      "desc": "Trade a detail for a headline. Fast and cheap — but it can compromise the record.",
+      "cost": 6,
+      "days": 1,
+      "gain": [
+        0,
+        0
+      ],
+      "support": [
+        4,
+        8
+      ],
+      "chance": 65,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'audit', name: '🔍 Forensic Audit of the Books', cost: 10, days: 5,
-      desc: 'Accountants, not cameras. Quiet evidence, modest headlines.',
-      run() {
-        const n = rand(6, 9); S.evidence += n; S.support += 2;
-        return { text: msg`The auditors find ${n} irregularities. Nobody tweets about it, but it holds up in court.`, kind: 'good' };
-      }
+      "id": "audit",
+      "name": "🔍 Forensic Audit of the Books",
+      "desc": "Accountants, not cameras. Quiet evidence, modest headlines.",
+      "cost": 10,
+      "days": 5,
+      "gain": [
+        6,
+        9
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "chance": 88,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'deputy', name: '🗂️ Deposition of the Deputy AG', cost: 12, days: 5,
-      desc: 'A senior official who would rather not be there. Steady, unspectacular evidence.',
-      run() {
-        const n = rand(8, 11); S.evidence += n; S.support += 2;
-        return { text: msg`The Deputy AG is deposed for five hours. ${n} new items, and one very long silence.`, kind: 'good' };
-      }
-    },
-
-    /* ---- extended toolkit (4-year mode only) ---- */
-    {
-      id: 'cos', name: '🏛️ Depose the Chief of Staff', cost: 18, days: 7, extended: true,
-      desc: 'The most senior testimony possible. High yield, high risk of a contempt fight.',
-      run() {
-        const n = rand(13, 18); S.evidence += n;
-        if (Math.random() < 0.30) {
-          S.support = clamp(S.support - 5, 0, 100);
-          return { text: msg`${n} new items secured — but the contempt fight dominates the news and costs you five points.`, kind: 'bad' };
-        }
-        return { text: msg`The Chief of Staff testifies for seven hours. ${n} new evidentiary items.`, kind: 'good' };
-      }
-    },
-    {
-      id: 'counsel2', name: '⚖️ Request a Second Special Counsel', cost: 16, days: 8, extended: true,
-      desc: 'A parallel investigation. Enormous upside if it lands, wasted calendar if it does not.',
-      run() {
-        if (Math.random() < 0.60) {
-          const n = rand(18, 24); S.evidence += n;
-          return { text: msg`A second counsel is appointed. The ${n} documents that follow are the best of the entire inquiry.`, kind: 'gold' };
-        }
-        S.capital = clamp(S.capital - 8, 0, 120);
-        return { text: 'The appointment stalls in committee. Eight days and eight points of capital, gone.', kind: 'bad' };
-      }
+      "id": "deputy",
+      "name": "🗂️ Deposition of the Deputy AG",
+      "desc": "A senior official who would rather not be there. Steady, unspectacular evidence.",
+      "cost": 12,
+      "days": 5,
+      "gain": [
+        8,
+        11
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "chance": 84,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'forensic', name: '🧮 Independent Forensic Accountant', cost: 12, days: 5, extended: true,
-      desc: 'Bring in outside expertise to trace the money. Unflashy, unimpeachable.',
-      run() {
-        const n = rand(9, 13); S.evidence += n;
-        return { text: msg`The outside accountant follows the money through three shell entities. ${n} new items.`, kind: 'good' };
-      }
+      "id": "investigation_new_0_0",
+      "name": "🗃️ Public Records Request",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        5,
+        9
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
     },
     {
-      id: 'grandjury', name: '🕳️ Grand Jury Leak', cost: 8, days: 2, extended: true,
-      desc: 'Feed the press from the grand jury. Big headlines, real legal exposure.',
-      run() {
-        S.support += 8;
-        if (Math.random() < 0.50) {
-          S.evidence = clamp(S.evidence - 6, 0, 100);
-          return { text: 'The leak lands everywhere — and the judge opens an inquiry into the source. Six evidentiary items are tainted.', kind: 'bad' };
-        }
-        return { text: 'The leak dominates three consecutive news cycles. Nobody traces it back to you.', kind: 'good' };
-      }
+      "id": "investigation_new_0_1",
+      "name": "🔬 Reconstruct the Timeline",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        10,
+        17
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'intl', name: '🌍 International Records Request', cost: 14, days: 6, extended: true,
-      desc: 'Foreign banking records take months but travel well in the record.',      run() {
-        const n = rand(10, 15); S.evidence += n; S.support += 3;
-        return { text: msg`Two foreign ministries comply. ${n} new items, and a very good photograph of a courier van.`, kind: 'good' };
-      }
+      "id": "investigation_new_0_2",
+      "name": "🤝 Interview the Archivist",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
     },
     {
-      id: 'shelter', name: '🛡️ Shelter a Second Whistleblower', cost: 15, days: 5, extended: true,
-      desc: 'Protect a source, earn testimony. Also earns you a very angry letter from counsel.',
-      run() {
-        const n = rand(12, 18); S.evidence += n;
-        return { text: msg`A second whistleblower is secured and sequestered. ${n} new items entered under seal.`, kind: 'good' };
-      }
+      "id": "investigation_new_0_3",
+      "name": "📣 Explain the Paper Trail",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        1,
+        4
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
     },
     {
-      id: 'resolution', name: '📜 Impeachment Inquiry Resolution', cost: 20, days: 9, extended: true,
-      desc: 'Formalize the whole enterprise. Expensive in every currency you have.',
-      run() {
-        S.evidence += 15; S.support += 6;
-        return { text: 'The resolution passes. The inquiry now has a name, a budget, and fifteen new evidentiary items.', kind: 'gold' };
-      }
+      "id": "investigation_new_0_4",
+      "name": "⚡ Emergency Document Hold",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_0_5",
+      "name": "🎲 Test the Anonymous Dossier",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        17,
+        29
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_0_6",
+      "name": "⚖️ Negotiate Limited Disclosure",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        9,
+        15
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_0_7",
+      "name": "🗃️ Verify the Visitor Logs",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        6,
+        10
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "investigation_new_0_8",
+      "name": "🔬 Trace the Travel Expenses",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        11,
+        18
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_0_9",
+      "name": "🤝 Cross-Check the Witnesses",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "investigation_new_0_10",
+      "name": "📣 Publish an Evidence Primer",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        2,
+        5
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_0_11",
+      "name": "⚡ Challenge the Redactions",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_0_12",
+      "name": "🎲 Recover the Deleted Emails",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        18,
+        30
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_0_13",
+      "name": "⚖️ Offer a Witness Accommodation",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        10,
+        16
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_0_14",
+      "name": "🗃️ Review the Procurement Files",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "investigation_new_0_15",
+      "name": "🔬 Follow the Shell Company",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        12,
+        19
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_0_16",
+      "name": "🤝 Interview the Security Detail",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "investigation_new_0_17",
+      "name": "📣 Open a Public Tip Line",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": false,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        3,
+        6
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_0_18",
+      "name": "⚡ Demand the Original Recording",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_0_19",
+      "name": "🎲 Confront the Missing Witness",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        19,
+        31
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_0_20",
+      "name": "⚖️ Accept a Partial Testimony",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        11,
+        17
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "cos",
+      "name": "🏛️ Depose the Chief of Staff",
+      "desc": "The most senior testimony possible. High yield, high risk of a contempt fight.",
+      "cost": 18,
+      "days": 7,
+      "extended": true,
+      "gain": [
+        13,
+        18
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "chance": 70,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "counsel2",
+      "name": "⚖️ Request a Second Special Counsel",
+      "desc": "A parallel investigation. Enormous upside if it lands, wasted calendar if it does not.",
+      "cost": 16,
+      "days": 8,
+      "extended": true,
+      "gain": [
+        18,
+        24
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "chance": 60,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "forensic",
+      "name": "🧮 Independent Forensic Accountant",
+      "desc": "Bring in outside expertise to trace the money. Unflashy, unimpeachable.",
+      "cost": 12,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        9,
+        13
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "grandjury",
+      "name": "🕳️ Grand Jury Leak",
+      "desc": "Feed the press from the grand jury. Big headlines, real legal exposure.",
+      "cost": 8,
+      "days": 2,
+      "extended": true,
+      "gain": [
+        0,
+        0
+      ],
+      "support": [
+        6,
+        10
+      ],
+      "chance": 50,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "intl",
+      "name": "🌍 International Records Request",
+      "desc": "Foreign banking records take months but travel well in the record.",
+      "cost": 14,
+      "days": 6,
+      "extended": true,
+      "gain": [
+        10,
+        15
+      ],
+      "support": [
+        2,
+        4
+      ],
+      "chance": 76,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "shelter",
+      "name": "🛡️ Shelter a Second Whistleblower",
+      "desc": "Protect a source, earn testimony. Also earns you a very angry letter from counsel.",
+      "cost": 15,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        12,
+        18
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "resolution",
+      "name": "📜 Impeachment Inquiry Resolution",
+      "desc": "Formalize the whole enterprise. Expensive in every currency you have.",
+      "cost": 20,
+      "days": 9,
+      "extended": true,
+      "gain": [
+        12,
+        18
+      ],
+      "support": [
+        4,
+        8
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        1,
+        4
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_0",
+      "name": "🗃️ Audit the Chain of Custody",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        5,
+        9
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "investigation_new_1_1",
+      "name": "🔬 Map the Offshore Transfers",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        10,
+        17
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_2",
+      "name": "🤝 Question the Budget Director",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "investigation_new_1_3",
+      "name": "📣 Release a Redacted Report",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        1,
+        4
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_4",
+      "name": "⚡ Seek a Contempt Citation",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_5",
+      "name": "🎲 Decode the Encrypted Archive",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        17,
+        29
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_1_6",
+      "name": "⚖️ Broker an Immunity Interview",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        9,
+        15
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_7",
+      "name": "🗃️ Review the Appointment Records",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        6,
+        10
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "investigation_new_1_8",
+      "name": "🔬 Compare the Contract Bids",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        11,
+        18
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_9",
+      "name": "🤝 Depose the Inspector General",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "investigation_new_1_10",
+      "name": "📣 Build a Public Evidence Map",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        2,
+        5
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_11",
+      "name": "⚡ Request an Expedited Injunction",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_12",
+      "name": "🎲 Pursue the Foreign Intermediary",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        18,
+        30
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_1_13",
+      "name": "⚖️ Trade Scope for Cooperation",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        10,
+        16
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_14",
+      "name": "🗃️ Authenticate the Signatures",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "investigation_new_1_15",
+      "name": "🔬 Rebuild the Deleted Schedule",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        12,
+        19
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "investigation_new_1_16",
+      "name": "🤝 Interview the Former Counsel",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "investigation_new_1_17",
+      "name": "📣 Hold a Citizens' Evidence Forum",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": true,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        3,
+        6
+      ],
+      "loss": [
+        0,
+        2
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_18",
+      "name": "⚡ Challenge an Emergency Secrecy Order",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "investigation_new_1_19",
+      "name": "🎲 Reopen the Sealed Deposition",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        19,
+        31
+      ],
+      "loss": [
+        5,
+        9
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "investigation_new_1_20",
+      "name": "⚖️ Negotiate a Records Escrow",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        11,
+        17
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     }
   ],
-
-  house: [
-    /* ---- shared ---- */
+  "house": [
     {
-      id: 'markup', name: '📜 Committee Markup', cost: 10, days: 6,
-      desc: 'Grind through the articles line by line. Reliable, incremental House votes.',
-      run() { S.house += 25; return { text: 'The committee reports four articles to the floor after a nineteen-hour markup.', kind: 'good' }; }
+      "id": "markup",
+      "name": "📜 Committee Markup",
+      "desc": "Grind through the articles line by line. Reliable, incremental House votes.",
+      "cost": 10,
+      "days": 6,
+      "gain": [
+        20,
+        30
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 84,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'whip', name: '🗳️ Whip the Caucus', cost: 12, days: 4,
-      desc: 'Work the vote count. Effectiveness scales with public support.',
-      run() {
-        const n = 15 + Math.floor(S.support / 3); S.house += n;
-        return { text: msg`The whip count moves by ${n}. Three members who were "undecided" are no longer undecided.`, kind: 'good' };
-      }
+      "id": "whip",
+      "name": "🗳️ Whip the Caucus",
+      "desc": "Work the vote count. Effectiveness scales with public support.",
+      "cost": 12,
+      "days": 4,
+      "gain": [
+        20,
+        40
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'address', name: '📺 Prime-Time Address', cost: 15, days: 3,
-      desc: 'Make the case directly to the country from the Speaker\'s ceremonial office.',
-      run() {
-        S.support += 10; S.house += 10;
-        return { text: 'Thirty-one million people watch. The next morning, the phones in the Capitol do not stop ringing.', kind: 'good' };
-      }
+      "id": "address",
+      "name": "📺 Prime-Time Address",
+      "desc": "Make the case directly to the country from the Speaker's ceremonial office.",
+      "cost": 15,
+      "days": 3,
+      "gain": [
+        8,
+        14
+      ],
+      "support": [
+        7,
+        12
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'moderates', name: '🤝 Cut a Deal with Moderates', cost: 14, days: 5,
-      desc: 'Narrow the articles to win swing districts. Buys votes, costs evidentiary scope.',
-      run() {
-        S.house += 30; S.evidence = clamp(S.evidence - 6, 0, 100);
-        return { text: 'Two articles are dropped. The moderates sign on. The base calls it a surrender.', kind: 'good' };
-      }
+      "id": "moderates",
+      "name": "🤝 Cut a Deal with Moderates",
+      "desc": "Narrow the articles to win swing districts. Buys votes, costs evidentiary scope.",
+      "cost": 14,
+      "days": 5,
+      "gain": [
+        24,
+        36
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 80,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 6
     },
     {
-      id: 'base', name: '📣 Rally the Base', cost: 8, days: 2,
-      desc: 'Fire up the people who already agree with you. Cheap votes, limited reach.',
-      run() {
-        S.support += 5; S.house += 12;
-        return { text: 'The rally fills a stadium. The other side fills one too. Net gain, barely.', kind: 'good' };
-      }
+      "id": "base",
+      "name": "📣 Rally the Base",
+      "desc": "Fire up the people who already agree with you. Cheap votes, limited reach.",
+      "cost": 8,
+      "days": 2,
+      "gain": [
+        9,
+        15
+      ],
+      "support": [
+        3,
+        7
+      ],
+      "chance": 84,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'debate', name: '⏱️ Floor Debate Marathon', cost: 12, days: 4,
-      desc: 'Hours of argument on the record. Slow, steady vote movement.',
-      run() {
-        S.house += 18; S.support += 3;
-        return { text: 'Eleven hours of debate, carried live on two networks. Eighteen votes move before midnight.', kind: 'good' };
-      }
+      "id": "debate",
+      "name": "⏱️ Floor Debate Marathon",
+      "desc": "Hours of argument on the record. Slow, steady vote movement.",
+      "cost": 12,
+      "days": 4,
+      "gain": [
+        14,
+        22
+      ],
+      "support": [
+        2,
+        4
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'scholars', name: '🎓 Constitutional Scholars Panel', cost: 9, days: 3,
-      desc: 'Academics on the record. Modest votes, real legitimacy.',
-      run() {
-        S.house += 12; S.support += 4;
-        return { text: 'Four constitutional scholars testify. The word "bribery" is used eleven times, on the record.', kind: 'good' };
-      }
-    },
-
-    /* ---- extended toolkit ---- */
-    {
-      id: 'defwitness', name: '📂 Subpoena Defense Witnesses', cost: 14, days: 5, extended: true,
-      desc: 'Force the other side\'s witnesses to testify early. Buys votes, muddies the record.',
-      run() {
-        S.house += 22; S.evidence = clamp(S.evidence - 5, 0, 100);
-        return { text: 'Three defense witnesses are subpoenaed. The cross-examinations yield twenty-two votes.', kind: 'good' };
-      }
-    },
-    {
-      id: 'leakwhip', name: '📉 Leak the Whip Count', cost: 7, days: 2, extended: true,
-      desc: 'Publish the tally early. Pressure works — until it backfires.',
-      run() {
-        S.house += 14;
-        if (Math.random() < 0.40) {
-          S.support = clamp(S.support - 5, 0, 100);
-          return { text: 'The leaked tally moves fourteen votes — and five members are furious about being counted.', kind: 'bad' };
-        }
-        return { text: 'The leaked tally moves fourteen votes. Nobody complains on the record.', kind: 'good' };
-      }
+      "id": "scholars",
+      "name": "🎓 Constitutional Scholars Panel",
+      "desc": "Academics on the record. Modest votes, real legitimacy.",
+      "cost": 9,
+      "days": 3,
+      "gain": [
+        9,
+        15
+      ],
+      "support": [
+        3,
+        5
+      ],
+      "chance": 86,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'freshman', name: '🌱 Court the Freshman Class', cost: 11, days: 4, extended: true,
-      desc: 'The newest members are the most movable. And the most afraid of a primary.',
-      run() {
-        S.house += 20;
-        return { text: 'A closed-door session with the freshman class. Twenty votes, and one very sincere hug.', kind: 'good' };
-      }
+      "id": "house_new_0_0",
+      "name": "🗃️ District-by-District Canvass",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
     },
     {
-      id: 'briefing', name: '🔐 The Closed-Door Briefing', cost: 16, days: 5, extended: true,
-      desc: 'Show the holdouts what you actually have. Nothing leaks. That is the point.',
-      run() {
-        S.house += 26; S.support += 4;
-        return { text: 'Ninety minutes, no phones, no staff. Twenty-six votes and not a single leak.', kind: 'good' };
-      }
+      "id": "house_new_0_1",
+      "name": "🔬 Draft a Narrow Article",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        21,
+        31
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'retire', name: '🚪 Retire a Ranking Member', cost: 18, days: 6, extended: true,
-      desc: 'Remove an obstacle from the committee. Effective, and it will be remembered.',
-      run() {
-        S.house += 30; S.support = clamp(S.support - 6, 0, 100);
-        return { text: 'The ranking member steps down. Thirty votes unlock. Six points of goodwill evaporate.', kind: 'bad' };
-      }
+      "id": "house_new_0_2",
+      "name": "🤝 Brief the Committee Chairs",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        15,
+        23
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
     },
     {
-      id: 'coalition', name: '🤝 Cross-Party Coalition', cost: 20, days: 7, extended: true,
-      desc: 'Bring the other side\'s moderates aboard. Huge vote swing, smaller evidentiary scope.',
-      run() {
-        S.house += 35; S.evidence = clamp(S.evidence - 4, 0, 100);
-        return { text: 'Six members from the other party sign a joint statement. Thirty-five votes move in a day.', kind: 'gold' };
-      }
+      "id": "house_new_0_3",
+      "name": "📣 Constituent Letter Drive",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        5,
+        11
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
     },
     {
-      id: 'rules', name: '📋 Rules Committee End-Run', cost: 15, days: 4, extended: true,
-      desc: 'Change the procedure to change the outcome. Sometimes the gavel slips.',
-      run() {
-        S.house += 24;
-        if (Math.random() < 0.25) {
-          S.capital = clamp(S.capital - 8, 0, 120);
-          return { text: 'The end-run works for twenty-four votes — then a point of order costs you eight capital.', kind: 'bad' };
-        }
-        return { text: 'The rule passes on a party-line vote. Twenty-four votes follow it through the door.', kind: 'good' };
-      }
+      "id": "house_new_0_4",
+      "name": "⚡ Force a Recorded Vote",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        25,
+        39
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_0_5",
+      "name": "🎲 Call the Leadership Bluff",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        35,
+        55
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_0_6",
+      "name": "⚖️ Amend the Contested Article",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        23,
+        33
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_0_7",
+      "name": "🗃️ Count the Private Commitments",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "house_new_0_8",
+      "name": "🔬 Commission a Legal Brief",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        22,
+        32
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_0_9",
+      "name": "🤝 Meet the Regional Delegation",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        16,
+        24
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "house_new_0_10",
+      "name": "📣 Town Hall Tour",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        6,
+        12
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_0_11",
+      "name": "⚡ Set a Floor Deadline",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        26,
+        40
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_0_12",
+      "name": "🎲 Release the Holdout List",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        36,
+        56
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_0_13",
+      "name": "⚖️ Offer a Sunset Clause",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        24,
+        34
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_0_14",
+      "name": "🗃️ Rehearse the Floor Managers",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "house_new_0_15",
+      "name": "🔬 Review Historical Precedents",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        23,
+        33
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_0_16",
+      "name": "🤝 Win the Oversight Bloc",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        17,
+        25
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "house_new_0_17",
+      "name": "📣 Invite Civic Observers",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": false,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        7,
+        13
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_0_18",
+      "name": "⚡ Demand a Committee Discharge",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        27,
+        41
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_0_19",
+      "name": "🎲 Schedule a Surprise Session",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        37,
+        57
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_0_20",
+      "name": "⚖️ Separate the Articles",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        25,
+        35
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "defwitness",
+      "name": "📂 Subpoena Defense Witnesses",
+      "desc": "Force the other side's witnesses to testify early. Buys votes, muddies the record.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        18,
+        26
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 5
+    },
+    {
+      "id": "leakwhip",
+      "name": "📉 Leak the Whip Count",
+      "desc": "Publish the tally early. Pressure works — until it backfires.",
+      "cost": 7,
+      "days": 2,
+      "extended": true,
+      "gain": [
+        11,
+        17
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "chance": 60,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "freshman",
+      "name": "🌱 Court the Freshman Class",
+      "desc": "The newest members are the most movable. And the most afraid of a primary.",
+      "cost": 11,
+      "days": 4,
+      "extended": true,
+      "gain": [
+        16,
+        24
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "briefing",
+      "name": "🔐 The Closed-Door Briefing",
+      "desc": "Show the holdouts what you actually have. Nothing leaks. That is the point.",
+      "cost": 16,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        22,
+        30
+      ],
+      "support": [
+        2,
+        6
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "retire",
+      "name": "🚪 Retire a Ranking Member",
+      "desc": "Remove an obstacle from the committee. Effective, and it will be remembered.",
+      "cost": 18,
+      "days": 6,
+      "extended": true,
+      "gain": [
+        25,
+        35
+      ],
+      "support": [
+        -7,
+        -4
+      ],
+      "chance": 80,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "coalition",
+      "name": "🤝 Cross-Party Coalition",
+      "desc": "Bring the other side's moderates aboard. Huge vote swing, smaller evidentiary scope.",
+      "cost": 20,
+      "days": 7,
+      "extended": true,
+      "gain": [
+        29,
+        41
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "chance": 76,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 4
+    },
+    {
+      "id": "rules",
+      "name": "📋 Rules Committee End-Run",
+      "desc": "Change the procedure to change the outcome. Sometimes the gavel slips.",
+      "cost": 15,
+      "days": 4,
+      "extended": true,
+      "gain": [
+        20,
+        28
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 75,
+      "profile": "legacy",
+      "loss": [
+        3,
+        8
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_0",
+      "name": "🗃️ Consult Retiring Members",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "house_new_1_1",
+      "name": "🔬 Audit Conflicts of Interest",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        21,
+        31
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_2",
+      "name": "🤝 Build a Procedural Alliance",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        15,
+        23
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "house_new_1_3",
+      "name": "📣 Launch a District Fact Sheet",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        5,
+        11
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_4",
+      "name": "⚡ Challenge the Speaker's Schedule",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        25,
+        39
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_5",
+      "name": "🎲 Risk a Discharge Petition",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        35,
+        55
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_1_6",
+      "name": "⚖️ Trade a Hearing for a Vote",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        23,
+        33
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_7",
+      "name": "🗃️ Verify Every Pledge",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "house_new_1_8",
+      "name": "🔬 Prepare the Minority Report",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        22,
+        32
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_9",
+      "name": "🤝 Court the Committee Veterans",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        16,
+        24
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "house_new_1_10",
+      "name": "📣 Bipartisan Press Conference",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        6,
+        12
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_11",
+      "name": "⚡ Demand an Open Rule",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        26,
+        40
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_12",
+      "name": "🎲 Challenge a Party Leader",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        36,
+        56
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_1_13",
+      "name": "⚖️ Narrow the Remedy",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        24,
+        34
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_14",
+      "name": "🗃️ Reconcile Competing Drafts",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        2,
+        5
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "house_new_1_15",
+      "name": "🔬 Test the Constitutional Language",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        23,
+        33
+      ],
+      "loss": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "house_new_1_16",
+      "name": "🤝 Convene a Cross-Regional Caucus",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        17,
+        25
+      ],
+      "loss": [
+        4,
+        8
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "house_new_1_17",
+      "name": "📣 Publish a Plain-Language Case",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": true,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        7,
+        13
+      ],
+      "loss": [
+        1,
+        4
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_18",
+      "name": "⚡ Keep the Chamber in Session",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        27,
+        41
+      ],
+      "loss": [
+        7,
+        14
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "house_new_1_19",
+      "name": "🎲 Move for an Immediate Vote",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        37,
+        57
+      ],
+      "loss": [
+        10,
+        18
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "house_new_1_20",
+      "name": "⚖️ Accept a Procedural Concession",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        25,
+        35
+      ],
+      "loss": [
+        4,
+        10
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     }
   ],
-
-  senate: [
-    /* ---- shared ---- */
+  "senate": [
     {
-      id: 'swing', name: '🎯 Court the Swing Six', cost: 18, days: 5,
-      desc: 'The whole trial comes down to six senators. Work them individually.',
-      run() {
-        const n = 4 + Math.floor(S.support / 10); S.senate += n;
-        return { text: msg`You secure ${n} more votes. One senator asks, twice, whether this is "really worth it."`, kind: 'good' };
-      }
+      "id": "swing",
+      "name": "🎯 Court the Swing Six",
+      "desc": "The whole trial comes down to six senators. Work them individually.",
+      "cost": 18,
+      "days": 5,
+      "gain": [
+        6,
+        12
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'pressure', name: '📢 Public Pressure Campaign', cost: 12, days: 4,
-      desc: 'Constituent calls, op-eds, and hometown town halls. Slow, but it moves the room.',
-      run() {
-        S.support += 8; S.senate += 5;
-        return { text: 'Senate offices report record call volume. Two switchboards go down.', kind: 'good' };
-      }
+      "id": "pressure",
+      "name": "📢 Public Pressure Campaign",
+      "desc": "Constituent calls, op-eds, and hometown town halls. Slow, but it moves the room.",
+      "cost": 12,
+      "days": 4,
+      "gain": [
+        3,
+        7
+      ],
+      "support": [
+        6,
+        10
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'backroom', name: '🚬 The Backroom Deal', cost: 22, days: 5,
-      desc: 'A committee chairmanship, a bridge, a promise. Effective and slightly nauseating.',
-      run() {
-        S.senate += 12; S.evidence = clamp(S.evidence - 8, 0, 100);
-        return { text: 'A deal is struck in a room with no windows. You get the votes. You will not enjoy it.', kind: 'good' };
-      }
+      "id": "backroom",
+      "name": "🚬 The Backroom Deal",
+      "desc": "A committee chairmanship, a bridge, a promise. Effective and slightly nauseating.",
+      "cost": 22,
+      "days": 5,
+      "gain": [
+        9,
+        15
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 8
     },
     {
-      id: 'bombshell', name: '💣 The Late Bombshell', cost: 15, days: 3,
-      desc: 'Requires Evidence ≥ 85. The one document nobody has seen yet.',
-      requires: () => S.evidence >= 85,
-      lockedMsg: 'Requires Evidence ≥ 85',
-      run() {
-        S.senate += 15; S.support += 10;
-        return { text: 'The document is entered into the record at 9:41 PM. The chamber goes silent. Six votes move overnight.', kind: 'gold' };
-      }
+      "id": "bombshell",
+      "name": "💣 The Late Bombshell",
+      "desc": "Requires Evidence ≥ 85. The one document nobody has seen yet.",
+      "cost": 15,
+      "days": 3,
+      "lockedMsg": "Requires Evidence ≥ 85",
+      "gain": [
+        12,
+        18
+      ],
+      "support": [
+        7,
+        12
+      ],
+      "chance": 70,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'constitution', name: '🏛️ The Constitutional Argument', cost: 10, days: 3,
-      desc: 'Remind the Senate what "high crimes and misdemeanors" has always meant.',
-      run() {
-        S.senate += 6; S.support += 3;
-        return { text: 'Your closing argument quotes the 1974 committee report. Two senators take notes.', kind: 'good' };
-      }
+      "id": "constitution",
+      "name": "🏛️ The Constitutional Argument",
+      "desc": "Remind the Senate what \"high crimes and misdemeanors\" has always meant.",
+      "cost": 10,
+      "days": 3,
+      "gain": [
+        4,
+        8
+      ],
+      "support": [
+        2,
+        4
+      ],
+      "chance": 84,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'closing', name: '📝 Trial Manager\'s Closing', cost: 13, days: 4,
-      desc: 'The last word on the record. Persuasive if the case is already strong.',
-      run() {
-        S.senate += 7; S.support += 4;
-        return { text: 'Ninety minutes, no notes. The chamber is quiet for the first time in six weeks.', kind: 'good' };
-      }
+      "id": "closing",
+      "name": "📝 Trial Manager's Closing",
+      "desc": "The last word on the record. Persuasive if the case is already strong.",
+      "cost": 13,
+      "days": 4,
+      "gain": [
+        5,
+        9
+      ],
+      "support": [
+        2,
+        6
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'editorial', name: '📰 Hometown Editorial Blitz', cost: 11, days: 3,
-      desc: 'Buy the opinion pages back home. Cheaper than a rally and harder to ignore.',
-      run() {
-        S.senate += 6; S.support += 5;
-        return { text: 'Fourteen editorial boards endorse conviction in a single week. Two senators stop taking questions.', kind: 'good' };
-      }
-    },
-
-    /* ---- extended toolkit ---- */
-    {
-      id: 'audit_sen', name: '🔎 Senator-by-Senator Audit', cost: 16, days: 5, extended: true,
-      desc: 'A full workup on every undecided vote. Expensive, methodical, effective.',
-      run() {
-        S.senate += 8; S.support += 3;
-        return { text: 'The audit identifies four soft votes and two that will never move. You stop wasting time on the two.', kind: 'good' };
-      }
-    },
-    {
-      id: 'recusal', name: '⚖️ The Recusal Motion', cost: 14, days: 4, extended: true,
-      desc: 'Move to recuse a presiding officer. All upside if it lands, all cost if it does not.',
-      run() {
-        if (Math.random() < 0.55) {
-          S.senate += 10;
-          return { text: 'The motion is granted. Ten votes shift the moment the gavel comes down.', kind: 'gold' };
-        }
-        S.support = clamp(S.support - 6, 0, 100);
-        return { text: 'The motion fails on a party-line vote. Six points of public support go with it.', kind: 'bad' };
-      }
+      "id": "editorial",
+      "name": "📰 Hometown Editorial Blitz",
+      "desc": "Buy the opinion pages back home. Cheaper than a rally and harder to ignore.",
+      "cost": 11,
+      "days": 3,
+      "gain": [
+        4,
+        8
+      ],
+      "support": [
+        3,
+        7
+      ],
+      "chance": 80,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'recall', name: '🎙️ Prime-Time Witness Recall', cost: 18, days: 5, extended: true,
-      desc: 'Bring the best witness back for the cameras. The country is watching again.',
-      run() {
-        S.senate += 11; S.support += 6;
-        return { text: 'The witness returns, and this time the networks carry it live. Eleven votes and six points of support.', kind: 'good' };
-      }
+      "id": "senate_new_0_0",
+      "name": "🗃️ One-on-One Senate Briefings",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        3,
+        5
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
     },
     {
-      id: 'resign', name: '🤐 Negotiate the Resignation', cost: 24, days: 7, extended: true,
-      desc: 'Skip the trial. Offer an exit. It works — and the record goes with him.',
-      run() {
-        S.senate += 14; S.evidence = clamp(S.evidence - 10, 0, 100);
-        return { text: 'A resignation is negotiated in principle. Fourteen votes secure. Ten evidentiary items are sealed forever.', kind: 'gold' };
-      }
+      "id": "senate_new_0_1",
+      "name": "🔬 Prepare the Trial Record",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        6,
+        10
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     },
     {
-      id: 'nuclear', name: '☢️ The Constitutional Nuclear Option', cost: 20, days: 5, extended: true,
-      desc: 'Threaten the institution itself. It moves votes and costs you the moral high ground.',
-      run() {
-        S.senate += 9; S.support = clamp(S.support - 5, 0, 100);
-        return { text: 'The threat is made on the record. Nine votes move. Five points of goodwill do not come back.', kind: 'bad' };
-      }
+      "id": "senate_new_0_2",
+      "name": "🤝 Consult Former Senators",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        4,
+        7
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
     },
     {
-      id: 'packing', name: '🎲 Court-Packing Leverage', cost: 12, days: 4, extended: true,
-      desc: 'Remind a few senators what happens if this drags on. Blunt, and it sometimes backfires.',
-      run() {
-        S.senate += 7;
-        if (Math.random() < 0.30) {
-          S.capital = clamp(S.capital - 6, 0, 120);
-          return { text: 'The leverage works for seven votes — and costs you six capital in favors called in.', kind: 'bad' };
-        }
-        return { text: 'The leverage works. Seven votes move, and nobody puts it in writing.', kind: 'good' };
-      }
+      "id": "senate_new_0_3",
+      "name": "📣 Home-State Listening Tour",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        1,
+        3
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
     },
     {
-      id: 'immunity', name: '🕊️ The Immunity Offer', cost: 19, days: 6, extended: true,
-      desc: 'Trade a prosecution for a conviction. The vote count goes up; the record gets thinner.',
-      run() {
-        S.senate += 12; S.evidence = clamp(S.evidence - 6, 0, 100);
-        return { text: 'Immunity is offered and accepted. Twelve votes secure. Six evidentiary items are withdrawn.', kind: 'good' };
-      }
+      "id": "senate_new_0_4",
+      "name": "⚡ Demand Witness Testimony",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_0_5",
+      "name": "🎲 Spring the Contradictory Tape",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_0_6",
+      "name": "⚖️ Agree to a Limited Witness List",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_0_7",
+      "name": "🗃️ Verify the Senate Count",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        4,
+        6
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "senate_new_0_8",
+      "name": "🔬 Analyze the Defense Brief",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_0_9",
+      "name": "🤝 Meet the Institutionalists",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        5,
+        8
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "senate_new_0_10",
+      "name": "📣 Broadcast the Trial Summary",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": false,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        2,
+        4
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_0_11",
+      "name": "⚡ Force Answers Under Oath",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_0_12",
+      "name": "🎲 Challenge the Defense in Public",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_0_13",
+      "name": "⚖️ Negotiate Trial Time Limits",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_0_14",
+      "name": "🗃️ Rehearse Witness Questions",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": false,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        5,
+        7
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "senate_new_0_15",
+      "name": "🔬 Audit the Defense Timeline",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_0_16",
+      "name": "🤝 Build a Removal Coalition",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": false,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        6,
+        9
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "senate_new_0_17",
+      "name": "📣 Organize a Civic Vigil",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": false,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        3,
+        5
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_0_18",
+      "name": "⚡ Demand a Public Explanation",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": false,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_0_19",
+      "name": "🎲 Call for an Early Verdict",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": false,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_0_20",
+      "name": "⚖️ Accept a Narrow Conviction Case",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": false,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "audit_sen",
+      "name": "🔎 Senator-by-Senator Audit",
+      "desc": "A full workup on every undecided vote. Expensive, methodical, effective.",
+      "cost": 16,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        6,
+        10
+      ],
+      "support": [
+        2,
+        4
+      ],
+      "chance": 82,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "recusal",
+      "name": "⚖️ The Recusal Motion",
+      "desc": "Move to recuse a presiding officer. All upside if it lands, all cost if it does not.",
+      "cost": 14,
+      "days": 4,
+      "extended": true,
+      "gain": [
+        8,
+        12
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "chance": 55,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "recall",
+      "name": "🎙️ Prime-Time Witness Recall",
+      "desc": "Bring the best witness back for the cameras. The country is watching again.",
+      "cost": 18,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        8,
+        14
+      ],
+      "support": [
+        4,
+        8
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "resign",
+      "name": "🤐 Negotiate the Resignation",
+      "desc": "Skip the trial. Offer an exit. It works — and the record goes with him.",
+      "cost": 24,
+      "days": 7,
+      "extended": true,
+      "gain": [
+        11,
+        17
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 76,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 10
+    },
+    {
+      "id": "nuclear",
+      "name": "☢️ The Constitutional Nuclear Option",
+      "desc": "Threaten the institution itself. It moves votes and costs you the moral high ground.",
+      "cost": 20,
+      "days": 5,
+      "extended": true,
+      "gain": [
+        7,
+        11
+      ],
+      "support": [
+        -6,
+        -3
+      ],
+      "chance": 72,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "packing",
+      "name": "🎲 Court-Packing Leverage",
+      "desc": "Remind a few senators what happens if this drags on. Blunt, and it sometimes backfires.",
+      "cost": 12,
+      "days": 4,
+      "extended": true,
+      "gain": [
+        5,
+        9
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 70,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "immunity",
+      "name": "🕊️ The Immunity Offer",
+      "desc": "Trade a prosecution for a conviction. The vote count goes up; the record gets thinner.",
+      "cost": 19,
+      "days": 6,
+      "extended": true,
+      "gain": [
+        9,
+        15
+      ],
+      "support": [
+        0,
+        1
+      ],
+      "chance": 78,
+      "profile": "legacy",
+      "loss": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        5
+      ],
+      "evidenceCost": 6
+    },
+    {
+      "id": "senate_new_1_0",
+      "name": "🗃️ Consult the Senate Historian",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 9,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 91,
+      "gain": [
+        3,
+        5
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "senate_new_1_1",
+      "name": "🔬 Compare Prior Trial Standards",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 75,
+      "gain": [
+        6,
+        10
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_1_2",
+      "name": "🤝 Court Retiring Senators",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 11,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 81,
+      "gain": [
+        4,
+        7
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "senate_new_1_3",
+      "name": "📣 Secure a Joint Editorial",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 8,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 85,
+      "gain": [
+        1,
+        3
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_4",
+      "name": "⚡ Challenge a Private Trial Rule",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 15,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 67,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_5",
+      "name": "🎲 Reopen the Evidence Window",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 51,
+      "gain": [
+        11,
+        19
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_1_6",
+      "name": "⚖️ Offer a Censure Fallback",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 85,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_1_7",
+      "name": "🗃️ Verify the Final Commitments",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 10,
+      "days": 7,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 88,
+      "gain": [
+        4,
+        6
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "senate_new_1_8",
+      "name": "🔬 Rebut the Executive Defense",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "research",
+      "chance": 72,
+      "gain": [
+        7,
+        11
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_1_9",
+      "name": "🤝 Convene a Senior Senators' Dinner",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 12,
+      "days": 4,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 78,
+      "gain": [
+        5,
+        8
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "senate_new_1_10",
+      "name": "📣 Hold a Constitutional Teach-In",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 9,
+      "days": 3,
+      "extended": true,
+      "profile": "public",
+      "chance": 82,
+      "gain": [
+        2,
+        4
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_11",
+      "name": "⚡ Demand the Missing Exhibits",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 16,
+      "days": 4,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 64,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_12",
+      "name": "🎲 Expose the Secret Side Agreement",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 18,
+      "days": 5,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 48,
+      "gain": [
+        12,
+        20
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_1_13",
+      "name": "⚖️ Limit the Cross-Examination",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 14,
+      "days": 5,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 82,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_1_14",
+      "name": "🗃️ Review the Jury Oaths",
+      "desc": "Methodical work. Better odds, slower progress.",
+      "cost": 11,
+      "days": 8,
+      "extended": true,
+      "profile": "quiet",
+      "chance": 85,
+      "gain": [
+        5,
+        7
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "senate_new_1_15",
+      "name": "🔬 Authenticate the Final Exhibit",
+      "desc": "Deep research. Strong gains, costly setbacks.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "research",
+      "chance": 69,
+      "gain": [
+        8,
+        12
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        0,
+        2
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "senate_new_1_16",
+      "name": "🤝 Build a Legacy Argument",
+      "desc": "Steady coalition work with a moderate payoff.",
+      "cost": 13,
+      "days": 5,
+      "extended": true,
+      "profile": "balanced",
+      "chance": 75,
+      "gain": [
+        6,
+        9
+      ],
+      "loss": [
+        1,
+        2
+      ],
+      "support": [
+        1,
+        3
+      ],
+      "supportLoss": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "senate_new_1_17",
+      "name": "📣 Give the Final Public Briefing",
+      "desc": "Build public support; progress is secondary.",
+      "cost": 10,
+      "days": 4,
+      "extended": true,
+      "profile": "public",
+      "chance": 79,
+      "gain": [
+        3,
+        5
+      ],
+      "loss": [
+        0,
+        1
+      ],
+      "support": [
+        5,
+        9
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_18",
+      "name": "⚡ Hold the Chamber Overnight",
+      "desc": "Apply pressure for a larger but less reliable gain.",
+      "cost": 17,
+      "days": 5,
+      "extended": true,
+      "profile": "pressure",
+      "chance": 61,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        2,
+        4
+      ],
+      "support": [
+        2,
+        5
+      ],
+      "supportLoss": [
+        3,
+        6
+      ]
+    },
+    {
+      "id": "senate_new_1_19",
+      "name": "🎲 Force the Deciding Roll Call",
+      "desc": "A high-risk play with a large upside and downside.",
+      "cost": 19,
+      "days": 6,
+      "extended": true,
+      "profile": "gamble",
+      "chance": 45,
+      "gain": [
+        13,
+        21
+      ],
+      "loss": [
+        3,
+        6
+      ],
+      "support": [
+        1,
+        6
+      ],
+      "supportLoss": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "senate_new_1_20",
+      "name": "⚖️ Broker the Last Compromise",
+      "desc": "Trade public goodwill for a better chance of progress.",
+      "cost": 15,
+      "days": 6,
+      "extended": true,
+      "profile": "compromise",
+      "chance": 79,
+      "gain": [
+        9,
+        13
+      ],
+      "loss": [
+        1,
+        3
+      ],
+      "support": [
+        -4,
+        -1
+      ],
+      "supportLoss": [
+        2,
+        5
+      ]
     }
   ]
 };
+const PHASE_METRICS = { investigation: 'evidence', house: 'house', senate: 'senate' };
+const METRIC_LABELS = { evidence: 'Evidence', house: 'House Votes', senate: 'Senate Votes' };
+const signed = n => n > 0 ? `+${n}` : String(n);
+function moveChance(action) {
+  const publicMood = clamp(Math.round((S.support - 40) / 10), -6, 6);
+  return clamp(action.chance + publicMood - (S.mode === 'harder' ? 8 : 0), 25, 94);
+}
+function resolveMove(action, phase) {
+  const metric = PHASE_METRICS[phase];
+  const before = S[metric], previousSupport = S.support;
+  const succeeded = Math.random() < moveChance(action) / 100;
+  const change = succeeded ? rand(...action.gain) : -rand(...action.loss);
+  S[metric] = clamp(S[metric] + change, 0, metric === 'house' ? 435 : 100);
+  S.support = clamp(S.support + (succeeded ? rand(...action.support) : -rand(...action.supportLoss)), 0, 100);
+  if (succeeded && action.evidenceCost) S.evidence = clamp(S.evidence - action.evidenceCost, 0, 100);
+  return {
+    text: msg`${action.name}: ${succeeded ? 'Succeeded' : 'Setback'}. ${METRIC_LABELS[metric]} ${signed(S[metric] - before)}; support ${signed(S.support - previousSupport)}.`,
+    kind: succeeded ? 'good' : 'bad', succeeded
+  };
+}
+const ACTIONS = Object.fromEntries(Object.entries(MOVE_DATA).map(([phase, moves]) => [phase, moves.map(data => {
+  const action = { ...data, run() { return resolveMove(action, phase); } };
+  if (action.id === 'bombshell') action.requires = () => S.evidence >= 85;
+  return action;
+})]));
+
+// Opinion reacts to every active day and every move, independently of the
+// move result. No polling runs while paused, in the briefing, or hidden.
+function shiftPublicOpinion(source, previousSupport = S.support) {
+  const magnitude = source === 'day' ? (S.mode === 'harder' ? rand(1, 2) : 1) : rand(1, S.mode === 'harder' ? 4 : 3);
+  const shift = Math.random() < 0.5 ? -magnitude : magnitude;
+  S.support = clamp(S.support + shift, 0, 100);
+  S.supportChange = S.support - previousSupport;
+  log(msg`PUBLIC OPINION — Support ${previousSupport}% → ${S.support}%.`, S.supportChange < 0 ? 'bad' : 'good');
+}
 
 /* =========================================================
    RANDOM EVENTS
@@ -500,7 +4508,7 @@ const EVENTS = [
       return { text: 'A viral town hall clip changes the conversation for a week.', kind: 'good' }; } },
   { w: 1, tone: 'bad', run() { S.support = clamp(S.support - rand(3, 7), 0, 100);
       return { text: "The administration's counter-programming dominates the news cycle.", kind: 'bad' }; } },
-  { w: 1, tone: 'bad', run() { S.capital = clamp(S.capital - rand(6, 10), 0, 120);
+  { w: 1, tone: 'bad', run() { S.support = clamp(S.support - rand(1, 3), 0, 100);
       return { text: 'A procedural floor fight burns a week of the calendar and a lot of goodwill.', kind: 'bad' }; } },
   { w: 1, tone: 'good', run() { S.capital = clamp(S.capital + rand(8, 14), 0, 120);
       return { text: 'A leadership reshuffle hands you a friendlier Rules Committee.', kind: 'good' }; } },
@@ -622,6 +4630,8 @@ function render() {
   document.getElementById('bEvidence').style.width = clamp(S.evidence, 0, 100) + '%';
 
   document.getElementById('vSupport').textContent = Math.round(S.support) + '%';
+  document.getElementById('supportPulse').textContent = tr`Last shift: ${signed(S.supportChange)}`;
+  document.getElementById('supportPulse').className = S.supportChange < 0 ? 'support-down' : 'support-up';
   document.getElementById('bSupport').style.width = clamp(S.support, 0, 100) + '%';
 
   document.getElementById('vCapital').textContent = Math.round(S.capital);
@@ -778,6 +4788,8 @@ function renderMoves() {
         ${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}
         <span class="name">${t(action.name)}</span>
         <span class="desc"></span>
+        <span class="move-odds"></span>
+        <span class="move-payoff"></span>
         <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span>`;
       button.onclick = () => doAction(action);
@@ -815,10 +4827,18 @@ function renderMoves() {
       status = needs.join(' · ');
     } else playable++;
     button.querySelector('.desc').textContent = t(action.desc);
+    const metric = METRIC_LABELS[PHASE_METRICS[S.phase]];
+    const odds = tr`Success: ${moveChance(action)}% · ${metric} +${action.gain[0]}–${action.gain[1]}`;
+    const support = tr`Support on success: ${signed(action.support[0])} to ${signed(action.support[1])}`;
+    const failure = tr`On failure: ${metric} −${action.loss[0]}–${action.loss[1]}; support −${action.supportLoss[0]}–${action.supportLoss[1]}.`;
+    const evidenceCost = action.evidenceCost ? tr`Evidence cost on success: ${action.evidenceCost}.` : '';
+    button.querySelector('.move-odds').textContent = odds;
+    button.querySelector('.move-payoff').textContent = `${support}. ${failure} ${evidenceCost}`.trim();
     button.querySelector('.move-status').textContent = t(status);
-    button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}`);
+    button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
   });
   document.getElementById('movesSummary').textContent = tr`Moves: ${actions.length} · Available: ${playable}`;
+  if (!playable && !paused && !S.over) document.getElementById('movesSummary').textContent += ' · ' + t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
   scheduleCarouselUpdate();
 }
 
@@ -933,6 +4953,7 @@ function consumeActiveCalendarTime(elapsedMs) {
     CALENDAR_CLOCK.elapsedMs -= DAY_DURATION_MS;
     S.daysLeft = Math.max(0, S.daysLeft - 1);
     log(msg`CLOCK — A session day expires. Days remaining this month: ${S.daysLeft}.`, 'sys');
+    shiftPublicOpinion('day');
     if (S.daysLeft === 0) endTurn('clock');
     else render();
   }
@@ -1001,12 +5022,14 @@ function doAction(action) {
   S.capital -= action.cost;
   S.daysLeft -= action.days;
 
+  const supportBefore = S.support;
   const result = action.run();
 
   S.evidence = clamp(S.evidence, 0, 100);
   S.support  = clamp(S.support, 0, 100);
 
   log(result.text, result.kind);
+  shiftPublicOpinion('move', supportBefore);
   checkPhase();
   if (!S.over && S.daysLeft === 0) endTurn('move');
   else render();
@@ -1035,32 +5058,37 @@ function checkPhase() {
 }
 
 // Roll within a single event type; a positive event cannot replace the
-// separate per-turn blowback roll. Effect sizes remain those of the original.
+// separate per-turn blowback roll. Every adverse event halves capital.
 function rollEvent(tone) {
   const pool = EVENTS.filter(event => event.tone === tone);
   const total = pool.reduce((sum, event) => sum + event.w, 0);
   if (!pool.length || total <= 0) return;
   let roll = Math.random() * total;
   const chosen = pool.find(event => (roll -= event.w) < 0) || pool[pool.length - 1];
+  const capitalBefore = S.capital;
   const result = chosen.run();
+  if (tone === 'bad') S.capital = Math.floor(capitalBefore / 2);
   S.evidence = clamp(S.evidence, 0, 100);
   S.support = clamp(S.support, 0, 100);
   S.capital = clamp(S.capital, 0, 120);
   const label = tone === 'bad' ? 'BLOWBACK' : 'BREAKTHROUGH';
   log(msg`${label} — ${result.text}`, result.kind);
+  if (tone === 'bad') log(msg`BLOWBACK — Political capital halved: ${capitalBefore} → ${S.capital} (rounded down).`, 'bad');
 }
 
 function resolveTurnEvents() {
   if (S.over || !S.mode) return;
   const mode = MODES[S.mode];
+  // Resolve good news first: a later breakthrough cannot immediately undo
+  // this month's halving. Recovery is credited before monthly event rolls.
+  if (Math.random() < mode.positiveEventChance) rollEvent('good');
   // Exactly one adverse-event chance per completed monthly turn.
   if (Math.random() < mode.blowbackChance) {
     rollEvent('bad');
   } else {
     log('No blowback this turn. The administration fails to land a counterattack.', 'sys');
   }
-  // A separate opportunity preserves positive developments.
-  if (Math.random() < mode.positiveEventChance) rollEvent('good');
+
 }
 
 function endTurn(source = 'manual') {
@@ -1090,6 +5118,7 @@ function endTurn(source = 'manual') {
   }
 
   const m = MODES[S.mode];
+  const supportBeforeMonth = S.support;
   S.support = clamp(S.support - decayNow(), 0, 100);
   if (m.evidenceDecay && S.phase !== 'investigation') {
     S.evidence = clamp(S.evidence - m.evidenceDecay, 0, 100);
@@ -1102,6 +5131,7 @@ function endTurn(source = 'manual') {
   // One per-turn risk roll, regardless of whether clock, move or Adjourn
   // caused the rollover. Individual clock days do NOT stack extra blowback.
   resolveTurnEvents();
+  S.supportChange = S.support - supportBeforeMonth;
   checkPhase();
   if (!S.over && S.support < 12) {
     finish(false, 'THE CASE COLLAPSES',
@@ -1144,6 +5174,7 @@ function startGame(modeId) {
   S.phase = 'investigation';
   S.evidence = m.startEvidence;
   S.support = m.startSupport;
+  S.supportChange = 0;
   S.capital = m.startCapital;
   S.house = 0;
   S.senate = 0;
@@ -1159,7 +5190,7 @@ function startGame(modeId) {
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');
   log(msg`MODE: ${m.name} — ${m.tag}. The matter before the House: ${scandal}.`, 'sys');
   log(msg`The term ends ${termEndString()}. ${m.months} months, ${m.daysPerMonth} session days a month.`, 'sys');
-  if (m.extendedToolkit) log('Extended Toolkit unlocked: 14 moves per phase instead of 7.', 'gold');
+  if (m.extendedToolkit) log('Extended Toolkit unlocked: 56 moves per phase instead of 28.', 'gold');
   log(msg`Blowback is checked after each monthly turn: ${Math.round(m.blowbackChance * 100)}% risk. Breakthroughs roll separately.`, 'sys');
   log('The calendar is live: 12 seconds of active play costs one session day. Moves also spend their listed days.', 'sys');
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');

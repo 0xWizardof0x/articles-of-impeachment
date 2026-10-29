@@ -65,6 +65,7 @@
     <div class="stat">
       <div class="label"><span data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
       <div class="bar"><i class="fill-support" id="bSupport"></i></div>
+      <span id="supportPulse"></span>
     </div>
     <div class="stat">
       <div class="label"><span data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
@@ -139,13 +140,13 @@
       <button type="button" class="mode-card" data-mode="hard" aria-pressed="false" onclick="selectMode('hard')">
         <span class="mode-tag" data-i18n="HARD">HARD</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
         <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
-        <span class="mode-desc" data-i18n="A shorter term. Less public fatigue. Seven moves per phase.">A shorter term. Less public fatigue. Seven moves per phase.</span>
+        <span class="mode-desc" data-i18n="A shorter term. Less public fatigue. 28 moves per phase.">A shorter term. Less public fatigue. 28 moves per phase.</span>
         <span class="mode-meta" data-i18n="Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk">Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk</span>
       </button>
       <button type="button" class="mode-card harder" data-mode="harder" aria-pressed="false" onclick="selectMode('harder')">
         <span class="mode-tag" data-i18n="HARDER">HARDER</span><span class="mode-name" data-i18n="4 Years">4 Years</span>
         <span class="mode-months" data-i18n="48 months · 480 session days">48 months · 480 session days</span>
-        <span class="mode-desc" data-i18n="A longer term. More public fatigue. Fourteen moves per phase.">A longer term. More public fatigue. Fourteen moves per phase.</span>
+        <span class="mode-desc" data-i18n="A longer term. More public fatigue. 56 moves per phase, with lower success odds.">A longer term. More public fatigue. 56 moves per phase, with lower success odds.</span>
         <span class="mode-meta" data-i18n="Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk">Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk</span>
       </button>
     </div>
@@ -155,8 +156,10 @@
         <li data-i18n="Build 75 Evidence to bring articles to the House.">Build 75 Evidence to bring articles to the House.</li>
         <li data-i18n="Win 218 House votes to impeach, then 67 Senate votes to convict and remove.">Win 218 House votes to impeach, then 67 Senate votes to convict and remove.</li>
         <li data-i18n="Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.">Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.</li>
-        <li data-i18n="Adjourn skips unused days. Each month restores capital but brings fatigue and a chance of blowback.">Adjourn skips unused days. Each month restores capital but brings fatigue and a chance of blowback.</li>
+        <li data-i18n="Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.">Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.</li>
         <li data-i18n="Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.">Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.</li>
+        <li data-i18n="Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.">Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.</li>
+        <li data-i18n="Public support shifts after every move and active-play day. Paused time does not affect it.">Public support shifts after every move and active-play day. Paused time does not affect it.</li>
       </ol>
     </section>
     <button type="button" id="startButton" disabled>

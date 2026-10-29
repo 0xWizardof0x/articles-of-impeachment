@@ -54,7 +54,7 @@ context.assert = assert;
 // Inspect all player-facing message paths, including both sides of random branches.
 run(`
 const verifyMessage = value => {
-  if (typeof value === 'number' || value == null || value.date || value === '' || /^━+$/.test(value)) return;
+  if (typeof value === 'number' || value == null || value.date || value === '' || /^[+-]?[0-9]+$/.test(value) || /^━+$/.test(value)) return;
   const key = typeof value === 'string' ? value : value.key;
   for (const locale of Object.keys(TRANSLATIONS)) {
     assert.ok(Object.hasOwn(TRANSLATIONS[locale], key), locale + ' missing: ' + key);
@@ -101,7 +101,44 @@ for (const phase of ['investigation','house','senate']) { S.phase=phase;S.turn=S
 S.phase='senate';S.senate=67;S.over=false;checkPhase();verifyMessage(lastVerdict.headline);verifyMessage(lastVerdict.body);
 S.phase='investigation';S.senate=0;S.turn=1;S.over=false;S.support=0;Math.random=()=>0.99;endTurn('clock');verifyMessage(lastVerdict.body);
 `);
+// Expanded pools stay exactly double in Harder in every phase.
+run(`
+assert.equal(Object.values(ACTIONS).flat().length,168);
+const allIds=Object.values(ACTIONS).flat().map(a=>a.id);assert.equal(new Set(allIds).size,168);
+for (const phase of Object.keys(ACTIONS)) {
+ S.phase=phase;S.mode='hard';assert.equal(availableActions().length,28);
+ S.mode='harder';assert.equal(availableActions().length,56);
+ for (const action of ACTIONS[phase]) {
+  assert.ok(action.cost>0 && action.days>0 && action.days<=10);
+  S.support=50;S.mode='hard';const hardOdds=moveChance(action);S.mode='harder';assert.equal(moveChance(action),hardOdds-8);
+  for (const roll of [0,0.999999]) {
+   S.evidence=50;S.house=100;S.senate=30;S.support=50;Math.random=()=>roll;
+   assert.equal(action.run().succeeded,roll===0);
+   assert.ok(S.support>=0 && S.support<=100);
+  }
+ }
+}
+// All adverse event types halve the pre-event balance exactly once, including odd/zero balances.
+const badEvents=EVENTS.filter(e=>e.tone==='bad');
+for (let i=0;i<badEvents.length;i++) for(const capital of [0,1,49,84,85,120]) {
+ S.capital=capital;Math.random=()=>(i+0.1)/badEvents.length;rollEvent('bad');assert.equal(S.capital,Math.floor(capital/2));
+ S.log.slice(-2).forEach(e=>verifyMessage(e.text));
+}
+// A failed move still spends its listed time and political capital.
+S.mode='hard';S.phase='investigation';S.over=false;S.turn=1;S.maxTurns=24;S.daysLeft=10;S.capital=50;S.evidence=30;S.support=50;
+document.getElementById('overlay').classList.remove('show');CALENDAR_CLOCK.manuallyPaused=false;CALENDAR_CLOCK.lastNow=null;
+Math.random=()=>0.999999;const failedMove=ACTIONS.investigation[0];doAction(failedMove);
+assert.equal(S.capital,50-failedMove.cost);assert.equal(S.daysLeft,10-failedMove.days);assert.ok(S.evidence<30);
+// Active polling can move support in either direction, never outside 0–100.
+S.support=50;Math.random=()=>0;shiftPublicOpinion('day');assert.equal(S.support,49);
+Math.random=()=>0.99;shiftPublicOpinion('day');assert.equal(S.support,50);
+S.support=0;Math.random=()=>0;shiftPublicOpinion('day');assert.equal(S.support,0);
+S.support=100;Math.random=()=>0.99;shiftPublicOpinion('day');assert.equal(S.support,100);
+// A full no-spend month recovers capital, then any blowback halves the recovered amount.
+S.support=50;S.evidence=20;S.capital=4;S.turn=1;S.over=false;S.daysLeft=1;
+const rolls=[0,0.99,0,0.2,0];Math.random=()=>rolls.shift() ?? 0.99;endTurn('clock');assert.equal(S.capital,12);assert.equal(S.turn,2);
+`);
 // A reduced-motion start has no animation delay.
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
-console.log('PASS: 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');
+console.log('PASS: 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

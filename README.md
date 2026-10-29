@@ -19,6 +19,7 @@ Then open <http://localhost:8000>.
 - Choose a language and a two-year **Hard** or four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
 - The gavel animates before play begins; reduced-motion preferences skip the animation.
 - Browse **28 moves per phase in Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
+- Playable moves come first in the carousel. Unavailable moves follow them, with the original order preserved within each group. Capital, days, and prerequisite changes update the order while retaining card focus and matching pagination dots.
 - Every move has a success roll. Cards disclose the current success chance, progress rewards, support changes, failure losses, and any evidence cost. Higher support improves the odds; Harder applies an additional eight-percentage-point penalty before the probability bounds.
 - Quiet preparation, research, coalition work, public outreach, pressure, gambles, and compromises provide different costs, durations, odds, and consequences. Failed moves still spend their full listed capital and days.
 - Public support fluctuates after every move and every active-play calendar day, alongside monthly fatigue and events. The dashboard shows the latest net change. Paused and hidden-tab time never generates opinion shifts.

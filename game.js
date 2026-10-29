@@ -4550,6 +4550,16 @@ function availableActions() {
   return ACTIONS[S.phase].filter(a => !a.extended || MODES[S.mode].extendedToolkit);
 }
 
+function isMoveReady(action) {
+  return (!action.requires || action.requires()) && S.capital >= action.cost && S.daysLeft >= action.days;
+}
+
+function orderedActions() {
+  const actions = availableActions();
+  // Preserve the original order inside each group. Pausing does not reshuffle cards.
+  return [...actions.filter(isMoveReady), ...actions.filter(action => !isMoveReady(action))];
+}
+
 /* =========================================================
    FEED
    ========================================================= */
@@ -4669,8 +4679,8 @@ function render() {
 
 /* =========================================================
    MOVE CAROUSEL
-   Keep cards stable within a phase so a move never resets
-   scroll position or steals keyboard focus during a render.
+   Reuse cards within a phase, with ready moves before unavailable
+   moves. Keep focus and the current card when their order changes.
    No autoplay: players decide when the cards move.
    ========================================================= */
 const moveTrack = document.getElementById('actions');
@@ -4727,6 +4737,7 @@ function updateCarouselControls() {
   // dot when it is still on screen; otherwise mark the first visible card.
   let selected = carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0);
   if (!carouselTarget && !visible.some(({ index }) => index === selected)) selected = visible[0]?.index ?? 0;
+  moveTrack.dataset.selectedIndex = String(selected);
   cards.forEach((card, index) => {
     card.classList.toggle('is-current', index === selected);
     card.setAttribute('aria-current', index === selected ? 'true' : 'false');
@@ -4770,8 +4781,11 @@ function scrollMoves(direction) {
 }
 
 function renderMoves() {
-  const actions = availableActions();
+  const actions = orderedActions();
   const phaseKey = `${S.mode}:${S.phase}:${language}`;
+  let reordered = false;
+  let anchorId;
+  let focusedElement;
   if (movePhaseKey !== phaseKey) {
     const hadFocus = moveTrack.contains(document.activeElement);
     movePhaseKey = phaseKey;
@@ -4797,19 +4811,39 @@ function renderMoves() {
       const dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'move-dot';
-      dot.setAttribute('aria-label', tr`Show move ${index + 1}: ${action.name}`);
-      dot.title = tr`Move ${index + 1}: ${action.name}`;
+      dot.dataset.moveId = action.id;
       dot.setAttribute('aria-controls', 'actions');
-      dot.onclick = () => scrollToMove(index);
       moveDots.appendChild(dot);
     });
     moveTrack.scrollTo({ left: 0, behavior: 'instant' });
     if (hadFocus) moveTrack.focus({ preventScroll: true });
+  } else if (actions.some((action, index) => moveTrack.children[index].dataset.moveId !== action.id)) {
+    reordered = true;
+    const cards = Array.from(moveTrack.children);
+    const dots = Array.from(moveDots.children);
+    focusedElement = document.activeElement;
+    const selected = carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0);
+    anchorId = (cards.includes(focusedElement) ? focusedElement : cards[selected])?.dataset.moveId;
+    const anchor = actions.find(action => action.id === anchorId);
+    if (!anchor || !isMoveReady(anchor)) anchorId = actions.find(isMoveReady)?.id ?? anchorId;
+    settleCarousel();
+    const cardById = new Map(cards.map(card => [card.dataset.moveId, card]));
+    const dotById = new Map(dots.map(dot => [dot.dataset.moveId, dot]));
+    actions.forEach((action, index) => {
+      const card = cardById.get(action.id);
+      const dot = dotById.get(action.id);
+      if (moveTrack.children[index] !== card) moveTrack.insertBefore(card, moveTrack.children[index]);
+      if (moveDots.children[index] !== dot) moveDots.insertBefore(dot, moveDots.children[index]);
+    });
   }
   let playable = 0;
   const paused = isCalendarPaused();
   actions.forEach((action, index) => {
     const button = moveTrack.children[index];
+    const dot = moveDots.children[index];
+    dot.setAttribute('aria-label', tr`Show move ${index + 1}: ${action.name}`);
+    dot.title = tr`Move ${index + 1}: ${action.name}`;
+    dot.onclick = () => scrollToMove(index);
     const locked = Boolean(action.requires && !action.requires());
     const affordable = S.capital >= action.cost && S.daysLeft >= action.days;
     const disabled = S.over || paused || locked || !affordable;
@@ -4837,6 +4871,14 @@ function renderMoves() {
     button.querySelector('.move-status').textContent = t(status);
     button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
   });
+  if (reordered) {
+    const index = Math.max(0, actions.findIndex(action => action.id === anchorId));
+    moveTrack.dataset.selectedIndex = String(index);
+    moveTrack.scrollTo({ left: (carouselIsRTL() ? -1 : 1) * moveDestination(moveTrack.children[index]), behavior: 'instant' });
+    if (moveTrack.contains(focusedElement) || moveDots.contains(focusedElement)) {
+      (focusedElement.disabled ? moveTrack : focusedElement).focus({ preventScroll: true });
+    }
+  }
   document.getElementById('movesSummary').textContent = tr`Moves: ${actions.length} · Available: ${playable}`;
   if (!playable && !paused && !S.over) document.getElementById('movesSummary').textContent += ' · ' + t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
   scheduleCarouselUpdate();

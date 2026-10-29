@@ -20,6 +20,13 @@ class Element {
   setAttribute(k,v) { this.attrs[k] = v; }
   getAttribute(k) { return this.attrs[k]; }
   appendChild(el) { el.offsetLeft = this.children.length * 192; this.children.push(el); }
+  insertBefore(el, reference) {
+    const oldIndex = this.children.indexOf(el);
+    if (oldIndex >= 0) this.children.splice(oldIndex, 1);
+    const index = reference ? this.children.indexOf(reference) : this.children.length;
+    this.children.splice(index, 0, el);
+    this.children.forEach((child, i) => { child.offsetLeft = i * 192; });
+  }
   replaceChildren(...els) { this.children = els; }
   querySelector(key) { if (!this.sub.has(key)) this.sub.set(key,new Element()); return this.sub.get(key); }
   querySelectorAll() { return []; }
@@ -139,6 +146,44 @@ S.support=50;S.evidence=20;S.capital=4;S.turn=1;S.over=false;S.daysLeft=1;
 const rolls=[0,0.99,0,0.2,0];Math.random=()=>rolls.shift() ?? 0.99;endTurn('clock');assert.equal(S.capital,12);assert.equal(S.turn,2);
 `);
 // A reduced-motion start has no animation delay.
+run(`
+// Ready moves always lead, while both groups retain the source order.
+S.over=false;S.mode='harder';S.phase='investigation';S.evidence=0;S.capital=25;S.daysLeft=3;
+CALENDAR_CLOCK.manuallyPaused=false;applyLanguage('en');
+const assertMoveOrder = () => {
+ const source=availableActions();
+ const expected=[...source.filter(isMoveReady),...source.filter(a=>!isMoveReady(a))];
+ assert.deepEqual(orderedActions().map(a=>a.id),expected.map(a=>a.id));
+ assert.deepEqual(Array.from(moveTrack.children,c=>c.dataset.moveId),expected.map(a=>a.id));
+ assert.deepEqual(Array.from(moveDots.children,d=>d.dataset.moveId),expected.map(a=>a.id));
+ const firstBlocked=expected.findIndex(a=>!isMoveReady(a));
+ if(firstBlocked>=0) assert.ok(expected.slice(firstBlocked).every(a=>!isMoveReady(a)));
+};
+renderMoves();assertMoveOrder();
+const originalCards=new Map(Array.from(moveTrack.children,c=>[c.dataset.moveId,c]));
+const focusedMove=orderedActions().find(isMoveReady);originalCards.get(focusedMove.id).focus();
+S.capital=120;S.daysLeft=10;renderMoves();assertMoveOrder();
+assert.equal(document.activeElement,originalCards.get(focusedMove.id));
+assert.ok(Array.from(moveTrack.children).every(c=>originalCards.get(c.dataset.moveId)===c),'reuse card nodes');
+S.capital=focusedMove.cost;S.daysLeft=focusedMove.days;renderMoves();assert.ok(isMoveReady(focusedMove));assertMoveOrder();
+S.capital=0;renderMoves();assertMoveOrder();assert.equal(document.activeElement,moveTrack);
+assert.ok(Array.from(moveTrack.children).every(c=>c.disabled));
+S.capital=25;S.daysLeft=3;renderMoves();assertMoveOrder();
+const beforePause=orderedActions().map(a=>a.id);CALENDAR_CLOCK.manuallyPaused=true;renderMoves();
+assert.deepEqual(orderedActions().map(a=>a.id),beforePause);assert.ok(Array.from(moveTrack.children).every(c=>c.disabled));
+CALENDAR_CLOCK.manuallyPaused=false;renderMoves();
+// Each dot keeps its current card and number after repeated partitions.
+for(let i=0;i<moveDots.children.length;i++) {
+ const dot=moveDots.children[i];dot.onclick();assert.equal(Number(moveTrack.dataset.selectedIndex),i);
+ assert.equal(dot.getAttribute('aria-label'),t(msg\`Show move \${i+1}: \${orderedActions()[i].name}\`));
+}
+// The evidence-gated move also returns to its original group when unlocked.
+S.phase='senate';S.capital=120;S.daysLeft=10;S.evidence=0;renderMoves();assertMoveOrder();
+const gated=availableActions().find(a=>a.requires);assert.ok(gated);assert.equal(isMoveReady(gated),false);
+S.evidence=85;renderMoves();assert.equal(isMoveReady(gated),true);assertMoveOrder();
+applyLanguage('fa');renderMoves();assertMoveOrder();moveDots.children[5].onclick();assert.ok(moveTrack.scrollLeft<=0);
+S.mode='hard';renderMoves();assert.equal(moveTrack.children.length,28);assertMoveOrder();
+`);
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
-console.log('PASS: 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');
+console.log('PASS: ready-first card order, stable focus and nodes, reordered dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

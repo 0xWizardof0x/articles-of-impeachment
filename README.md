@@ -18,7 +18,7 @@ Then open <http://localhost:8000>.
 
 - Choose a two-year **Hard** campaign or a four-year **Harder** campaign.
 - Browse the move carousel to build evidence and political support.
-- Every 24 seconds of active play consumes one session day. Moves also spend their listed days.
+- Every 12 seconds of active play consumes one session day. Moves also spend their listed days.
 - The calendar pauses when you pause the game, hide the tab, or open a campaign dialog.
 - Game state lives in the current page session; reloading starts over.
 

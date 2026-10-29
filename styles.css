@@ -301,7 +301,7 @@
     border-radius: 6px;
     padding: 13px 14px;
     cursor: pointer;
-    transition: all .18s ease;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
     text-align: left;
     color: inherit;
     font-family: inherit;
@@ -556,7 +556,8 @@
     position: relative; display: grid; grid-auto-flow: column;
     grid-template-columns: none; grid-auto-columns: calc((100% - 48px) / 5);
     gap: 12px; overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: var(--gold-dim) var(--panel);
+    scroll-snap-type: x mandatory; scroll-behavior: smooth;
+    scrollbar-width: thin; scrollbar-color: var(--gold-dim) var(--panel);
     padding: 5px 0 10px; margin-bottom: 0; min-width: 0; touch-action: pan-x pan-y;
   }
   #actions .action {
@@ -567,13 +568,25 @@
   #actions .action .desc { font-size: 12px; line-height: 1.6; margin-bottom: 18px; }
   #actions .action .cost { margin-top: auto; line-height: 1.6; }
   #actions .action:disabled { opacity: .6; }
+  #actions .action.is-current {
+    border-color: var(--gold);
+    background: #25251f;
+    box-shadow: inset 0 0 0 1px rgba(212,165,55,.3);
+  }
+  #actions .action:hover, #actions .action:focus-visible {
+    border-color: #f5d47e;
+    background: #303025;
+    box-shadow: inset 0 0 0 2px rgba(245,212,126,.5), 0 2px 8px rgba(212,165,55,.18);
+  }
   .move-status { display: block; margin-top: 9px; font-size: 10.5px; color: var(--muted); }
   .action:not(:disabled) .move-status { color: #9ed7b8; }
   .carousel-bottom { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: 8px; }
   .carousel-hint { color: var(--muted); font-size: 10.5px; }
+  .move-pagination { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  #moveOptionsLabel { font-size: 11px; font-weight: 600; color: var(--text); }
   .move-dots { display: flex; flex-wrap: wrap; gap: 2px; }
   .move-dot { padding: 8px; background: none; border: 0; cursor: pointer; border-radius: 5px; }
-  .move-dot::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+  .move-dot::after { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--line); transition: background-color 160ms ease; }
   .move-dot[aria-current="true"]::after { background: var(--gold); }
   .move-dot:hover::after { background: var(--gold-dim); }
   button:focus-visible, #actions:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }

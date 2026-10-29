@@ -664,6 +664,19 @@ const moveTrack = document.getElementById('actions');
 const moveDots = document.getElementById('moveDots');
 let movePhaseKey = '';
 let carouselFrame = null;
+let carouselTarget = null;
+let carouselSettleTimer = null;
+
+function settleCarousel() {
+  clearTimeout(carouselSettleTimer);
+  carouselSettleTimer = null;
+  carouselTarget = null;
+  scheduleCarouselUpdate();
+}
+
+function moveDestination(card) {
+  return Math.max(0, Math.min(card.offsetLeft, moveTrack.scrollWidth - moveTrack.clientWidth));
+}
 
 // Keep the feed immediately after the campaign-stat dashboard.
 document.getElementById('dashboard').insertAdjacentElement(
@@ -686,15 +699,20 @@ function updateCarouselControls() {
   const visible = cards.map((card, index) => ({ card, index })).filter(({ card }) =>
     card.offsetLeft + card.offsetWidth > left + 3 && card.offsetLeft < right - 3
   );
-  document.getElementById('movesPrev').disabled = left <= 2;
-  document.getElementById('movesNext').disabled = left >= max - 2 || !cards.length;
+  const navigationLeft = carouselTarget?.left ?? left;
+  document.getElementById('movesPrev').disabled = navigationLeft <= 2;
+  document.getElementById('movesNext').disabled = navigationLeft >= max - 2 || !cards.length;
   document.getElementById('movesRange').textContent = visible.length
     ? `${visible[0].index + 1}–${visible[visible.length - 1].index + 1} / ${cards.length}`
     : `0 / ${cards.length}`;
   // Several final cards share a clamped destination. Mark the requested
   // dot when it is still on screen; otherwise mark the first visible card.
-  let selected = Number(moveTrack.dataset.selectedIndex || 0);
-  if (!visible.some(({ index }) => index === selected)) selected = visible[0]?.index ?? 0;
+  let selected = carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0);
+  if (!carouselTarget && !visible.some(({ index }) => index === selected)) selected = visible[0]?.index ?? 0;
+  cards.forEach((card, index) => {
+    card.classList.toggle('is-current', index === selected);
+    card.setAttribute('aria-current', index === selected ? 'true' : 'false');
+  });
   Array.from(moveDots.children).forEach((dot, index) => {
     dot.setAttribute('aria-current', index === selected ? 'true' : 'false');
   });
@@ -704,25 +722,31 @@ function scrollToMove(index) {
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   index = clamp(index, 0, cards.length - 1);
+  clearTimeout(carouselSettleTimer);
+  carouselTarget = { index, left: moveDestination(cards[index]) };
   moveTrack.dataset.selectedIndex = String(index);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   moveTrack.scrollTo({
-    left: Math.min(cards[index].offsetLeft, moveTrack.scrollWidth - moveTrack.clientWidth),
+    left: carouselTarget.left,
     behavior: reduceMotion ? 'instant' : 'smooth'
   });
+  // Also settle when the destination is already in view and no scroll event fires.
+  carouselSettleTimer = setTimeout(settleCarousel, 180);
   scheduleCarouselUpdate();
 }
 
 function scrollMoves(direction) {
   const cards = Array.from(moveTrack.children);
-  const left = moveTrack.scrollLeft;
+  if (!cards.length) return;
+  // Rapid clicks continue from the requested destination, not an in-flight frame.
+  const left = carouselTarget?.left ?? moveTrack.scrollLeft;
   let index;
   if (direction > 0) {
-    index = cards.findIndex(card => card.offsetLeft > left + 3);
+    index = cards.findIndex(card => moveDestination(card) > left + 3);
     if (index < 0) index = cards.length - 1;
   } else {
     index = cards.length - 1;
-    while (index > 0 && cards[index].offsetLeft >= left - 3) index--;
+    while (index > 0 && moveDestination(cards[index]) >= left - 3) index--;
   }
   scrollToMove(index);
 }
@@ -733,6 +757,7 @@ function renderMoves() {
   if (movePhaseKey !== phaseKey) {
     const hadFocus = moveTrack.contains(document.activeElement);
     movePhaseKey = phaseKey;
+    settleCarousel();
     moveTrack.replaceChildren();
     moveDots.replaceChildren();
     moveTrack.dataset.selectedIndex = '0';
@@ -753,11 +778,12 @@ function renderMoves() {
       dot.type = 'button';
       dot.className = 'move-dot';
       dot.setAttribute('aria-label', `Show move ${index + 1}: ${action.name}`);
+      dot.title = `Move ${index + 1}: ${action.name}`;
       dot.setAttribute('aria-controls', 'actions');
       dot.onclick = () => scrollToMove(index);
       moveDots.appendChild(dot);
     });
-    moveTrack.scrollLeft = 0;
+    moveTrack.scrollTo({ left: 0, behavior: 'instant' });
     if (hadFocus) moveTrack.focus({ preventScroll: true });
   }
   let playable = 0;
@@ -790,7 +816,21 @@ function renderMoves() {
 
 document.getElementById('movesPrev').addEventListener('click', () => scrollMoves(-1));
 document.getElementById('movesNext').addEventListener('click', () => scrollMoves(1));
-moveTrack.addEventListener('scroll', scheduleCarouselUpdate, { passive: true });
+moveTrack.addEventListener('scroll', () => {
+  clearTimeout(carouselSettleTimer);
+  carouselSettleTimer = setTimeout(settleCarousel, 180);
+  scheduleCarouselUpdate();
+}, { passive: true });
+moveTrack.addEventListener('scrollend', () => {
+  if (!carouselTarget || Math.abs(moveTrack.scrollLeft - carouselTarget.left) <= 2) settleCarousel();
+});
+// Hand control back immediately when the player swipes or scrolls directly.
+for (const eventName of ['pointerdown', 'touchstart', 'wheel']) {
+  moveTrack.addEventListener(eventName, () => {
+    delete moveTrack.dataset.selectedIndex;
+    settleCarousel();
+  }, { passive: true });
+}
 moveTrack.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -801,20 +841,20 @@ moveTrack.addEventListener('keydown', event => {
     scrollToMove(event.key === 'Home' ? 0 : moveTrack.children.length - 1);
   }
 });
-window.addEventListener('resize', scheduleCarouselUpdate);
+window.addEventListener('resize', settleCarousel);
 if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).observe(moveTrack);
 
 function log(text, kind = '') { S.log.push({ text, kind }); }
 
 /* =========================================================
-   ACTIVE-PLAY CALENDAR — 24 seconds = 1 remaining session day
+   ACTIVE-PLAY CALENDAR — 12 seconds = 1 remaining session day
    - performance.now() prevents wall-clock adjustments affecting play.
    - Only one interval exists; starting a new game always clears it.
    - Hidden tabs, explicit pause and open dialogs preserve the fraction
      of the current day, without accruing background catch-up time.
    - Moves keep their existing day costs; a move never resets the clock.
    ========================================================= */
-const DAY_DURATION_MS = 24_000;
+const DAY_DURATION_MS = 12_000;
 const CALENDAR_CLOCK = {
   elapsedMs: 0,
   lastNow: null,
@@ -845,7 +885,7 @@ function renderCalendarClock() {
   pause.disabled = !S.mode || S.over;
   pause.textContent = CALENDAR_CLOCK.manuallyPaused ? 'Resume' : 'Pause';
   pause.setAttribute('aria-pressed', String(CALENDAR_CLOCK.manuallyPaused));
-  let message = '24 seconds = 1 session day';
+  let message = '12 seconds = 1 session day';
   if (S.over) message = 'Campaign ended · clock stopped';
   else if (!S.mode) message = 'Choose a campaign to start the clock';
   else if (CALENDAR_CLOCK.manuallyPaused) message = 'Paused · no calendar time lost';
@@ -1112,7 +1152,7 @@ function startGame(modeId) {
   log(`The term ends ${termEndString()}. ${m.months} months, ${m.daysPerMonth} session days a month.`, 'sys');
   if (m.extendedToolkit) log('Extended Toolkit unlocked: 14 moves per phase instead of 7.', 'gold');
   log(`Blowback is checked after each monthly turn: ${Math.round(m.blowbackChance * 100)}% risk. Breakthroughs roll separately.`, 'sys');
-  log('The calendar is live: 24 seconds of active play costs one session day. Moves also spend their listed days.', 'sys');
+  log('The calendar is live: 12 seconds of active play costs one session day. Moves also spend their listed days.', 'sys');
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');
 
   render();

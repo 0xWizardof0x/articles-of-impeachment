@@ -35,11 +35,11 @@
       <div class="cal-block clock-block" aria-label="Active-play calendar clock">
         <span class="cal-cap">Next day expires in</span>
         <div class="clock-row">
-          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires">00:24</strong>
+          <strong id="dayCountdown" role="timer" aria-live="off" aria-label="Time until a session day expires">00:12</strong>
           <button type="button" id="clockPause" aria-pressed="false" disabled>Pause</button>
         </div>
         <div class="clock-meter" aria-hidden="true"><i id="clockFill"></i></div>
-        <span id="clockStatus" role="status">24 seconds = 1 session day</span>
+        <span id="clockStatus" role="status">12 seconds = 1 session day</span>
       </div>
     </div>
     <div class="term-wrap">
@@ -104,7 +104,10 @@
       </div>
       <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
       <div class="carousel-bottom">
-        <div id="moveDots" class="move-dots" role="group" aria-label="Jump to a move"></div>
+        <div class="move-pagination">
+          <span id="moveOptionsLabel">Move Options</span>
+          <div id="moveDots" class="move-dots" role="group" aria-labelledby="moveOptionsLabel"></div>
+        </div>
         <span class="carousel-hint">Swipe or use the arrows · moves update with your campaign</span>
       </div>
     </section>
@@ -125,7 +128,7 @@
   <div class="start-modal">
     <h2>Choose Your Calendar</h2>
     <p class="start-sub">The term length changes everything. The rules do not.</p>
-    <p class="clock-rules">The clock is live: <b>24 seconds of active play = 1 session day.</b><br>
+    <p class="clock-rules">The clock is live: <b>12 seconds of active play = 1 session day.</b><br>
       Moves also spend their listed days. When the 10 days run out, the month advances.<br>
       Paused, hidden-tab and dialog time does not count.</p>
     <div class="mode-grid">

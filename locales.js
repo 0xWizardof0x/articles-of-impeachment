@@ -2,6 +2,10 @@
 // Preserve all numbered placeholders when editing a translation.
 const TRANSLATIONS = {
   "es": {
+    "Sound effects": "Efectos de sonido",
+    "Sound on": "Sonido activado",
+    "Sound off": "Sonido desactivado",
+    "Sound unavailable": "Sonido no disponible",
     "Success chance": "Probabilidad de éxito",
     "Language": "Idioma",
     "Articles of Impeachment": "Artículos de juicio político",
@@ -423,6 +427,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "El apoyo cambia tras cada movimiento y día de juego activo. El tiempo en pausa no influye."
   },
   "fr": {
+    "Sound effects": "Effets sonores",
+    "Sound on": "Son activé",
+    "Sound off": "Son désactivé",
+    "Sound unavailable": "Son indisponible",
     "Success chance": "Chance de réussite",
     "Language": "Langue",
     "Articles of Impeachment": "Articles de mise en accusation",
@@ -844,6 +852,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "Le soutien évolue après chaque action et jour de jeu actif. Les pauses n’ont aucun effet."
   },
   "ko": {
+    "Sound effects": "효과음",
+    "Sound on": "소리 켜짐",
+    "Sound off": "소리 꺼짐",
+    "Sound unavailable": "소리를 사용할 수 없음",
     "Success chance": "성공 확률",
     "Language": "언어",
     "Articles of Impeachment": "대통령 탄핵안",
@@ -1265,6 +1277,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "국민 지지는 행동과 실제 플레이 하루마다 변합니다. 일시정지 시간에는 변하지 않습니다."
   },
   "fa": {
+    "Sound effects": "جلوه‌های صوتی",
+    "Sound on": "صدا روشن",
+    "Sound off": "صدا خاموش",
+    "Sound unavailable": "صدا در دسترس نیست",
     "Success chance": "احتمال موفقیت",
     "Language": "زبان",
     "Articles of Impeachment": "مواد استیضاح",
@@ -1686,6 +1702,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "حمایت پس از هر حرکت و هر روز بازی فعال تغییر می‌کند. زمان مکث اثری ندارد."
   },
   "he": {
+    "Sound effects": "אפקטים קוליים",
+    "Sound on": "צליל פעיל",
+    "Sound off": "צליל כבוי",
+    "Sound unavailable": "הצליל אינו זמין",
     "Success chance": "סיכויי הצלחה",
     "Language": "שפה",
     "Articles of Impeachment": "סעיפי הדחה",
@@ -2107,6 +2127,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "התמיכה משתנה אחרי כל מהלך ויום משחק פעיל. זמן בהשהיה לא משפיע."
   },
   "zh": {
+    "Sound effects": "音效",
+    "Sound on": "声音已开启",
+    "Sound off": "声音已关闭",
+    "Sound unavailable": "声音不可用",
     "Success chance": "成功率",
     "Language": "语言",
     "Articles of Impeachment": "总统弹劾案",
@@ -2528,6 +2552,10 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "每次行动和每个有效游玩日后，公众支持都会波动。暂停时间不会影响支持。"
   },
   "ja": {
+    "Sound effects": "効果音",
+    "Sound on": "サウンドオン",
+    "Sound off": "サウンドオフ",
+    "Sound unavailable": "サウンドを利用できません",
     "Success chance": "成功率",
     "Language": "言語",
     "Articles of Impeachment": "大統領弾劾条項",

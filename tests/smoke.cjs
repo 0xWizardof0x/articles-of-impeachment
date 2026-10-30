@@ -257,6 +257,20 @@ assert.equal(document.getElementById('dispatchPeek').dataset.tone,'good','a quie
 `);
 reduced=true;run(`animations.length=0;S.capital=0;renderMoves();assert.equal(animations.length,0);assert.equal(document.getElementById('deckExits').children.length,0);`);
 run(`log('A new result','good');renderFeed();assert.equal(animations.length,0,'reduced motion skips dispatch effects');`);
+run(`
+['Sound effects','Sound on','Sound off','Sound unavailable'].forEach(verifyMessage);
+const soundCues=[];window.GameAudio={play:name=>soundCues.push(name),stop:()=>{}};
+S.over=false;
+log('Sound test success','good');renderFeed();assert.deepEqual(soundCues,['success']);
+renderFeed();applyLanguage('en');assert.deepEqual(soundCues,['success'],'rendering and translation never replay audio');
+log(msg\`PUBLIC OPINION — Support \${40}% → \${42}%.\`,'good','day');renderFeed();assert.equal(soundCues.length,1,'daily polls are silent');
+log(msg\`BLOWBACK — Political capital halved: \${80} → \${40} (rounded down).\`,'bad');renderFeed();assert.equal(soundCues.at(-1),'blowback');
+log(msg\`\${'BREAKTHROUGH'} — \${'A second witness appears.'}\`,'good');log('No blowback this turn. The administration fails to land a counterattack.','sys');renderFeed();assert.equal(soundCues.at(-1),'breakthrough');
+log('Phase advance','gold');renderFeed();assert.equal(soundCues.at(-1),'phase');
+soundCues.length=0;S.over=true;log('Campaign complete','good');renderFeed();assert.equal(soundCues.length,0,'the verdict owns the final cue');
+S.over=false;finish(true,'CONVICTED','');assert.deepEqual(soundCues,['victory']);
+soundCues.length=0;S.over=false;finish(false,'THE TERM ENDS','');assert.deepEqual(soundCues,['defeat']);
+`);
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
 console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

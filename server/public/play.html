@@ -14,6 +14,7 @@
   <header class="game-header">
     <div class="brand"><h1 data-i18n="Articles of Impeachment">Articles of Impeachment</h1><button type="button" class="setting-note" data-open-briefing data-i18n="U.S. political fiction">U.S. political fiction</button></div>
     <div class="header-tools">
+      <button type="button" class="icon-button sound-toggle" data-sound-toggle aria-label="Sound effects" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-slash" d="m16 9 6 6m0-6-6 6"/></svg><span class="sound-label">Sound on</span></button>
       <button type="button" class="icon-button" data-open-leaderboard aria-label="Leaderboards" data-i18n-aria="Leaderboards"><span aria-hidden="true">🏆</span></button>
       <button type="button" class="icon-button" data-open-briefing aria-label="Campaign brief" data-i18n-aria="Campaign brief"><span aria-hidden="true">?</span></button>
       <label class="language-picker"><span class="sr-only" data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
@@ -130,41 +131,51 @@
 
 <div id="startScreen" class="show" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startIntro">
   <div class="start-modal">
+    <div class="start-tools">
     <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
 <option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
 </select></label>
-    <h2 id="startTitle" data-i18n="Call the House to Order">Call the House to Order</h2>
+    <div class="start-utility"><button type="button" class="sound-toggle sound-control" data-sound-toggle aria-label="Sound effects" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-slash" d="m16 9 6 6m0-6-6 6"/></svg><span class="sound-label">Sound on</span></button><button type="button" class="icon-button" data-open-leaderboard aria-label="Leaderboards" data-i18n-aria="Leaderboards">🏆</button></div>
+    </div>
+    <div class="brief-kicker"><span aria-hidden="true">✦</span><span data-i18n="Articles of Impeachment">Articles of Impeachment</span><span aria-hidden="true">✦</span></div>
+    <h2 id="startTitle" data-i18n="Choose your campaign">Choose your campaign</h2>
     <p id="startIntro" data-i18n="Choose your calendar. Read the brief. You control when the clock starts.">Choose your calendar. Read the brief. You control when the clock starts.</p>
     <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
-    <div class="player-fields">
-      <label><span data-i18n="Player name">Player name</span><input id="playerName" type="text" minlength="2" maxlength="24" autocomplete="nickname" dir="auto" aria-describedby="profileNote profileError"></label>
-      <label><span data-i18n="Country / territory">Country / territory</span><select id="playerCountry" aria-describedby="profileNote profileError"></select></label>
-    </div>
-    <p id="profileNote" class="board-note" data-i18n="Use a nickname. Your name, country and score become public only when you post a result.">Use a nickname. Your name, country and score become public only when you post a result.</p>
-    <p id="profileError" role="alert"></p>
-    <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
     <div class="mode-grid" role="group" aria-label="Choose your campaign" data-i18n-aria="Choose your campaign">
       <button type="button" class="mode-card easy" data-mode="easy" aria-pressed="false" onclick="selectMode('easy')">
+        <span class="mode-stars" aria-hidden="true">✦</span><span class="mode-check" aria-hidden="true">✓</span>
+        <span class="mode-emblem" aria-hidden="true"><svg viewBox="0 0 120 100"><path class="emblem-halo" d="M60 7 94 20v30c0 22-34 42-34 42S26 72 26 50V20Z"/><path d="M60 19 83 28v22c0 14-23 29-23 29S37 64 37 50V28Z"/><path d="m46 48 10 10 22-24"/><path class="emblem-laurel" d="M19 77C3 59 5 36 17 22M11 37l9 1M8 49l10 1M11 62l10-2m80 17c16-18 14-41 2-55m6 15-9 1m12 11-10 1m7 12-10-2"/></svg></span>
         <span class="mode-tag" data-i18n="EASY">EASY</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
         <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
         <span class="mode-desc" data-i18n="A gentler introduction. More starting resources, better odds, and 28 cards per phase.">A gentler introduction. More starting resources, better odds, and 28 cards per phase.</span>
         <span class="mode-meta" data-i18n="Monthly: 28–34 capital · support −1 · 35% blowback risk">Monthly: 28–34 capital · support −1 · 35% blowback risk</span>
       </button>
       <button type="button" class="mode-card" data-mode="hard" aria-pressed="false" onclick="selectMode('hard')">
+        <span class="mode-stars" aria-hidden="true">✦ ✦</span><span class="mode-check" aria-hidden="true">✓</span>
+        <span class="mode-emblem" aria-hidden="true"><svg viewBox="0 0 120 100"><circle class="emblem-halo" cx="60" cy="49" r="40"/><path d="M23 79h74M28 72h64M32 39h56L60 23Zm8 6v22m13-22v22m14-22v22m13-22v22M60 23V11m0 0h14v9H60"/><path class="emblem-laurel" d="M14 75C3 57 7 35 19 23m-9 15 9 2M8 52l10 1m88 22c11-18 7-40-5-52m9 15-9 2m11 12-10 1"/></svg></span>
         <span class="mode-tag" data-i18n="HARD">HARD</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
         <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
         <span class="mode-desc" data-i18n="A shorter term. Less public fatigue. 28 moves per phase.">A shorter term. Less public fatigue. 28 moves per phase.</span>
         <span class="mode-meta" data-i18n="Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk">Monthly: 20–26 capital · support −1 (+fatigue) · 65% blowback risk</span>
       </button>
       <button type="button" class="mode-card harder" data-mode="harder" aria-pressed="false" onclick="selectMode('harder')">
+        <span class="mode-stars" aria-hidden="true">✦ ✦ ✦</span><span class="mode-check" aria-hidden="true">✓</span>
+        <span class="mode-emblem" aria-hidden="true"><svg viewBox="0 0 120 100"><path class="emblem-halo" d="M60 5 99 27v46L60 95 21 73V27Z"/><path d="m66 16-29 40h23l-6 29 30-42H61Z"/><path class="emblem-laurel" d="m13 30-5 9 5 10-5 10 6 11m92-40 6 9-5 10 5 10-6 11M37 9l-8 5m54-5 8 5M37 91l-8-5m54 5 8-5"/></svg></span>
         <span class="mode-tag" data-i18n="HARDER">HARDER</span><span class="mode-name" data-i18n="4 Years">4 Years</span>
         <span class="mode-months" data-i18n="48 months · 480 session days">48 months · 480 session days</span>
         <span class="mode-desc" data-i18n="A longer term. More public fatigue. 56 moves per phase, with lower success odds.">A longer term. More public fatigue. 56 moves per phase, with lower success odds.</span>
         <span class="mode-meta" data-i18n="Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk">Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk</span>
       </button>
     </div>
-    <section class="quickstart" aria-labelledby="quickstartTitle">
-      <h3 id="quickstartTitle" data-i18n="Quickstart · Your path to a verdict">Quickstart · Your path to a verdict</h3>
+    <div class="verdict-path" aria-label="Quickstart · Your path to a verdict" data-i18n-aria="Quickstart · Your path to a verdict"><div><strong>75</strong><span data-i18n="Evidence">Evidence</span></div><span class="path-arrow" aria-hidden="true">→</span><div><strong>218</strong><span data-i18n="House Votes">House Votes</span></div><span class="path-arrow" aria-hidden="true">→</span><div><strong>67</strong><span data-i18n="Senate Votes">Senate Votes</span></div></div>
+    <div class="player-panel"><div class="player-fields">
+      <label><span data-i18n="Player name">Player name</span><input id="playerName" type="text" minlength="2" maxlength="24" autocomplete="nickname" dir="auto" aria-describedby="profileNote profileError"></label>
+      <label><span data-i18n="Country / territory">Country / territory</span><select id="playerCountry" aria-describedby="profileNote profileError"></select></label>
+    </div>
+    <p id="profileNote" class="board-note" data-i18n="Use a nickname. Your name, country and score become public only when you post a result.">Use a nickname. Your name, country and score become public only when you post a result.</p>
+    <p id="profileError" role="alert"></p></div>
+    <details class="quickstart" aria-labelledby="quickstartTitle">
+      <summary id="quickstartTitle" data-i18n="Quickstart · Your path to a verdict">Quickstart · Your path to a verdict</summary>
       <ol>
         <li data-i18n="Build 75 Evidence to bring articles to the House.">Build 75 Evidence to bring articles to the House.</li>
         <li data-i18n="Win 218 House votes to impeach, then 67 Senate votes to convict and remove.">Win 218 House votes to impeach, then 67 Senate votes to convict and remove.</li>
@@ -174,12 +185,14 @@
         <li data-i18n="Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.">Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.</li>
         <li data-i18n="Public support shifts after every move and active-play day. Paused time does not affect it.">Public support shifts after every move and active-play day. Paused time does not affect it.</li>
       </ol>
-    </section>
+    </details>
+    <div class="launch-panel">
     <button type="button" id="startButton" disabled>
       <svg class="gavel-scene" viewBox="0 0 90 72" aria-hidden="true"><g class="gavel"><rect x="41" y="13" width="9" height="40" rx="3" transform="rotate(-42 45 17)"/><rect x="26" y="9" width="33" height="18" rx="4" transform="rotate(-42 43 18)"/></g><rect class="gavel-block" x="21" y="58" width="47" height="7" rx="3"/><path class="gavel-impact" d="M14 48l-6-5m67 5 6-5M45 52v-7"/></svg>
       <span id="startButtonText" data-i18n="Start the Session">Start the Session</span>
     </button>
     <p id="startHint" role="status"></p>
+    </div>
   </div>
 </div>
 
@@ -191,6 +204,7 @@
     <p id="scoreIdentity" class="board-note"></p>
     <button type="button" id="postScore" data-i18n="Post score">Post score</button>
     <p id="scoreStatus" role="status"></p>
+    <button type="button" class="sound-toggle sound-control" data-sound-toggle aria-label="Sound effects" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-slash" d="m16 9 6 6m0-6-6 6"/></svg><span class="sound-label">Sound on</span></button>
     <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
     <button onclick="location.reload()" data-i18n="Run It Back">Run It Back</button>
   </div>
@@ -241,6 +255,7 @@
 <script src="leaderboard-locales.js"></script>
 <script src="countries.js"></script>
 <script src="i18n.js"></script>
+<script src="sound.js"></script>
 <script src="game.js"></script>
 <script src="leaderboards.js"></script>
 </body>

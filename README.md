@@ -17,7 +17,9 @@ Then open <http://localhost:8000>.
 ## Gameplay
 
 - Choose a language and a two-year **Easy** or **Hard** campaign, or a four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
+- The opening brief presents three illuminated campaign seals: teal shield, gold Capitol and coral lightning. Selection lifts the chosen card and marks it with a check; all three show duration, resources and blowback risk. The 75 → 218 → 67 verdict path stays visible, with the full rules in an expandable Quickstart. Player details and the gavel start control share a compact desktop footer; phones stack the cards and fields without clipping. Every label follows the chosen language, including RTL layouts.
 - The gavel animates before play begins; reduced-motion preferences skip the animation.
+- Original synthesized sound effects accompany the gavel, card navigation/play, success, setbacks, breakthroughs, blowback, phase changes, adjournment and final verdicts. Sound starts only after interaction. A speaker toggle in the opening brief, game header and final result remembers your mute preference. Muting or hiding the tab immediately stops pending sounds; daily opinion polls, re-renders and language changes stay silent. Reduced motion does not mute audio. No music loop, external audio files or sound libraries are loaded, and browsers without Web Audio still play the game normally.
 - Browse **28 cards per phase in Easy and Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
 - The **Deck** shows only cards affordable with current capital and days and with their prerequisites met. Unavailable cards fade and shrink out; remaining cards slide into the gaps. Cards return when resources recover. Playing a card resets the deck to its beginning; dots and accessible labels match the visible cards. Pausing keeps the deck visible. Reduced-motion preferences skip movement and exit animations.
 - The play canvas puts a prominent live result feed above the Deck. It pairs the latest move outcome with its polling consequence, or shows the newest event with its context. A later daily opinion poll becomes its own headline. Successes, setbacks and milestones have distinct colors, impact stamps, light sweeps and particle bursts; blowback uses a stronger red impact and a **½** emblem. Resource changes pop and briefly float their signed deltas. Effects never consume game randomness, and re-renders or language changes do not replay them. Reduced-motion preferences remove animation while preserving every result. The calendar and header are condensed; campaign rules and full dispatches open in sheets that pause the clock. On mobile, the compact emoji-led **Bars of Burden** strip and larger feed sit above a shorter Deck, with only **Adjourn** beneath it at the bottom of the viewport. The core game fits a 375 × 667 portrait viewport at default text size; very small screens, landscape, or enlarged text can scroll instead of clipping controls.
@@ -48,6 +50,7 @@ The selected language is remembered on this device when browser storage is avail
 | `styles.css` | Base theme, briefing and leaderboard styles |
 | `experience.css` | Compact play canvas, 3D carousel and responsive burden bars |
 | `game.js` | Game rules, start flow, move carousel, and calendar clock |
+| `sound.js` | Gesture-unlocked sound synthesis, mute preference and bounded voice cleanup |
 | `i18n.js` | Language preference, message formatting, and text direction |
 | `locales.js` | Seven translation catalogs keyed by English source messages |
 | `tests/smoke.cjs` | Translation coverage, start-flow, and clock regression checks |
@@ -61,6 +64,7 @@ node --check game.js
 node --check i18n.js
 node --check locales.js
 node tests/smoke.cjs
+node tests/sound.cjs
 ```
 
 No Node dependencies are needed. For a browser smoke check, confirm 28/28/56 moves in the three modes, select a move, inspect the displayed odds and support change, and adjourn until a blowback logs the exact capital halving. Check both LTR and RTL carousel navigation and verify that Pause/Resume and hidden-tab behavior preserve the countdown and public support.

@@ -4676,6 +4676,12 @@ function renderFeed() {
     lastDispatchSignature = signature;
     if (canAnimate) {
       animateResult(panel, tone, blowback);
+      // One cue for the final event in this action; quiet daily polling stays silent.
+      if (!S.over && latest?.source !== 'day') {
+        const breakthrough = headline?.text?.values?.[0] === 'BREAKTHROUGH';
+        const cue = blowback ? 'blowback' : breakthrough ? 'breakthrough' : {good: 'success', bad: 'setback', gold: 'phase'}[tone];
+        if (cue) window.GameAudio?.play(cue, {delay: .10});
+      }
     }
   }
 }
@@ -4853,6 +4859,7 @@ function scrollToMove(index) {
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   index = clamp(index, 0, cards.length - 1);
+  if (index !== (carouselTarget?.index ?? nearestMoveIndex())) window.GameAudio?.play('shuffle', {gesture: true});
   clearTimeout(carouselSettleTimer);
   carouselTarget = { index, left: moveDestination(cards[index]) };
   moveTrack.dataset.selectedIndex = String(index);
@@ -5199,6 +5206,8 @@ function toggleCalendarPause() {
   if (!CALENDAR_CLOCK.manuallyPaused) syncCalendarClock();
   if (S.over) return;
   CALENDAR_CLOCK.manuallyPaused = !CALENDAR_CLOCK.manuallyPaused;
+  if (CALENDAR_CLOCK.manuallyPaused) window.GameAudio?.stop();
+  else window.GameAudio?.play('select', {gesture: true});
   CALENDAR_CLOCK.lastNow = isCalendarPaused() ? null : performance.now();
   render();
 }
@@ -5240,6 +5249,7 @@ function doAction(action) {
   if (action.requires && !action.requires()) return;
   if (S.capital < action.cost || S.daysLeft < action.days) return;
 
+  window.GameAudio?.play('card', {gesture: true});
   deckResetRequested = true;
   S.capital -= action.cost;
   S.daysLeft -= action.days;
@@ -5324,6 +5334,7 @@ function endTurn(source = 'manual') {
     // Adjourn deliberately skips the current month's unused time.
     CALENDAR_CLOCK.elapsedMs = 0;
     CALENDAR_CLOCK.lastNow = performance.now();
+    window.GameAudio?.play('adjourn', {gesture: true});
   }
 
   // Finish in the final month instead of displaying a phantom extra month.
@@ -5369,7 +5380,9 @@ function finish(won, headline, body) {
   lastVerdict = { won, headline, body };
   S.over = true;
   stopCalendarClock();
+  window.GameAudio?.stop();
   render();
+  window.GameAudio?.play(won ? 'victory' : 'defeat');
 
   const overlay = document.getElementById('overlay');
   const vt = document.getElementById('verdictText');
@@ -5433,12 +5446,14 @@ let startingSession = false;
 function renderStartHint() {
   document.getElementById('startHint').textContent = startingSession
     ? t('The House will come to order…')
-    : selectedMode ? tr`Selected: ${MODES[selectedMode].name}. The clock is stopped until you start.`
+    : selectedMode ? tr`Selected: ${MODES[selectedMode].tag}. The clock is stopped until you start.`
     : t('Select a mode above to enable Start. The clock is stopped.');
 }
 function selectMode(modeId) {
   if (startingSession || S.mode || !MODES[modeId]) return;
+  window.GameAudio?.play('select', {gesture: true});
   selectedMode = modeId;
+  document.getElementById('startScreen').dataset.campaign = modeId;
   document.querySelectorAll('[data-mode]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.mode === modeId));
   });
@@ -5455,6 +5470,7 @@ function beginSession() {
   document.querySelectorAll('#startScreen [data-mode], #startScreen select, #startScreen input').forEach(el => { el.disabled = true; });
   renderStartHint();
   const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 740;
+  window.GameAudio?.play('gavel', {gesture: true, delay: delay ? .42 : 0});
   setTimeout(() => startGame(selectedMode), delay);
 }
 document.getElementById('startButton').addEventListener('click', beginSession);

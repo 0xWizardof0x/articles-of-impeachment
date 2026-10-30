@@ -3,6 +3,15 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../sound.js'), 'utf8');
+const noteOf = n => 69+12*Math.log2(n.frequency.changes[0].value/440);
+const chiefClasses = new Set([1,2,4,6,9,11]); // C#, D, E, F#, A, B.
+function assertChiefNotes(nodes) {
+  for (const voice of nodes.filter(n=>n.wave?.pulse||n.type==='triangle')) {
+    const note=noteOf(voice);
+    assert.ok(Math.abs(note-Math.round(note))<1e-8,'musical voices use exact equal-tempered notes');
+    assert.ok(chiefClasses.has((Math.round(note)%12+12)%12),'every musical voice stays in the Hail to the Chief palette');
+  }
+}
 
 function setup({saved = null, supported = true, blocked = false, pending = false, samplesAvailable = false} = {}) {
   const contexts = [], nodes = [], storage = new Map(saved ? [['aoi-sound', saved]] : []), events = {};
@@ -40,6 +49,7 @@ function setup({saved = null, supported = true, blocked = false, pending = false
   assert.ok(s.nodes[0].startAt >= .42,'gavel follows the visual strike');
   for (const cue of ['intro','select','shuffle','card','success','setback','breakthrough','blowback','phase','adjourn','pause','resume','victory','defeat']) {
     const before=s.nodes.length; assert.equal(await s.audio.play(cue),true,cue); assert.ok(s.nodes.length>before,cue+' schedules audio');
+    assertChiefNotes(s.nodes.slice(before));
     s.nodes.slice(before).forEach(n=>{assert.ok(n.stopAt > n.startAt && n.stopAt-n.startAt<1,'every voice has a bounded lifetime'); n.onended();});
   }
   assert.equal(await s.audio.play('shuffle'),false,'rapid deck movement is rate limited');
@@ -67,7 +77,7 @@ function setup({saved = null, supported = true, blocked = false, pending = false
     const lead=recorded.nodes.slice(start).filter(n=>n.wave?.pulse).slice(0,notes.length);
     const actual=lead.map(n=>Math.round(69+12*Math.log2(n.frequency.changes[0].value/440)));
     const transpose=actual[0]-notes[0]-shift;
-    assert.ok(['pause','resume'].includes(cue) ? Math.abs(transpose)<=2 : transpose===0,'bounded chime variations; fixed signature themes');
+    assert.equal(transpose,0,'all full themes retain their original key');
     assert.deepEqual(actual,notes.map(n=>n+shift+transpose),'recognizable Hail to the Chief melody');
     assert.ok(Math.abs(lead[2].startAt-lead[1].startAt-.75*60/tempo)<1e-8,'dotted rhythm retained');
     assert.ok(lead.at(-1).stopAt>1.5,'pause/resume are melodic phrases, not clicks');
@@ -77,20 +87,21 @@ function setup({saved = null, supported = true, blocked = false, pending = false
   assert.deepEqual(openingLead.slice(12,24).map(n=>Math.round(69+12*Math.log2(n.frequency.changes[0].value/440))),chief.map(n=>n+12),'opening has a full octave-up reprise');
   assert.ok(Math.max(...opening.map(n=>n.stopAt))-Math.min(...opening.map(n=>n.startAt))>7.5,'opening is a complete fanfare, longer than pause');
   assert.ok(opening.every(n=>!n.disconnected),'the opening fits the voice budget without stealing its own notes');
-  for(const [cue,count] of Object.entries({select:6,shuffle:7,card:7,gavel:5,success:5,setback:5,breakthrough:5,blowback:6,phase:5,adjourn:5,pause:5,resume:5,defeat:5})) {
+  for(const cue of ['select','shuffle','card','gavel','success','setback','breakthrough','blowback','phase','adjourn','defeat']) {
+    const count=6;
     const pitches=[];
     for(let i=0;i<count*3;i++) {
       recorded.audio.stop();recorded.advance(100);start=recorded.nodes.length;await recorded.audio.play(cue);
-      const nodes=recorded.nodes.slice(start),first=nodes.find(n=>n.buffer?.recorded||n.frequency.changes.length);
-      pitches.push(first.buffer?.recorded ? first.playbackRate.value : first.frequency.changes[0].value);
+      const nodes=recorded.nodes.slice(start),lead=nodes.filter(n=>n.wave?.pulse);
+      assertChiefNotes(nodes);
+      pitches.push(Math.round(noteOf(lead[0])));
       if(i>0)assert.notEqual(pitches[i],pitches[i-1],cue+' never repeats its previous pitch, including bag boundaries');
-      // Every harmonic in a phrase transposes by the same amount.
-      const lead=nodes.filter(n=>n.wave?.pulse);
-      if(cue==='success')assert.ok(Math.abs(lead[1].frequency.changes[0].value/lead[0].frequency.changes[0].value-2**(4/12))<1e-8,'variation preserves chord intervals');
+      if(['select','shuffle','card','gavel','adjourn'].includes(cue))assert.equal(lead.length,1,'short actions play one melody note');
+      if(cue==='success')assert.ok(lead.every((n,index)=>index===0||noteOf(n)>noteOf(lead[index-1])),'success retains its rising contour');
     }
     assert.equal(new Set(pitches).size,count,cue+' uses its full pitch range');
-    assert.ok(Math.max(...pitches)/Math.min(...pitches)<1.6,cue+' stays in a recognizable register');
+    assert.ok(Math.max(...pitches)-Math.min(...pitches)<12,cue+' variations stay within one octave');
   }
   recorded.audio.stop();assert.ok(recorded.nodes.every(n=>n.disconnected),'all sample and melody voices clean up');
-  console.log('PASS: 13 cues with 5–7 nonrepeating pitch variants; full 7.7-second opening and octave reprise; fixed opening/conviction keys; intact chime melodies; voice budget; recorded/offline Foley; gesture/mute/hidden/stale cleanup; no game RNG.');
+  console.log('PASS: 11 cues with six nonrepeating Hail to the Chief notes; single-note actions; all pitched leads/bass in the melody palette, recorded and offline; four intact themes; 7.7-second opening; voice budget; gesture/mute/hidden/stale cleanup; no game RNG.');
 })().catch(error => {console.error(error);process.exitCode=1;});

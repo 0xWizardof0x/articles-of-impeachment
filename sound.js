@@ -16,22 +16,19 @@ window.GameAudio = (() => {
     window.crypto?.getRandomValues(seed);
     variationSeed ^= seed[0];
   } catch { /* The clock seed works without crypto. */ }
+  // The note palette comes directly from our Hail to the Chief melody in D.
+  const chief = [69,71,73,74,73,71,69,71,69,66,64,62];
+  const chiefNotes = [...new Set(chief.map(note => 62 + (note - 62) % 12))].sort((a,b) => a-b);
+  const chiefClasses = new Set(chiefNotes.map(note => note % 12));
+  const cueRoots = {select:74, shuffle:74, card:74, gavel:62, success:74,
+    setback:69, breakthrough:74, blowback:62, phase:69, adjourn:66, defeat:74};
   const pitchBags = new Map();
-  const pitchSteps = {
-    select: [-3,-1,0,2,4,5], shuffle: [-3,-2,-1,0,1,2,3],
-    card: [-3,-2,-1,0,1,2,3], gavel: [-2,-1,0,1,2],
-    success: [-2,0,2,4,5], setback: [-3,-2,0,1,3],
-    breakthrough: [-2,0,2,4,5], blowback: [-3,-2,-1,0,1,2],
-    phase: [-2,0,2,3,5], adjourn: [-3,-1,0,2,4],
-    pause: [-2,-1,0,1,2], resume: [-2,-1,0,1,2], defeat: [-3,-2,0,1,3]
-  };
-  function pitchFor(name) {
-    const steps = pitchSteps[name];
-    if (!steps) return 1; // Opening and conviction retain their signature key.
+  function noteFor(name) {
+    if (!Object.hasOwn(cueRoots, name)) return null; // Full themes keep their melody and key.
     let bag = pitchBags.get(name);
     if (!bag) { bag = {remaining: [], last: null}; pitchBags.set(name, bag); }
     if (!bag.remaining.length) {
-      bag.remaining = [...steps];
+      bag.remaining = [...chiefNotes];
       for (let i = bag.remaining.length - 1; i > 0; i--) {
         variationSeed = (Math.imul(variationSeed, 1664525) + 1013904223) >>> 0;
         const j = Math.floor(variationSeed / 4294967296 * (i + 1));
@@ -41,7 +38,15 @@ window.GameAudio = (() => {
       if (bag.remaining[end] === bag.last) [bag.remaining[0], bag.remaining[end]] = [bag.remaining[end], bag.remaining[0]];
     }
     bag.last = bag.remaining.pop();
-    return 2 ** (bag.last / 12);
+    return bag.last;
+  }
+  function nearestChiefNote(note) {
+    // Preserve a phrase's contour while keeping every fundamental in the palette.
+    for (let distance = 0; distance < 12; distance++) {
+      if (chiefClasses.has(((note - distance) % 12 + 12) % 12)) return note - distance;
+      if (chiefClasses.has(((note + distance) % 12 + 12) % 12)) return note + distance;
+    }
+    return note;
   }
   let enabled = true, generation = 0, lastShuffle = -Infinity;
   try { enabled = localStorage.getItem('aoi-sound') !== 'off'; } catch { /* Optional preference. */ }
@@ -141,13 +146,18 @@ window.GameAudio = (() => {
       if (name === 'shuffle' && requested - lastShuffle < 85) return false;
       if (name === 'shuffle') lastShuffle = requested;
       const at = context.currentTime + .012 + Math.max(0, delay);
-      const pitch = pitchFor(name);
+      const selectedNote = noteFor(name);
+      const root = cueRoots[name];
+      const shift = selectedNote === null ? 0 : selectedNote + 12 * Math.round((root - 67.5) / 12) - root;
+      // Keep Foley variations subtle; the audible chime supplies the exact note.
+      const step = selectedNote === null ? 0 : selectedNote - 62;
+      const pitch = 2 ** ((step > 6 ? step - 12 : step) / 12);
       const tone = (frequency, offset, duration, level = .2, type = 'sine', end = frequency) => {
         const oscillator = context.createOscillator();
         if (type === 'pulse') oscillator.setPeriodicWave(pulseWave);
         else oscillator.type = type;
-        oscillator.frequency.setValueAtTime(frequency * pitch, at + offset);
-        oscillator.frequency.exponentialRampToValueAtTime(end * pitch, at + offset + duration);
+        oscillator.frequency.setValueAtTime(frequency, at + offset);
+        oscillator.frequency.exponentialRampToValueAtTime(end, at + offset + duration);
         voice(oscillator, at + offset, duration, level);
       };
       const rustle = (offset, duration, level, frequency) => {
@@ -166,13 +176,13 @@ window.GameAudio = (() => {
       };
       const knock = (offset = 0, level = .75, rate = 1) => {
         if (!sample('wood', offset, level, rate)) {
-          [185, 471, 953].forEach((hz, i) => tone(hz * rate, offset, .20 / (i + 1), level * [.42,.21,.12][i]));
+          [185, 471, 953].forEach((hz, i) => tone(hz * rate * pitch, offset, .20 / (i + 1), level * [.42,.21,.12][i]));
           rustle(offset, .035, level * .4, 1700);
         }
       };
-      const bass = (note, offset = 0, duration = .25, level = .20) => tone(440 * 2 ** ((note - 69) / 12), offset, duration, level, 'triangle');
+      const bass = (note, offset = 0, duration = .25, level = .20) => tone(440 * 2 ** ((nearestChiefNote(note + shift) - 69) / 12), offset, duration, level, 'triangle');
       const chip = (note, offset, duration, level = .17) => {
-        const hz = 440 * 2 ** ((note - 69) / 12);
+        const hz = 440 * 2 ** ((nearestChiefNote(note + shift) - 69) / 12);
         tone(hz, offset, duration, level, 'pulse');
         tone(hz * 2, offset, Math.min(.18, duration), level * .32, 'sine');
       };
@@ -187,13 +197,12 @@ window.GameAudio = (() => {
       };
       // James Sanderson, Hail to the Chief (1812), first two bars in D.
       // Dotted rhythms retained; no modern recording or arrangement is used.
-      const chief = [69,71,73,74,73,71,69,71,69,66,64,62];
       const chiefBeats = [1,.75,.25,1,.75,.25,.75,.25,.75,.25,1,1];
       switch (name) {
-        case 'select': chip(74,0,.09,.12); chip(81,.055,.13,.10); break;
-        case 'shuffle': if (!sample('slide',0,.75)) rustle(0,.09,.30,2400); break;
-        case 'card': if (!sample('card',0,.95)) { rustle(0,.08,.34,2200); knock(.02,.35,1.5); } break;
-        case 'gavel': knock(0,.95,.88); knock(.135,.25,1.05); bass(38,0,.17,.25); break;
+        case 'select': chip(74,0,.14,.12); break;
+        case 'shuffle': if (!sample('slide',0,.75)) rustle(0,.09,.30,2400); chip(74,0,.075,.065); break;
+        case 'card': if (!sample('card',0,.95)) { rustle(0,.08,.34,2200); knock(.02,.35,1.5); } chip(74,.015,.12,.10); break;
+        case 'gavel': knock(0,.95,.88); knock(.135,.25,1.05); chip(62,0,.14,.11); bass(38,0,.17,.25); break;
         case 'intro': {
           // A four-bar opening ceremony, distinct from both pause and victory.
           // The second pass lifts an octave over a marching bass/snare groove.
@@ -216,12 +225,12 @@ window.GameAudio = (() => {
         case 'setback': phrase([69,65,62],[.4,.3,.7],180,0,.15); bass(38,0,.30,.18); break;
         case 'breakthrough': phrase([74,78,81,86,90],[.25,.25,.25,.5,.9],180); bass(50,0,.4); bass(57,.4,.4); break;
         case 'blowback':
-          knock(0,.75,.65); tone(110,0,.5,.25,'pulse',35); rustle(0,.18,.24,700);
+          knock(0,.75,.65); bass(38,0,.5,.25); rustle(0,.18,.24,700);
           phrase([62,61,57,50],[.25,.25,.4,.8],172,0,.17); break;
         case 'phase': phrase([69,74,78,81,78,81,86],[.5,.25,.25,.75,.25,.25,1],184); bass(50,0,.5); bass(57,.65,.5); break;
         case 'adjourn':
           if (!sample('knock',0,.75)) knock(0,.65,1.1);
-          chip(66,.09,.15,.13); chip(69,.20,.20,.12); bass(50,.09,.25,.15); break;
+          chip(66,.09,.20,.14); bass(42,.09,.25,.15); break;
         case 'pause':
           phrase(chief.slice(0,6),chiefBeats.slice(0,6),156,0,.14);
           bass(50,0,.65,.13); bass(57,2 * 60 / 156,.58,.11); break;

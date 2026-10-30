@@ -58,7 +58,7 @@ const context = vm.createContext({document,Intl,console,Event:class {constructor
   setTimeout:(fn,ms)=>{const id=callbacks.push({fn,ms});timers.set(id,fn);return id;},
   setInterval:()=>99,clearInterval(){}
 });
-for (const file of ['locales.js','leaderboard-locales.js','i18n.js','game.js','simulation.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for (const file of ['locales.js','leaderboard-locales.js','oligarch-locales.js','i18n.js','game.js','simulation.js','oligarch-engine.js','oligarch.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const run = code => vm.runInContext(code,context);
 context.assert = assert;
 // Inspect all player-facing message paths, including both sides of random branches.
@@ -408,5 +408,35 @@ for (const mode of ['easy','hard','harder']) for (const seed of [721,927]) {
   run(`assert.ok(document.getElementById('postScore').hidden);assert.ok(document.getElementById('scoreIdentity').textContent.includes('Simulation'));
   var endSnapshot=JSON.stringify(S);window.Simulator.advance(600000);assert.equal(JSON.stringify(S),endSnapshot,'completed simulation stays stopped');`);
 }
+// Oligarch selection/start bypasses the profile; its turns never consume clock time.
+run(`
+S.mode=null;S.over=false;S.oligarch=false;startingSession=false;selectedMode=null;
+window.Oligarch.select();assert.equal(selectedMode,'oligarch');assert.ok(document.getElementById('startScreen').classList.contains('oligarch-selected'));
+selectMode('easy');assert.equal(selectedMode,'easy');assert.ok(!document.getElementById('startScreen').classList.contains('oligarch-selected'));
+window.Oligarch.select();beginSession();
+`);
+callbacks.at(-1).fn();
+run(`
+assert.ok(S.oligarch);assert.equal(CALENDAR_CLOCK.interval,null);assert.equal(document.getElementById('campaignMain').hidden,true);
+assert.equal(window.Oligarch.state.seat,'oligarch');assert.equal(document.getElementById('postScore').hidden,true);
+const duelBefore=JSON.stringify(window.Oligarch.state);consumeActiveCalendarTime(10000000);syncCalendarClock();
+doAction(ACTIONS.investigation[0]);endTurn();assert.equal(JSON.stringify(window.Oligarch.state),duelBefore,'no clock or old game controls advance the duel');
+toggleCalendarPause();const pausedDuel=window.Oligarch.state;window.Oligarch.respond('reserve',pausedDuel.revision);window.Oligarch.advance();
+assert.equal(JSON.stringify(window.Oligarch.state),JSON.stringify(pausedDuel),'pause locks both seats');toggleCalendarPause();
+for(const c of window.OligarchRules.counters){verifyMessage(c.name);verifyMessage(c.desc);}
+verifyMessage(msg\`Month \${2} / 24 · Exchange \${3}\`);verifyMessage(msg\`Cost: \${10} · Exposure: \${'+8'}\`);
+verifyMessage(msg\`You used \${'Stand Aside'}. Influence \${60}; exposure \${0}.\`);
+verifyMessage(msg\`Opposition capital: \${60} · Session days: \${10}\`);
+for(let i=0;i<200&&!S.over;i++){
+ const state=window.Oligarch.state;
+ if(state.seat==='oligarch'){
+  window.Oligarch.respond('reserve',state.revision);
+  const once=JSON.stringify(window.Oligarch.state);window.Oligarch.respond('reserve',state.revision);assert.equal(JSON.stringify(window.Oligarch.state),once,'double clicks never spend a second counter');
+ }else window.Oligarch.advance();
+}
+assert.ok(S.over);assert.equal(window.Oligarch.state.winner,'prosecution');assert.equal(document.getElementById('postScore').hidden,true);
+applyLanguage('ja');window.Oligarch.renderResult();assert.ok(document.getElementById('scoreIdentity').textContent.includes('非対称'));
+`);
+console.log('PASS: Oligarch selection and profile-free start; no live clock; pause/double-click guards; localized counter cards and result; full UI-driven duel; no leaderboard submission.');
 console.log('PASS: post-move shuffle, fresh available head, persistent order, <1s animation, no game RNG; mouse/pen momentum + friction; passive native touch, no pointer capture/preventDefault, swipe-click suppression; pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
 console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

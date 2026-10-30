@@ -1,0 +1,122 @@
+/* A second seat in the same war room: lacquer, copper and covert violet. */
+#campaignMain[hidden], #calendarPanel[hidden], #oligarchBoard[hidden] { display:none; }
+.oligarch-mode { display:flex; align-items:center; gap:16px; width:100%; padding:14px 20px; margin-top:16px; color:#e6d6ef; border:1px solid #a98cbd66; border-radius:14px; background:radial-gradient(ellipse at 0 50%,#73557544,transparent 60%),#1a2330; text-align:start; cursor:pointer; transition:transform 220ms,border-color 220ms,box-shadow 220ms; }
+.oligarch-mode > span:nth-child(2) { flex:1; display:flex; flex-wrap:wrap; gap:5px 16px; align-items:baseline; }
+.oligarch-mode strong { font:22px Georgia,serif; color:#f4d7c5; }
+.oligarch-mode span span { font-size:11px; color:#d6b6dc; }
+.oligarch-mode small { flex-basis:100%; font-size:11px; line-height:1.4; color:#aebdca; }
+.oligarch-mode-icon { font-size:36px; filter:drop-shadow(0 4px 7px #0008); }
+.oligarch-mode-check { display:grid; place-items:center; width:25px; height:25px; border:1px solid #b599bf66; border-radius:50%; color:transparent; }
+.oligarch-mode[aria-pressed=true] { border-color:#e2aec9; box-shadow:inset 0 0 0 1px #e2aec955,0 0 30px #d893b51a; transform:translateY(-2px); }
+.oligarch-mode[aria-pressed=true] .oligarch-mode-check { background:#edc4ba; color:#252436; }
+.oligarch-mode:hover:not(:disabled) { border-color:#efc7bd; transform:translateY(-3px); }
+#startScreen[data-campaign=oligarch] { --brief-glow:#aa6baf33; }
+.oligarch-selected .player-panel, .oligarch-selected .quickstart, .oligarch-selected #watchButton, .oligarch-selected .watch-note { display:none; }
+#oligarchStartRules { color:#e9c8d4; font-size:12px; line-height:1.5; margin:13px 0 0; }
+#startScreen.oligarch-selected .launch-panel { grid-column:1/-1; grid-row:auto; text-align:center; }
+.shadow-rules { padding:16px 0 0 20px; font-size:13px; line-height:1.7; }
+#app.is-oligarch { --shadow:#c6a5dc; --shadow-gold:#f0cbb0; }
+#oligarchBoard { display:flex; flex-direction:column; gap:10px; }
+.shadow-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border:1px solid #967f9d66; border-radius:11px; background:linear-gradient(110deg,#352b4050,#162733); }
+.shadow-header > div:first-child { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.shadow-kicker { color:#d5addc; font-size:10px; letter-spacing:1px; }
+#shadowRound { color:#f6e3ca; font:18px Georgia,serif; }
+.shadow-tools { display:flex; gap:6px; }
+.shadow-tools button, .shadow-deck-heading button { border:1px solid #a298b077; background:linear-gradient(155deg,#3b3a4e,#1b2a37); color:#f0dac7; border-radius:8px; padding:7px 11px; min-height:36px; cursor:pointer; font:inherit; font-size:12px; }
+.shadow-resources { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; border:1px solid #7d829844; border-radius:9px; background:#13232e; padding:10px 6px; }
+.shadow-resources > div { display:grid; grid-template-columns:1fr auto; align-items:center; gap:5px; padding:0 12px; border-inline-end:1px solid #71829733; }
+.shadow-resources > div:last-child { border:0; }
+.shadow-resources span { font-size:11px; color:#b6c2cf; }
+.shadow-resources strong { color:#f2d9bc; font-size:16px; }
+.shadow-resources meter { grid-column:1/-1; width:100%; height:6px; accent-color:#c7b3e0; }
+#exposureMeter { accent-color:#e3a393; }
+.shadow-progress { display:flex; justify-content:space-between; gap:12px; padding:2px 14px; color:#d2d8e0; font-size:12px; }
+.shadow-progress .is-active { color:#f2d1ac; text-shadow:0 0 12px #ebc49c33; }
+.shadow-threat { position:relative; padding:16px 20px; min-height:132px; border:1px solid #94788e77; border-inline-start:3px solid #d8a1bd; border-radius:13px; background:radial-gradient(ellipse at 0 0,#7d435942,transparent 70%),#172530; }
+.shadow-threat h2 { font:25px/1.2 Georgia,serif; color:#f5dbc5; margin:6px 0; }
+#shadowMoveDesc { color:#c0cdd8; font-size:12px; line-height:1.45; }
+.shadow-telemetry { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-top:9px; color:#d5b4df; font-size:11px; }
+.shadow-telemetry strong { color:#f5d2b5; font-size:14px; }
+#shadowResult, #shadowAftermath { font-size:11px; color:#b0c5cf; margin-top:6px; line-height:1.35; }
+#shadowResult:empty, #shadowAftermath:empty, #shadowMoveDesc:empty, .shadow-telemetry:has(#shadowOdds:empty) { display:none; }
+.shadow-threat[data-state=blocked] { border-inline-start-color:#8dd9b1; background:linear-gradient(110deg,#6caa8730,transparent 70%),#172530; }
+.shadow-threat[data-state=setback] { border-inline-start-color:#ed9a8c; background:linear-gradient(110deg,#ac655034,transparent 70%),#172530; }
+.shadow-threat[data-state=threat] { animation:shadow-arrive 400ms ease-out; }
+.shadow-deck-panel { border:1px solid #7d829844; border-radius:14px; overflow:hidden; background:radial-gradient(ellipse at 50% 100%,#5a476c33,transparent 70%),#101e28; }
+.shadow-deck-heading { display:flex; justify-content:space-between; align-items:center; padding:8px 18px 0; }
+.shadow-deck-heading h2 { color:#edccb8; font:italic 24px Georgia,serif; }
+.shadow-deck-heading > div { display:flex; align-items:center; gap:12px; font-size:11px; color:#acb7c6; }
+.shadow-deck-heading button { min-height:30px; width:32px; padding:3px; }
+#counterDeck { display:flex; gap:12px; overflow-x:auto; overflow-y:hidden; padding:12px 20px 18px; scroll-snap-type:none; scroll-behavior:auto; touch-action:manipulation; -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior-x:contain; }
+#counterDeck::-webkit-scrollbar { display:none; }
+.counter-card { flex:0 0 290px; height:300px; padding:0; border:0; border-radius:13px; background:none; text-align:start; cursor:pointer; color:inherit; font:inherit; touch-action:manipulation; }
+.counter-card .card-face { border-color:#a393a777; padding:17px 19px 13px; background:linear-gradient(145deg,#3b3648,#1c2937 60%,#2c303b); transition:border-color 180ms,box-shadow 180ms; }
+.counter-card:hover:not(:disabled) .card-face, .counter-card:focus-visible .card-face { border-color:#edc7bb; box-shadow:0 0 0 1px #edc7bb55,0 12px 25px #0007; }
+.counter-icon { font-size:34px; margin-bottom:9px; }
+.counter-name { color:#fae0c9; font:23px/1.15 Georgia,serif; margin-bottom:8px; }
+.counter-desc { font-size:12px; line-height:1.45; color:#d0d6df; }
+.counter-preview { display:block; border-block:1px solid #c4a1bc26; padding-block:8px; margin:10px 0; color:#e2bed3; font-size:12px; line-height:1.55; }
+.counter-preview:empty { display:none; }
+.counter-cost { margin-top:auto; color:#c8c0d0; font-size:11px; }
+.counter-card.is-dangerous .counter-cost { color:#ffb0a2; font-weight:750; }
+.counter-play { display:flex; justify-content:space-between; margin-top:8px; padding:8px 11px; border-radius:5px; color:#272434; background:linear-gradient(110deg,#c095a4,#f3cdb5); font-size:12px; font-weight:750; box-shadow:inset 0 1px #fff4; }
+.counter-card:disabled { cursor:default; opacity:.45; }
+.counter-card.was-played { opacity:1; }
+.counter-card.was-played .card-face { border-color:#a8e6c6; }
+#shadowAdvance { padding:13px 18px; min-height:48px; border:1px solid #f0cdb7; border-radius:9px; color:#252434; background:linear-gradient(110deg,#bd91a8,#f3d3b5 65%,#c89b93); box-shadow:inset 0 1px #fff4,0 4px 0 #0005; font:750 14px system-ui,sans-serif; cursor:pointer; transition:transform 180ms,box-shadow 180ms; }
+#shadowAdvance[hidden] { display:none; }
+#shadowAdvance:active { transform:translateY(2px); }
+.shadow-history { font-size:11px; color:#9eb1c0; padding:0 4px 5px; }
+.shadow-history summary { cursor:pointer; color:#b8c0d0; }
+.shadow-history ol { max-height:200px; overflow-y:auto; padding:12px 20px; line-height:1.5; }
+.shadow-history li { margin-bottom:8px; }
+.is-paused #counterDeck { overflow-x:hidden; touch-action:none; }
+@keyframes shadow-arrive { from {opacity:.5;transform:translateY(5px);} to {opacity:1;transform:none;} }
+@media(min-width:601px) and (max-height:800px) {
+  #oligarchBoard { gap:7px; }
+  .shadow-threat { padding:10px 16px; min-height:116px; }
+  .shadow-threat h2 { font-size:22px; margin-block:4px; }
+  .counter-card { height:244px; }
+  .counter-card .card-face { padding:12px 17px; }
+  .counter-icon { font-size:24px; margin-bottom:5px; }
+  .counter-name { font-size:21px; margin-bottom:6px; }
+  .counter-desc { font-size:11px; }
+  .counter-preview { font-size:11px; padding-block:5px; margin-block:7px; }
+  #oligarchBoard[data-seat=prosecution] .counter-card { height:200px; }
+}
+@media(max-width:600px) {
+  .oligarch-mode { padding:12px; gap:11px; }
+  .oligarch-mode strong { font-size:18px; }
+  .oligarch-mode small { font-size:10px; }
+  .oligarch-mode-icon { font-size:28px; }
+  #oligarchBoard { gap:6px; }
+  .shadow-header { padding:7px 9px; gap:6px; }
+  .shadow-kicker { font-size:8px; letter-spacing:.4px; }
+  #shadowRound { font-size:14px; }
+  .shadow-tools button { padding:5px 8px; min-height:32px; font-size:10px; }
+  .shadow-resources { padding:7px 2px; }
+  .shadow-resources > div { padding-inline:7px; gap:4px; }
+  .shadow-resources span { font-size:9px; }
+  .shadow-resources strong { font-size:13px; }
+  .shadow-resources > div:last-child > span > span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+  .shadow-progress { padding-inline:7px; font-size:10px; gap:5px; }
+  .shadow-threat { padding:10px 11px; min-height:126px; }
+  .shadow-threat h2 { font-size:19px; margin-block:5px; }
+  #shadowMoveDesc { font-size:11px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .shadow-telemetry { font-size:9px; gap:4px; margin-top:6px; }
+  .shadow-telemetry strong { font-size:12px; }
+  #shadowResult, #shadowAftermath { font-size:10px; }
+  .shadow-deck-heading { padding:7px 10px 0; }
+  .shadow-deck-heading h2 { font-size:21px; }
+  #counterDeck { padding:9px 12px 12px; gap:9px; }
+  .counter-card { flex-basis:286px; height:239px; }
+  #oligarchBoard[data-seat=prosecution] .counter-card { height:190px; }
+  .counter-card .card-face { padding:11px 15px; }
+  .counter-icon { position:absolute; inset-inline-end:15px; top:12px; font-size:26px; opacity:.45; }
+  .counter-name { font-size:20px; padding-inline-end:28px; margin-bottom:7px; }
+  .counter-desc { font-size:11px; line-height:1.4; }
+  .counter-preview { margin:8px 0; padding-block:6px; font-size:11px; }
+  .counter-cost { font-size:10px; }
+  .counter-play { padding:7px 9px; font-size:11px; margin-top:7px; }
+  #shadowAdvance { font-size:12px; padding:10px 14px; min-height:44px; }
+}

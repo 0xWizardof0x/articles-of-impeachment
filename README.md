@@ -37,6 +37,33 @@ Then open <http://localhost:8000>.
 
 This is a fictional simulation, not legal advice or a factual account of an impeachment proceeding.
 
+## Secret Evil Oligarch
+
+Choose **Secret Evil Oligarch** beneath the three classic difficulty cards, then **Start as Oligarch**. This is a separate, turn-based 24-month campaign against the computer. It needs no player profile and has no live timer. The computer uses the existing 84-card standard toolkit to pursue 75 evidence, 218 House votes and 67 Senate votes. Its move, success odds, progress range, capital cost and session-day cost are revealed before you choose a response.
+
+You have **12 counter cards**: Media Blitz, Legal Objection, Challenge the Witness, Loyalty Whip, Procedural Delay, Backchannel Deal, Scandal Bomb, Counter-Leak, Sacrifice an Ally, Lawyer Wall, Stand Aside and Lay Low. Only affordable, phase-appropriate counters off cooldown appear. Each card previews its effect on odds and progress and discloses its influence cost and exposure change. Backchannel Deal cancels a committed move after its costs are paid and has a four-exchange cooldown. Stand Aside and Lay Low are always available to recover resources or reduce exposure.
+
+Each response resolves once. Read the result, then press **Next computer move** to advance. Three exchanges or exhausted computer session days end a month. Monthly recovery gives you 24 influence and removes 6 exposure; the computer recovers 38–46 capital and resets to 10 days. A separate 35% blowback roll halves its recovered capital. High exposure also improves the computer’s odds. Public support moves with outcomes and polling.
+
+Win by surviving the full term or reducing support for the case below 12. Conviction or exposure reaching 100 is a loss. All meters are bounded, and a final conviction or exposure takes priority over a last-month survival win. Pause, rules and leaderboard dialogs lock the response controls. Counter cards use native mobile scrolling. All controls, counter descriptions, results and rules are translated into the existing eight languages. Oligarch results are separate from the classic leaderboards and cannot be posted there.
+
+### Multiplayer foundation
+
+`oligarch-engine.js` is a pure, versioned rules module with two seats (`prosecution`, `oligarch`), serializable state, seeded outcome rolls and revision-checked commands. The computer is an adapter that selects a legal prosecution move. A committed move is resolved only when the opposing seat submits a legal counter. Invalid actors, stale revisions, illegal cards and duplicate responses are rejected without mutating the input state. The command history can reproduce an entire match exactly.
+
+```js
+state = OligarchRules.dispatch(state, {
+  actor: 'prosecution', type: 'propose', moveId: 'subpoena', revision: state.revision
+});
+state = OligarchRules.dispatch(state, {
+  actor: 'oligarch', type: 'counter', counterId: 'objection', revision: state.revision
+});
+```
+
+This release is local human-versus-computer play. Online rooms, identity, reconnection and persistence are future work. A multiplayer service must authenticate each seat and own the state, revision and random seed on the server; the browser’s state is not an authoritative multiplayer record.
+
+`node tests/oligarch.cjs` checks two-seat validation, deterministic replay, costs, cooldowns, monthly recovery, all terminal conditions and 200 seeded campaigns. In its simple balance probes, ignoring every move lost 100/100; repeatedly using Legal Objection when affordable survived 38/100. These policies are test baselines, not estimates of human win rates. `tests/smoke.cjs` also runs a complete UI-driven duel and checks profile-free startup, no clock consumption, pause, double-click protection, localization and leaderboard isolation.
+
 ## Languages
 
 English, Spanish, French, Korean, Persian, Hebrew, Simplified Chinese, and Japanese are included. The language picker is available in the opening brief and during play. It updates controls, move cards, historical feed entries, dates, and outcomes without resetting the campaign. Persian and Hebrew use right-to-left layouts and carousel navigation. Dates retain the Gregorian calendar because the game is set in the United States.
@@ -51,6 +78,9 @@ The selected language is remembered on this device when browser storage is avail
 | `styles.css` | Base theme, briefing and leaderboard styles |
 | `experience.css` | Compact play canvas, 3D carousel and responsive burden bars |
 | `game.js` | Game rules, start flow, move carousel, and calendar clock |
+| `oligarch-engine.js` | Two-seat deterministic match rules and command validation |
+| `oligarch.js` / `oligarch.css` | Turn-based defense interface and computer-seat adapter |
+| `oligarch-locales.js` | Counter-mode translations in seven languages |
 | `simulation.js` | Spectator strategy and controls, driven by the shared calendar clock |
 | `sound.js` | Recorded Foley, chiptune arrangements, mute preference and bounded voice cleanup |
 | `audio/` | Four bundled CC0 WAV samples, credits and license notices |
@@ -69,6 +99,7 @@ node --check i18n.js
 node --check locales.js
 node tests/smoke.cjs
 node tests/sound.cjs
+node tests/oligarch.cjs
 ```
 
 No Node dependencies are needed. Automated checks include post-move shuffling, availability/order preservation, a shuffle animation capped below one second, independent presentation randomness, momentum/friction in LTR and RTL, free resting positions, passive native-touch handling and synthetic-click suppression, pause and reduced-motion cancellation, six complete watched campaigns across all three difficulties, manual-input and leaderboard isolation, and the opening/conviction melodies. For a browser smoke check, confirm 28/28/56 moves in the three modes, select a move, inspect the displayed odds and support change, and adjourn until a blowback logs the exact capital halving. Check both LTR and RTL carousel navigation and verify that Pause/Resume and hidden-tab behavior preserve the countdown and public support.

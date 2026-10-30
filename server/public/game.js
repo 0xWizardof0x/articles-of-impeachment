@@ -54,6 +54,7 @@ const MONTHS = ['January','February','March','April','May','June',
 const S = {
   mode: null,
   simulated: false,
+  oligarch: false,
   turn: 1,
   maxTurns: 24,
   daysMax: 10,
@@ -4752,6 +4753,7 @@ function renderEndTurnSub() {
 
 function render() {
   if (!S.mode) return;
+  if (S.oligarch) { renderPauseLock(); window.Oligarch?.render(); return; }
   moveTrack.classList.toggle('is-scroll-locked', isCalendarPaused() || S.simulated);
   if (isCalendarPaused()) { stopDeckMomentum(); stopDeckShuffle(); deckDrag = null; deckTouch = null; moveTrack.classList.remove('is-dragging'); }
   renderPauseLock();
@@ -5263,6 +5265,7 @@ moveTrack.addEventListener('pointercancel', finishDeckDrag);
 // Detail sheets give small screens room to play, and pause the calendar.
 function openCampaignSheet(id) {
   if (CALENDAR_CLOCK.manuallyPaused) return;
+  if (S.oligarch && id === 'briefingDialog') id = 'oligarchRulesDialog';
   syncCalendarClock();
   document.getElementById(id).showModal();
   CALENDAR_CLOCK.lastNow = null;
@@ -5365,7 +5368,7 @@ function resetCalendarClock() {
 
 function startCalendarClock() {
   stopCalendarClock();
-  if (!S.mode || S.over) return;
+  if (!S.mode || S.over || S.oligarch) return;
   CALENDAR_CLOCK.lastNow = isCalendarPaused() ? null : performance.now();
   CALENDAR_CLOCK.interval = setInterval(syncCalendarClock, 100);
   renderCalendarClock();
@@ -5374,6 +5377,7 @@ function startCalendarClock() {
 // Isolated elapsed-time consumer for deterministic testing. No date or score
 // is accepted from an external client; this file is a local practice preview.
 function consumeActiveCalendarTime(elapsedMs) {
+  if (S.oligarch) return;
   if (isCalendarPaused() || !Number.isFinite(elapsedMs) || elapsedMs <= 0) return;
   CALENDAR_CLOCK.elapsedMs += elapsedMs;
   while (CALENDAR_CLOCK.elapsedMs >= DAY_DURATION_MS && !S.over) {
@@ -5388,6 +5392,7 @@ function consumeActiveCalendarTime(elapsedMs) {
 }
 
 function syncCalendarClock() {
+  if (S.oligarch) return;
   const now = performance.now();
   if (isCalendarPaused()) {
     CALENDAR_CLOCK.lastNow = null;
@@ -5450,6 +5455,7 @@ renderCalendarClock();
    GAME FLOW
    ========================================================= */
 function doAction(action, source = 'manual') {
+  if (S.oligarch) return;
   if (S.simulated && source !== 'simulation') return;
   if (isCalendarPaused()) return;
   const previousTurn = S.turn;
@@ -5539,6 +5545,7 @@ function resolveTurnEvents() {
 }
 
 function endTurn(source = 'manual') {
+  if (S.oligarch) return;
   if (S.over || !S.mode) return;
   if (S.simulated && source === 'manual') return;
   if (source === 'manual' || source === 'simulation') {
@@ -5623,6 +5630,7 @@ function startGame(modeId, {simulation = false} = {}) {
   window.Simulator?.stop();
 
   S.mode = modeId;
+  S.oligarch = false;
   S.simulated = simulation;
   document.getElementById('postScore').hidden = simulation;
   S.turn = 1;
@@ -5670,6 +5678,10 @@ function startGame(modeId, {simulation = false} = {}) {
 let selectedMode = null;
 let startingSession = false;
 function renderStartHint() {
+  if (selectedMode === 'oligarch' && !startingSession) {
+    document.getElementById('startHint').textContent = t('Selected: Secret Evil Oligarch. Choose Start when ready.');
+    return;
+  }
   document.getElementById('startHint').textContent = startingSession
     ? t('The House will come to order…')
     : selectedMode ? tr`Selected: ${MODES[selectedMode].tag}. The clock is stopped until you start.`
@@ -5677,6 +5689,7 @@ function renderStartHint() {
 }
 function selectMode(modeId) {
   if (startingSession || S.mode || !MODES[modeId]) return;
+  window.Oligarch?.deselect();
   window.GameAudio?.play('select', {gesture: true});
   selectedMode = modeId;
   document.getElementById('startScreen').dataset.campaign = modeId;
@@ -5689,6 +5702,7 @@ function selectMode(modeId) {
 }
 function beginSession(simulation = false) {
   if (!selectedMode || startingSession || S.mode) return;
+  if (selectedMode === 'oligarch') { if (!simulation) window.Oligarch?.begin(); return; }
   if (!simulation && window.Leaderboards && !window.Leaderboards.prepareProfile()) return;
   startingSession = true;
   const button = document.getElementById('startButton');
@@ -5713,6 +5727,7 @@ document.addEventListener('languagechange', () => {
     document.getElementById('verdictText').textContent = t(lastVerdict.headline);
     document.getElementById('verdictBody').textContent = t(lastVerdict.body);
     if (S.simulated) window.Simulator?.renderResult();
+    if (S.oligarch) window.Oligarch?.renderResult();
   }
   renderStartHint();
 });

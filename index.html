@@ -7,6 +7,7 @@
 <meta name="description" content="Build the case, count the votes, and beat the calendar in a fictional political strategy game.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="experience.css">
+<link rel="stylesheet" href="oligarch.css">
 </head>
 <body>
 <div id="app" inert>
@@ -54,7 +55,7 @@
     </div>
   </section>
 
-  <main>
+  <main id="campaignMain">
     <section id="simulationBar" aria-label="Simulation controls" data-i18n-aria="Simulation controls" hidden>
       <div class="simulation-copy"><span class="simulation-label"><i aria-hidden="true"></i><span data-i18n="Watching simulation">Watching simulation</span></span><span id="simulationStatus" role="status"></span></div>
       <label class="simulation-speed"><span data-i18n="Speed">Speed</span><select id="simulationSpeed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
@@ -137,6 +138,16 @@
     </button></div>
   </main>
 
+  <section id="oligarchBoard" hidden aria-label="Secret Evil Oligarch" data-i18n-aria="Secret Evil Oligarch">
+    <div class="shadow-header"><div><span class="shadow-kicker" data-i18n="Secret Evil Oligarch">Secret Evil Oligarch</span><strong id="shadowRound"></strong></div><div class="shadow-tools"><button type="button" id="shadowPause" data-i18n="Pause">Pause</button><button type="button" id="shadowExit" data-i18n="Exit">Exit</button></div></div>
+    <div class="shadow-resources"><div><span>🕶️ <span data-i18n="Influence">Influence</span></span><strong id="shadowInfluence"></strong><meter id="influenceMeter" min="0" max="100"></meter></div><div><span>🔎 <span data-i18n="Exposure">Exposure</span></span><strong id="shadowExposure"></strong><meter id="exposureMeter" min="0" max="100" high="70" optimum="0"></meter></div><div><span>👥 <span data-i18n="Public Support">Public Support</span></span><strong id="shadowSupport"></strong><meter id="shadowSupportMeter" min="0" max="100"></meter></div></div>
+    <div class="shadow-progress" aria-label="Opposition progress" data-i18n-aria="Opposition progress"><span id="shadowEvidence"></span><span id="shadowHouse"></span><span id="shadowSenate"></span></div>
+    <section id="shadowThreat" class="shadow-threat" aria-live="polite" aria-atomic="true"><span class="shadow-kicker" id="shadowSeat"></span><h2 id="shadowMove"></h2><p id="shadowMoveDesc"></p><div class="shadow-telemetry"><strong id="shadowOdds"></strong><span id="shadowResources"></span></div><p id="shadowResult"></p><p id="shadowAftermath"></p></section>
+    <section class="shadow-deck-panel"><div class="shadow-deck-heading"><h2 data-i18n="Counters">Counters</h2><div><button type="button" id="counterPrev" aria-label="Previous moves" data-i18n-aria="Previous moves">←</button><span id="counterCount"></span><button type="button" id="counterNext" aria-label="Next moves" data-i18n-aria="Next moves">→</button></div></div><div id="counterDeck" tabindex="0" role="group" aria-label="Counters" data-i18n-aria="Counters"></div></section>
+    <button type="button" id="shadowAdvance" data-i18n="Next computer move">Next computer move</button>
+    <details class="shadow-history"><summary data-i18n="Turn history">Turn history</summary><ol id="shadowHistory"></ol></details>
+  </section>
+
 </div>
 
 <div id="startScreen" class="show" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startIntro">
@@ -177,6 +188,8 @@
         <span class="mode-meta" data-i18n="Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk">Monthly: 16–22 capital · support −2 (+fatigue) · evidence −2 after investigation · 80% blowback risk</span>
       </button>
     </div>
+    <button type="button" id="oligarchMode" class="oligarch-mode" data-mode="oligarch" aria-pressed="false"><span class="oligarch-mode-icon" aria-hidden="true">🕶️</span><span><strong data-i18n="Secret Evil Oligarch">Secret Evil Oligarch</strong><span data-i18n="Turn-based defense · 24 months">Turn-based defense · 24 months</span><small data-i18n="The computer builds the case. You choose one counter per move. No live timer.">The computer builds the case. You choose one counter per move. No live timer.</small></span><span class="oligarch-mode-check" aria-hidden="true">✓</span></button>
+    <p id="oligarchStartRules" hidden data-i18n="Survive 24 months or collapse public support below 12. Conviction or 100 exposure loses.">Survive 24 months or collapse public support below 12. Conviction or 100 exposure loses.</p>
     <div class="verdict-path" aria-label="Quickstart · Your path to a verdict" data-i18n-aria="Quickstart · Your path to a verdict"><div><strong>75</strong><span data-i18n="Evidence">Evidence</span></div><span class="path-arrow" aria-hidden="true">→</span><div><strong>218</strong><span data-i18n="House Votes">House Votes</span></div><span class="path-arrow" aria-hidden="true">→</span><div><strong>67</strong><span data-i18n="Senate Votes">Senate Votes</span></div></div>
     <div class="player-panel"><div class="player-fields">
       <label><span data-i18n="Player name">Player name</span><input id="playerName" type="text" minlength="2" maxlength="24" autocomplete="nickname" dir="auto" aria-describedby="profileNote profileError"></label>
@@ -266,17 +279,26 @@
     </section>
 
 </dialog>
+<dialog id="oligarchRulesDialog" class="campaign-dialog" aria-labelledby="oligarchRulesTitle">
+  <div class="sheet-heading"><h2 id="oligarchRulesTitle" data-i18n="Secret Evil Oligarch">Secret Evil Oligarch</h2><button type="button" data-close-dialog data-i18n="Close">Close</button></div>
+  <p data-i18n="Read the move, then choose a counter.">Read the move, then choose a counter.</p>
+  <ol class="shadow-rules"><li data-i18n="Influence pays for counters. At month end, recover 24 influence and lose 6 exposure.">Influence pays for counters. At month end, recover 24 influence and lose 6 exposure.</li><li data-i18n="Three exchanges or exhausted session days end a month. The computer also pays capital and days.">Three exchanges or exhausted session days end a month. The computer also pays capital and days.</li><li data-i18n="Survive 24 months or collapse public support below 12. Conviction or 100 exposure loses.">Survive 24 months or collapse public support below 12. Conviction or 100 exposure loses.</li><li data-i18n="Every response resolves once. Use Next computer move when you are ready.">Every response resolves once. Use Next computer move when you are ready.</li></ol>
+  <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
+</dialog>
 <dialog id="dispatchDialog" class="campaign-dialog" aria-labelledby="dispatchTitle">
   <div class="sheet-heading"><h2 id="dispatchTitle" data-i18n="Live — War Room Feed">Live — War Room Feed</h2><button type="button" data-close-dialog data-i18n="Close">Close</button></div>
   <section id="feedPanel"><div class="feed-head"><span id="feedHint" data-i18n="No dispatches yet">No dispatches yet</span></div><div id="feed"></div></section>
 </dialog>
 <script src="locales.js"></script>
 <script src="leaderboard-locales.js"></script>
+<script src="oligarch-locales.js"></script>
 <script src="countries.js"></script>
 <script src="i18n.js"></script>
 <script src="sound.js"></script>
 <script src="game.js"></script>
 <script src="simulation.js"></script>
+<script src="oligarch-engine.js"></script>
+<script src="oligarch.js"></script>
 <script src="leaderboards.js"></script>
 </body>
 </html>

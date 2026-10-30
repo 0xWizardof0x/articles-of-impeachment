@@ -30,7 +30,7 @@
     return true;
   }
   function onFinish(state, won) {
-    if(state.simulated) return;
+    if(state.simulated||state.oligarch) return;
     if(completed) return;
     const daysRemaining=Math.max(0,(state.maxTurns-state.turn)*state.daysMax+state.daysLeft);
     completed={...profile,runId:crypto.randomUUID(),mode:state.mode,won,evidence:state.evidence,house:state.house,senate:state.senate,support:state.support,capital:state.capital,daysRemaining};
@@ -38,6 +38,7 @@
     renderResult();
   }
   function renderResult() {
+    if(S.oligarch) return;
     if(!completed) return;
     byId('finalScore').textContent=t('Score')+': '+t(completed.score);
     byId('scoreIdentity').textContent=profile.name+' · '+countryName(profile.country)+' · '+t(completed.mode.toUpperCase());
@@ -55,7 +56,7 @@
     } finally {clearTimeout(timeout);}
   }
   async function postScore() {
-    if(S.simulated||!completed||posting||posted) return;
+    if(S.simulated||S.oligarch||!completed||posting||posted) return;
     posting=true;scoreStatus='';renderResult();
     try {
       const data=await api('/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(completed)});
@@ -92,7 +93,8 @@
     byId('boardCountryLabel').hidden=scope!=='country';loadBoard();
   }
   function openBoard() {
-    byId('boardMode').value=S.mode || selectedMode || 'hard';
+    const mode=S.mode || selectedMode;
+    byId('boardMode').value=['easy','hard','harder'].includes(mode)?mode:'hard';
     if(profile.country) byId('boardCountry').value=profile.country;
     dialog.showModal();refreshCalendarPauseState();loadBoard();
   }

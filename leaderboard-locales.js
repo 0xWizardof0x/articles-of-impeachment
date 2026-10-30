@@ -270,3 +270,55 @@ for (const [code, messages] of Object.entries({
     "Deck: {0} / {1} cards available": "\u724c\u7ec4\uff1a{0} / {1}\u5f20\u53ef\u7528"
   }
 })) Object.assign(TRANSLATIONS[code], messages);
+
+for (const [code, messages] of Object.entries({
+  "es": {
+    "U.S. political fiction": "Ficción política de EE. UU.",
+    "Campaign brief": "Informe de campaña",
+    "Bars of Burden": "Barras de carga",
+    "Play card": "Jugar carta",
+    "Swipe to choose · tap the center card to play": "Desliza para elegir · toca la carta central para jugar"
+  },
+  "fr": {
+    "U.S. political fiction": "Fiction politique américaine",
+    "Campaign brief": "Brief de campagne",
+    "Bars of Burden": "Jauges de pression",
+    "Play card": "Jouer la carte",
+    "Swipe to choose · tap the center card to play": "Balayez pour choisir · touchez la carte centrale pour jouer"
+  },
+  "ko": {
+    "U.S. political fiction": "미국 정치 픽션",
+    "Campaign brief": "캠페인 안내",
+    "Bars of Burden": "부담 지표",
+    "Play card": "카드 사용",
+    "Swipe to choose · tap the center card to play": "밀어서 선택 · 가운데 카드를 눌러 사용"
+  },
+  "fa": {
+    "U.S. political fiction": "داستان سیاسی آمریکایی",
+    "Campaign brief": "راهنمای کارزار",
+    "Bars of Burden": "نشانگرهای فشار",
+    "Play card": "بازی با کارت",
+    "Swipe to choose · tap the center card to play": "برای انتخاب بکشید · برای بازی کارت وسط را بزنید"
+  },
+  "he": {
+    "U.S. political fiction": "סיפורת פוליטית אמריקאית",
+    "Campaign brief": "תדריך מערכה",
+    "Bars of Burden": "מדדי עומס",
+    "Play card": "שחקו בקלף",
+    "Swipe to choose · tap the center card to play": "החליקו לבחירה · הקישו על הקלף המרכזי כדי לשחק"
+  },
+  "ja": {
+    "U.S. political fiction": "米国政治のフィクション",
+    "Campaign brief": "キャンペーンガイド",
+    "Bars of Burden": "負担ゲージ",
+    "Play card": "カードを使う",
+    "Swipe to choose · tap the center card to play": "スワイプで選択 · 中央のカードをタップして使用"
+  },
+  "zh": {
+    "U.S. political fiction": "美国政治虚构故事",
+    "Campaign brief": "行动指南",
+    "Bars of Burden": "压力指标",
+    "Play card": "使用卡牌",
+    "Swipe to choose · tap the center card to play": "滑动选择 · 点击中央卡牌使用"
+  }
+})) Object.assign(TRANSLATIONS[code], messages);

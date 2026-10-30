@@ -4593,6 +4593,11 @@ function renderFeed() {
   hint.textContent = S.log.length === 0
     ? t('No dispatches yet')
     : tr`Dispatches: ${shown} of ${S.log.length} · scroll for more`;
+  const latest = [...S.log].reverse().find(entry => !/^━+$/.test(t(entry.text).trim()));
+  const peek = document.getElementById('latestDispatch');
+  peek.textContent = latest ? t(latest.text) : t('No dispatches yet');
+  peek.className = latest?.kind || '';
+  document.getElementById('dispatchPeek').title = peek.textContent;
 }
 
 /* =========================================================
@@ -4685,8 +4690,8 @@ function render() {
 
 /* =========================================================
    MOVE CAROUSEL
-   Reuse cards within a phase, with ready moves before unavailable
-   moves. Keep focus and the current card when their order changes.
+   Reuse playable cards within a phase. Center one card in a native
+   scroll track, rotating its neighbors as the player moves the deck.
    No autoplay: players decide when the cards move.
    ========================================================= */
 const moveTrack = document.getElementById('actions');
@@ -4711,13 +4716,19 @@ function cardStart(card) {
   return carouselIsRTL() ? moveTrack.clientWidth - card.offsetLeft - card.offsetWidth : card.offsetLeft;
 }
 function moveDestination(card) {
-  return Math.max(0, Math.min(cardStart(card), moveTrack.scrollWidth - moveTrack.clientWidth));
+  const centered = cardStart(card) - (moveTrack.clientWidth - card.offsetWidth) / 2;
+  return clamp(centered, 0, Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth));
 }
 
-// Keep the feed immediately after the campaign-stat dashboard.
-document.getElementById('dashboard').insertAdjacentElement(
-  'afterend', document.getElementById('feedPanel')
-);
+function nearestMoveIndex() {
+  const center = carouselPosition() + moveTrack.clientWidth / 2;
+  let nearest = 0, distance = Infinity;
+  Array.from(moveTrack.children).forEach((card, index) => {
+    const next = Math.abs(cardStart(card) + card.offsetWidth / 2 - center);
+    if (next < distance) { nearest = index; distance = next; }
+  });
+  return nearest;
+}
 
 function scheduleCarouselUpdate() {
   if (carouselFrame !== null) return;
@@ -4730,28 +4741,30 @@ function scheduleCarouselUpdate() {
 function updateCarouselControls() {
   const cards = Array.from(moveTrack.children);
   const left = carouselPosition();
-  const right = left + moveTrack.clientWidth;
-  const max = Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth);
-  const visible = cards.map((card, index) => ({ card, index })).filter(({ card }) =>
-    cardStart(card) + card.offsetWidth > left + 3 && cardStart(card) < right - 3
-  );
-  const navigationLeft = carouselTarget?.left ?? left;
-  document.getElementById('movesPrev').disabled = navigationLeft <= 2;
-  document.getElementById('movesNext').disabled = navigationLeft >= max - 2 || !cards.length;
-  document.getElementById('movesRange').textContent = visible.length
-    ? `${visible[0].index + 1}–${visible[visible.length - 1].index + 1} / ${cards.length}`
-    : `0 / ${cards.length}`;
-  // Several final cards share a clamped destination. Mark the requested
-  // dot when it is still on screen; otherwise mark the first visible card.
-  let selected = carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0);
-  if (!carouselTarget && !visible.some(({ index }) => index === selected)) selected = visible[0]?.index ?? 0;
+  const selected = carouselTarget?.index ?? nearestMoveIndex();
+  document.getElementById('movesPrev').disabled = selected <= 0;
+  document.getElementById('movesNext').disabled = selected >= cards.length - 1;
+  document.getElementById('movesRange').textContent = `${cards.length ? selected + 1 : 0} / ${cards.length}`;
   moveTrack.dataset.selectedIndex = String(selected);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   cards.forEach((card, index) => {
     card.classList.toggle('is-current', index === selected);
     card.setAttribute('aria-current', index === selected ? 'true' : 'false');
+    card.tabIndex = index === selected ? 0 : -1;
+    // The button owns layout/focus; its face owns the 3D presentation.
+    // Availability animations can therefore move the button independently.
+    const distance = (cardStart(card) + card.offsetWidth / 2 - left - moveTrack.clientWidth / 2) / card.offsetWidth;
+    const depth = Math.min(Math.abs(distance), 2.5);
+    const face = card.querySelector('.card-face');
+    face.style.transform = reduce ? 'none' : `perspective(1000px) rotateY(${clamp(distance, -2, 2) * (carouselIsRTL() ? 1 : -1) * 25}deg) translateZ(${-depth * 65}px) scale(${1 - depth * .065})`;
+    face.style.opacity = String(Math.max(.32, 1 - depth * .25));
+    card.style.zIndex = String(20 - Math.round(depth * 5));
   });
   Array.from(moveDots.children).forEach((dot, index) => {
     dot.setAttribute('aria-current', index === selected ? 'true' : 'false');
+    // A compact moving window prevents 56 pagination buttons taking over mobile.
+    const start = clamp(selected - 3, 0, Math.max(0, cards.length - 7));
+    dot.hidden = index < start || index >= start + 7;
   });
 }
 
@@ -4776,16 +4789,7 @@ function scrollMoves(direction) {
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   // Rapid clicks continue from the requested destination, not an in-flight frame.
-  const left = carouselTarget?.left ?? carouselPosition();
-  let index;
-  if (direction > 0) {
-    index = cards.findIndex(card => moveDestination(card) > left + 3);
-    if (index < 0) index = cards.length - 1;
-  } else {
-    index = cards.length - 1;
-    while (index > 0 && moveDestination(cards[index]) >= left - 3) index--;
-  }
-  scrollToMove(index);
+  scrollToMove((carouselTarget?.index ?? nearestMoveIndex()) + direction);
 }
 
 function animateDeckExit(card) {
@@ -4824,13 +4828,22 @@ function renderMoves() {
     availableActions().forEach(action => {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'action'; button.dataset.moveId = action.id;
+      const translated = t(action.name);
+      const firstSpace = translated.indexOf(' ');
+      const hasIcon = firstSpace > 0 && /\p{Extended_Pictographic}/u.test(translated.slice(0, firstSpace));
       button.innerHTML = `
-        ${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}
-        <span class="name">${t(action.name)}</span><span class="desc"></span>
+        <span class="card-face">
+        <span class="card-top"><span class="card-icon" aria-hidden="true">${hasIcon ? translated.slice(0, firstSpace) : '📜'}</span>${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}<span class="card-number" aria-hidden="true"></span></span>
+        <span class="name">${hasIcon ? translated.slice(firstSpace + 1) : translated}</span><span class="desc"></span>
         <span class="move-odds"></span><span class="move-payoff"></span>
         <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
-        <span class="move-status"></span>`;
-      button.onclick = () => doAction(action);
+        <span class="move-status"></span><span class="play-card"><span class="play-label">${t('Play card')}</span><span aria-hidden="true">↗</span></span></span>`;
+      button.onclick = () => {
+        if (deckDragMoved) return;
+        const index = Array.from(moveTrack.children).indexOf(button);
+        if (index !== nearestMoveIndex()) { scrollToMove(index); return; }
+        doAction(action);
+      };
       deckCards.set(action.id, button);
       const dot = document.createElement('button');
       dot.type = 'button'; dot.className = 'move-dot'; dot.dataset.moveId = action.id;
@@ -4865,6 +4878,7 @@ function renderMoves() {
   actions.forEach((action, index) => {
     const button = moveTrack.children[index];
     const dot = moveDots.children[index];
+    button.querySelector('.card-number').textContent = `${String(index + 1).padStart(2, '0')} / ${actions.length}`;
     dot.setAttribute('aria-label', tr`Show move ${index + 1}: ${action.name}`);
     dot.title = tr`Move ${index + 1}: ${action.name}`;
     dot.onclick = () => scrollToMove(index);
@@ -4893,6 +4907,7 @@ function renderMoves() {
     button.querySelector('.move-odds').textContent = odds;
     button.querySelector('.move-payoff').textContent = `${support}. ${failure} ${evidenceCost}`.trim();
     button.querySelector('.move-status').textContent = t(status);
+    button.querySelector('.play-label').textContent = t(disabled ? status : 'Play card');
     button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
   });
   if (shouldReset) {
@@ -4910,6 +4925,7 @@ function renderMoves() {
   const empty = document.getElementById('deckEmpty');
   empty.hidden = actions.length > 0;
   empty.textContent = t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
+  moveTrack.hidden = actions.length === 0;
   scheduleCarouselUpdate();
 }
 
@@ -4935,13 +4951,60 @@ moveTrack.addEventListener('keydown', event => {
   if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
     event.preventDefault();
     scrollMoves((event.key === 'ArrowRight' ? 1 : -1) * (carouselIsRTL() ? -1 : 1));
+    moveTrack.focus({preventScroll: true});
   } else if (event.key === 'Home' || event.key === 'End') {
     event.preventDefault();
     scrollToMove(event.key === 'Home' ? 0 : moveTrack.children.length - 1);
+    moveTrack.focus({preventScroll: true});
+  } else if ((event.key === 'Enter' || event.key === ' ') && event.target === moveTrack) {
+    event.preventDefault();
+    const card = moveTrack.children[nearestMoveIndex()];
+    if (card && !card.disabled && !carouselTarget) card.click();
   }
 });
 window.addEventListener('resize', settleCarousel);
 if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).observe(moveTrack);
+
+// Touch keeps native momentum scrolling. A mouse can also drag the deck.
+let deckDrag = null, deckDragMoved = false;
+moveTrack.addEventListener('pointerdown', event => {
+  deckDragMoved = false;
+  if (event.pointerType === 'mouse' && event.button === 0) deckDrag = {x: event.clientX, left: moveTrack.scrollLeft, id: event.pointerId};
+});
+moveTrack.addEventListener('pointermove', event => {
+  if (!deckDrag) return;
+  const delta = event.clientX - deckDrag.x;
+  if (Math.abs(delta) > 6) {
+    deckDragMoved = true;
+    moveTrack.setPointerCapture(event.pointerId);
+    moveTrack.classList.add('is-dragging');
+  }
+  if (deckDragMoved) moveTrack.scrollLeft = deckDrag.left - delta;
+});
+function finishDeckDrag() {
+  if (!deckDrag) return;
+  deckDrag = null;
+  moveTrack.classList.remove('is-dragging');
+  if (deckDragMoved) scrollToMove(nearestMoveIndex());
+  // Suppress the click immediately following a drag, then restore keyboard play.
+  setTimeout(() => { deckDragMoved = false; }, 0);
+}
+moveTrack.addEventListener('pointerup', finishDeckDrag);
+moveTrack.addEventListener('pointercancel', finishDeckDrag);
+
+// Detail sheets give small screens room to play, and pause the calendar.
+function openCampaignSheet(id) {
+  syncCalendarClock();
+  document.getElementById(id).showModal();
+  CALENDAR_CLOCK.lastNow = null;
+  if (S.mode) render();
+}
+document.querySelectorAll('[data-open-briefing]').forEach(button => button.addEventListener('click', () => openCampaignSheet('briefingDialog')));
+document.getElementById('dispatchPeek').addEventListener('click', () => openCampaignSheet('dispatchDialog'));
+document.querySelectorAll('.campaign-dialog').forEach(dialog => {
+  dialog.querySelector('[data-close-dialog]').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => { CALENDAR_CLOCK.lastNow = null; if (S.mode) render(); });
+});
 
 function log(text, kind = '') { S.log.push({ text, kind }); }
 

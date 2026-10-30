@@ -6,34 +6,34 @@
 <title>Articles of Impeachment — A Political Simulation</title>
 <meta name="description" content="Build the case, count the votes, and beat the calendar in a fictional political strategy game.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="experience.css">
 </head>
 <body>
 <div id="app" inert>
 
-  <header>
-    <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
-    <label class="language-picker"><span data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
-<option value="en" lang="en">English</option><option value="es" lang="es">Español</option><option value="fr" lang="fr">Français</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">简体中文</option>
+  <header class="game-header">
+    <div class="brand"><h1 data-i18n="Articles of Impeachment">Articles of Impeachment</h1><button type="button" class="setting-note" data-open-briefing data-i18n="U.S. political fiction">U.S. political fiction</button></div>
+    <div class="header-tools">
+      <button type="button" class="icon-button" data-open-leaderboard aria-label="Leaderboards" data-i18n-aria="Leaderboards"><span aria-hidden="true">🏆</span></button>
+      <button type="button" class="icon-button" data-open-briefing aria-label="Campaign brief" data-i18n-aria="Campaign brief"><span aria-hidden="true">?</span></button>
+      <label class="language-picker"><span class="sr-only" data-i18n="Language">Language</span><select class="language-select" aria-label="Language" data-i18n-aria="Language">
+<option value="en" lang="en">EN</option><option value="es" lang="es">ES</option><option value="fr" lang="fr">FR</option><option value="ko" lang="ko">한국어</option><option value="fa" lang="fa">فارسی</option><option value="he" lang="he">עברית</option><option value="ja" lang="ja">日本語</option><option value="zh" lang="zh-Hans">中文</option>
 </select></label>
-    <h1 data-i18n="Articles of Impeachment">Articles of Impeachment</h1>
-    <div class="sub" data-i18n="A Political Simulation · All Persons Fictitious">A Political Simulation · All Persons Fictitious</div>
+    </div>
   </header>
-  <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
-
-
 
   <section id="calendarPanel">
     <div class="cal-row">
-      <div class="cal-block">
+      <div class="cal-block date-block">
         <span class="cal-cap" data-i18n="The Calendar">The Calendar</span>
         <span class="cal-date" id="calMonth">—</span>
         <span class="cal-year" id="calYear">—</span>
       </div>
-      <div class="cal-block">
+      <div class="cal-block days-block">
         <span class="cal-cap"><span data-i18n="Session Days">Session Days</span> <b id="calDaysText">10 / 10</b></span>
         <div class="daypips" id="dayPips"></div>
       </div>
-      <div class="cal-block">
+      <div class="cal-block remaining-block">
         <span class="cal-cap" data-i18n="Term Remaining">Term Remaining</span>
         <span class="cal-rem" id="calRemaining">—</span>
       </div>
@@ -51,43 +51,6 @@
       <div class="term-bar"><i id="termFill"></i></div>
       <div class="term-ticks" id="termTicks"></div>
     </div>
-    <div class="cal-foot">
-      <span id="calFatigue">—</span>
-      <span id="blowbackRisk">—</span>
-      <span id="calEnd">—</span>
-    </div>
-  </section>
-
-  <section id="dashboard">
-    <div class="stat">
-      <div class="label"><span data-i18n="Evidence">Evidence</span><b id="vEvidence">0</b></div>
-      <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
-    </div>
-    <div class="stat">
-      <div class="label"><span data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
-      <div class="bar"><i class="fill-support" id="bSupport"></i></div>
-      <span id="supportPulse"></span>
-    </div>
-    <div class="stat">
-      <div class="label"><span data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
-      <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
-    </div>
-    <div class="stat">
-      <div class="label"><span data-i18n="House Votes">House Votes</span><b id="vHouse">0 / 218</b></div>
-      <div class="bar"><i class="fill-house" id="bHouse"></i></div>
-    </div>
-    <div class="stat">
-      <div class="label"><span data-i18n="Senate Votes">Senate Votes</span><b id="vSenate">0 / 67</b></div>
-      <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
-    </div>
-  </section>
-
-    <section id="feedPanel">
-    <div class="feed-head">
-      <span class="live"><i></i><span data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
-      <span id="feedHint" data-i18n="No dispatches yet">No dispatches yet</span>
-    </div>
-    <div id="feed" aria-live="polite"></div>
   </section>
 
   <main>
@@ -116,9 +79,39 @@
           <span id="moveOptionsLabel" data-i18n="Move Options">Move Options</span>
           <div id="moveDots" class="move-dots" role="group" aria-labelledby="moveOptionsLabel"></div>
         </div>
-        <span class="carousel-hint" data-i18n="Swipe or use the arrows · moves update with your campaign">Swipe or use the arrows · moves update with your campaign</span>
+        <span class="carousel-hint" data-i18n="Swipe to choose · tap the center card to play">Swipe to choose · tap the center card to play</span>
       </div>
     </section>
+
+  <section id="dashboard" aria-label="Bars of Burden" data-i18n-aria="Bars of Burden">
+    <button type="button" class="stat" data-open-briefing>
+      <div class="label"><span class="stat-icon" aria-hidden="true">📁</span><span class="stat-label" data-i18n="Evidence">Evidence</span><b id="vEvidence">0</b></div>
+      <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
+    </button>
+    <button type="button" class="stat" data-open-briefing>
+      <div class="label"><span class="stat-icon" aria-hidden="true">👥</span><span class="stat-label" data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
+      <div class="bar"><i class="fill-support" id="bSupport"></i></div>
+      <span id="supportPulse"></span>
+    </button>
+    <button type="button" class="stat" data-open-briefing>
+      <div class="label"><span class="stat-icon" aria-hidden="true">⚡</span><span class="stat-label" data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
+      <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
+    </button>
+    <button type="button" class="stat" data-open-briefing>
+      <div class="label"><span class="stat-icon" aria-hidden="true">🏛️</span><span class="stat-label" data-i18n="House Votes">House Votes</span><b id="vHouse">0 / 218</b></div>
+      <div class="bar"><i class="fill-house" id="bHouse"></i></div>
+    </button>
+    <button type="button" class="stat" data-open-briefing>
+      <div class="label"><span class="stat-icon" aria-hidden="true">⚖️</span><span class="stat-label" data-i18n="Senate Votes">Senate Votes</span><b id="vSenate">0 / 67</b></div>
+      <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
+    </button>
+  </section>
+
+    <button type="button" id="dispatchPeek" aria-haspopup="dialog" aria-controls="dispatchDialog">
+      <span class="live"><i></i><span class="sr-only" data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
+      <span id="latestDispatch" aria-live="polite" data-i18n="No dispatches yet">No dispatches yet</span>
+      <span class="dispatch-expand" aria-hidden="true">↗</span>
+    </button>
 
     <button id="endTurn" onclick="endTurn()" disabled>
       <span class="et-main" data-i18n="Adjourn — Advance the Calendar">Adjourn — Advance the Calendar</span>
@@ -126,9 +119,6 @@
     </button>
   </main>
 
-  <footer>
-    <span data-i18n="Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.">Political fiction: every president, scandal, witness and senator is invented. The game simplifies U.S. constitutional procedures.</span>
-  </footer>
 </div>
 
 <div id="startScreen" class="show" role="dialog" aria-modal="true" aria-labelledby="startTitle" aria-describedby="startIntro">
@@ -211,6 +201,34 @@
   <p id="boardStatus" role="status"></p>
   <div class="board-table-wrap"><table><thead><tr><th data-i18n="Rank">Rank</th><th data-i18n="Player name">Player name</th><th data-i18n="Country / territory">Country / territory</th><th data-i18n="Score">Score</th><th data-i18n="Result">Result</th></tr></thead><tbody id="boardRows"></tbody></table></div>
   <details class="score-rules"><summary data-i18n="How scoring works">How scoring works</summary><p data-i18n="Victory: 10,000. Evidence: 10 each (up to 75). House votes: 10 each (up to 218). Senate votes: 30 each (up to 67). Support: 10 each. Capital: 1 each. Wins also earn 5 per remaining session day.">Victory: 10,000. Evidence: 10 each (up to 75). House votes: 10 each (up to 218). Senate votes: 30 each (up to 67). Support: 10 each. Capital: 1 each. Wins also earn 5 per remaining session day.</p></details>
+</dialog>
+<dialog id="briefingDialog" class="campaign-dialog" aria-labelledby="briefTitle">
+  <div class="sheet-heading"><h2 id="briefTitle" data-i18n="Campaign brief">Campaign brief</h2><button type="button" data-close-dialog data-i18n="Close">Close</button></div>
+  <p class="us-context" data-i18n="U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.">U.S. setting: this fictional game uses the U.S. House, Senate and impeachment process. Its rules simplify that system; they do not describe your country.</p>
+  <h3 data-i18n="Bars of Burden">Bars of Burden</h3><div class="stat-legend"><div><span aria-hidden="true">📁</span> <span data-i18n="Evidence">Evidence</span></div><div><span aria-hidden="true">👥</span> <span data-i18n="Public Support">Public Support</span></div><div><span aria-hidden="true">⚡</span> <span data-i18n="Political Capital">Political Capital</span></div><div><span aria-hidden="true">🏛️</span> <span data-i18n="House Votes">House Votes</span></div><div><span aria-hidden="true">⚖️</span> <span data-i18n="Senate Votes">Senate Votes</span></div></div>
+      <div class="cal-foot">
+      <span id="calFatigue">—</span>
+      <span id="blowbackRisk">—</span>
+      <span id="calEnd">—</span>
+    </div>
+
+      <section class="quickstart" aria-labelledby="briefRulesTitle">
+      <h3 id="briefRulesTitle" data-i18n="Quickstart · Your path to a verdict">Quickstart · Your path to a verdict</h3>
+      <ol>
+        <li data-i18n="Build 75 Evidence to bring articles to the House.">Build 75 Evidence to bring articles to the House.</li>
+        <li data-i18n="Win 218 House votes to impeach, then 67 Senate votes to convict and remove.">Win 218 House votes to impeach, then 67 Senate votes to convict and remove.</li>
+        <li data-i18n="Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.">Spend capital and days on moves. Every 12 seconds of active play also spends one day; 10 days make a month.</li>
+        <li data-i18n="Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.">Adjourn skips unused days to recover capital. Every blowback halves your capital after recovery, rounded down.</li>
+        <li data-i18n="Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.">Finish before the term ends. Keep support at 12% or higher at each monthly review. Pause or hide the tab to stop the clock.</li>
+        <li data-i18n="Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.">Every move can fail. Cards show success odds and rewards; stronger public support improves your odds.</li>
+        <li data-i18n="Public support shifts after every move and active-play day. Paused time does not affect it.">Public support shifts after every move and active-play day. Paused time does not affect it.</li>
+      </ol>
+    </section>
+
+</dialog>
+<dialog id="dispatchDialog" class="campaign-dialog" aria-labelledby="dispatchTitle">
+  <div class="sheet-heading"><h2 id="dispatchTitle" data-i18n="Live — War Room Feed">Live — War Room Feed</h2><button type="button" data-close-dialog data-i18n="Close">Close</button></div>
+  <section id="feedPanel"><div class="feed-head"><span id="feedHint" data-i18n="No dispatches yet">No dispatches yet</span></div><div id="feed"></div></section>
 </dialog>
 <script src="locales.js"></script>
 <script src="leaderboard-locales.js"></script>

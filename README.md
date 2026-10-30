@@ -20,6 +20,8 @@ Then open <http://localhost:8000>.
 - The gavel animates before play begins; reduced-motion preferences skip the animation.
 - Browse **28 cards per phase in Easy and Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
 - The **Deck** shows only cards affordable with current capital and days and with their prerequisites met. Unavailable cards fade and shrink out; remaining cards slide into the gaps. Cards return when resources recover. Playing a card resets the deck to its beginning; dots and accessible labels match the visible cards. Pausing keeps the deck visible. Reduced-motion preferences skip movement and exit animations.
+- The play canvas puts the Deck above a compact, emoji-led **Bars of Burden** strip. The calendar and header are condensed; campaign rules and full dispatches open in sheets that pause the clock. The core game fits a 375 × 667 portrait viewport at default text size; very small screens, landscape, or enlarged text can scroll instead of clipping controls.
+- The carousel centers one card, rotates neighboring cards with CSS 3D transforms, and supports native touch momentum, mouse drag, arrows, Home/End, and keyboard play. A side-card tap brings it forward; a centered-card tap plays it. Seven sliding pagination dots keep larger decks compact. No autoplay or WebGL dependency.
 - Easy starts with 70 capital, 55 support and 12 evidence; regenerates 28–34 capital monthly; loses 1 support per month with no added fatigue; has 35% blowback and 40% breakthrough chances; and adds 10 percentage points to success odds (capped at 94%). Every blowback still halves capital. Easy has its own leaderboard.
 - Every move has a success roll. Cards disclose the current success chance, progress rewards, support changes, failure losses, and any evidence cost. Higher support improves the odds; Harder applies an additional eight-percentage-point penalty before the probability bounds.
 - Quiet preparation, research, coalition work, public outreach, pressure, gambles, and compromises provide different costs, durations, odds, and consequences. Failed moves still spend their full listed capital and days.
@@ -42,7 +44,8 @@ The selected language is remembered on this device when browser storage is avail
 | File | Purpose |
 | --- | --- |
 | `index.html` | Game interface and page structure |
-| `styles.css` | Layout, theme, and responsive styles |
+| `styles.css` | Base theme, briefing and leaderboard styles |
+| `experience.css` | Compact play canvas, 3D carousel and responsive burden bars |
 | `game.js` | Game rules, start flow, move carousel, and calendar clock |
 | `i18n.js` | Language preference, message formatting, and text direction |
 | `locales.js` | Seven translation catalogs keyed by English source messages |
@@ -59,11 +62,11 @@ node --check locales.js
 node tests/smoke.cjs
 ```
 
-No Node dependencies are needed. For a browser smoke check, confirm 28/56 moves in the two modes, select a move, inspect the displayed odds and support change, and adjourn until a blowback logs the exact capital halving. Check both LTR and RTL carousel navigation and verify that Pause/Resume and hidden-tab behavior preserve the countdown and public support.
+No Node dependencies are needed. For a browser smoke check, confirm 28/28/56 moves in the three modes, select a move, inspect the displayed odds and support change, and adjourn until a blowback logs the exact capital halving. Check both LTR and RTL carousel navigation and verify that Pause/Resume and hidden-tab behavior preserve the countdown and public support.
 
 ## Hosting
 
-Serve the repository root with any static web host. Keep `index.html`, `styles.css`, `game.js`, `i18n.js`, and `locales.js` together.
+Serve the repository root with any static web host. Keep the root HTML, CSS and JavaScript assets together, including `experience.css` and the leaderboard/localization assets.
 
 Live game: <https://articles-of-impeachment-play.proudpeach18.chatgpt.site>
 

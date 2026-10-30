@@ -193,6 +193,28 @@ assert.ok(Array.from(moveTrack.children).every(card=>isMoveReady(availableAction
 verifyMessage(msg\`Deck: \${1} / \${28} cards available\`);
 
 `);
+// Centered navigation must reach the first and last card in both directions.
+run(`
+applyLanguage('en');S.capital=120;S.daysLeft=10;renderMoves();
+moveTrack.clientWidth=600;
+Array.from(moveTrack.children).forEach((card,index)=>{card.offsetWidth=300;card.offsetLeft=150+index*238;});
+moveTrack.scrollWidth=600+(moveTrack.children.length-1)*238;
+assert.equal(moveDestination(moveTrack.children[0]),0);
+assert.equal(moveDestination(moveTrack.children.at(-1)),moveTrack.scrollWidth-600);
+moveTrack.scrollLeft=4*238;settleCarousel();updateCarouselControls();
+assert.equal(nearestMoveIndex(),4);assert.equal(moveTrack.dataset.selectedIndex,'4');
+assert.equal(moveDots.children.filter(dot=>!dot.hidden).length,7);
+assert.equal(moveTrack.children.filter(card=>card.tabIndex===0).length,1);
+const beforeBrowse=JSON.stringify(S);moveTrack.children[5].onclick();
+assert.equal(JSON.stringify(S),beforeBrowse,'side-card click only centers the card');
+assert.equal(carouselTarget.index,5);
+document.documentElement.dir='rtl';
+Array.from(moveTrack.children).forEach((card,index)=>{card.offsetLeft=150-index*238;});
+moveTrack.scrollLeft=-4*238;settleCarousel();updateCarouselControls();
+assert.equal(nearestMoveIndex(),4);scrollMoves(1);assert.equal(moveTrack.scrollLeft,-5*238);
+assert.ok(moveTrack.children[0].querySelector('.card-face').style.transform.includes('rotateY'));
+document.documentElement.dir='ltr';movePhaseKey='';renderMoves();
+`);
 // Exercise exit animation cleanup and reduced-motion behavior without wall-clock waits.
 const animations=[];context.animations=animations;
 Element.prototype.getBoundingClientRect=function(){return {left:this.offsetLeft,right:this.offsetLeft+this.offsetWidth,top:0,width:this.offsetWidth,height:214};};

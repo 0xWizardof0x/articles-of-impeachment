@@ -87,27 +87,33 @@
     <button type="button" class="stat" data-open-briefing>
       <div class="label"><span class="stat-icon" aria-hidden="true">📁</span><span class="stat-label" data-i18n="Evidence">Evidence</span><b id="vEvidence">0</b></div>
       <div class="bar"><i class="fill-evidence" id="bEvidence"></i></div>
+      <span class="stat-delta" id="dEvidence" aria-hidden="true"></span>
     </button>
     <button type="button" class="stat" data-open-briefing>
       <div class="label"><span class="stat-icon" aria-hidden="true">👥</span><span class="stat-label" data-i18n="Public Support">Public Support</span><b id="vSupport">0%</b></div>
       <div class="bar"><i class="fill-support" id="bSupport"></i></div>
+      <span class="stat-delta" id="dSupport" aria-hidden="true"></span>
       <span id="supportPulse"></span>
     </button>
     <button type="button" class="stat" data-open-briefing>
       <div class="label"><span class="stat-icon" aria-hidden="true">⚡</span><span class="stat-label" data-i18n="Political Capital">Political Capital</span><b id="vCapital">0</b></div>
       <div class="bar"><i class="fill-capital" id="bCapital"></i></div>
+      <span class="stat-delta" id="dCapital" aria-hidden="true"></span>
     </button>
     <button type="button" class="stat" data-open-briefing>
       <div class="label"><span class="stat-icon" aria-hidden="true">🏛️</span><span class="stat-label" data-i18n="House Votes">House Votes</span><b id="vHouse">0 / 218</b></div>
       <div class="bar"><i class="fill-house" id="bHouse"></i></div>
+      <span class="stat-delta" id="dHouse" aria-hidden="true"></span>
     </button>
     <button type="button" class="stat" data-open-briefing>
       <div class="label"><span class="stat-icon" aria-hidden="true">⚖️</span><span class="stat-label" data-i18n="Senate Votes">Senate Votes</span><b id="vSenate">0 / 67</b></div>
       <div class="bar"><i class="fill-senate" id="bSenate"></i></div>
+      <span class="stat-delta" id="dSenate" aria-hidden="true"></span>
     </button>
   </section>
 
     <button type="button" id="dispatchPeek" aria-haspopup="dialog" aria-controls="dispatchDialog">
+      <span class="dispatch-sweep" aria-hidden="true"></span><span class="dispatch-particles" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <span id="dispatchSignal" aria-hidden="true">•</span>
       <span class="live"><i></i><span class="dispatch-title" data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
       <span class="dispatch-copy" aria-live="polite" aria-atomic="true"><span id="previousDispatch"></span><span id="latestDispatch" data-i18n="No dispatches yet">No dispatches yet</span></span>

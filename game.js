@@ -4500,7 +4500,7 @@ function shiftPublicOpinion(source, previousSupport = S.support) {
   const shift = Math.random() < 0.5 ? -magnitude : magnitude;
   S.support = clamp(S.support + shift, 0, 100);
   S.supportChange = S.support - previousSupport;
-  log(msg`PUBLIC OPINION — Support ${previousSupport}% → ${S.support}%.`, S.supportChange < 0 ? 'bad' : 'good');
+  log(msg`PUBLIC OPINION — Support ${previousSupport}% → ${S.support}%.`, S.supportChange < 0 ? 'bad' : 'good', source);
 }
 
 /* =========================================================
@@ -4571,6 +4571,60 @@ function orderedActions() {
    ========================================================= */
 const feedEl = document.getElementById('feed');
 let lastDispatchSignature = '';
+let lastBurdenValues = null;
+
+// All visual effects are deterministic: presentation never consumes game RNG.
+function animateResult(panel, tone, blowback) {
+  if (typeof panel.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const animate = (element, frames, options) => {
+    element.getAnimations().forEach(animation => animation.cancel());
+    element.animate(frames, options);
+  };
+  animate(panel, [
+    {boxShadow: 'inset 0 0 55px var(--dispatch-glow), 0 0 30px var(--dispatch-glow)', transform: 'translateX(0)'},
+    {transform: tone === 'bad' ? 'translateX(-4px)' : 'translateY(-2px)', offset: .12},
+    {transform: tone === 'bad' ? 'translateX(3px)' : 'translateY(0)', offset: .24},
+    {boxShadow: 'inset 0 0 0 transparent, 0 0 0 transparent', transform: 'translate(0)'}
+  ], {duration: blowback ? 1100 : 850, easing: 'ease-out'});
+  animate(panel.querySelector('.dispatch-copy'), [{opacity: .2, transform: 'translateY(12px)'}, {opacity: 1, transform: 'translateY(0)'}], {duration: 360, easing: 'cubic-bezier(.16,1,.3,1)'});
+  if (tone === 'sys') return;
+  animate(document.getElementById('dispatchSignal'), [
+    {transform: 'scale(2.2) rotate(-18deg)', opacity: 0},
+    {transform: 'scale(.88) rotate(4deg)', opacity: 1, offset: .65},
+    {transform: 'scale(1) rotate(0)', opacity: 1}
+  ], {duration: 600, easing: 'cubic-bezier(.16,1,.3,1)'});
+  animate(panel.querySelector('.dispatch-sweep'), [
+    {transform: 'translateX(-120%)', opacity: 0},
+    {opacity: .65, offset: .25},
+    {transform: 'translateX(150%)', opacity: 0}
+  ], {duration: 1000, easing: 'ease-out'});
+  panel.querySelectorAll('.dispatch-particles i').forEach((particle, index) => {
+    const angle = index * Math.PI * 2 / 10;
+    animate(particle, [
+      {transform: 'translate(0,0) scale(1.4)', opacity: .9},
+      {transform: `translate(${Math.cos(angle) * (85 + index * 7)}px,${Math.sin(angle) * 65}px) scale(0)`, opacity: 0}
+    ], {duration: 650 + index * 35, easing: 'cubic-bezier(.12,.7,.2,1)'});
+  });
+}
+
+function animateBurdenChanges() {
+  const values = {Evidence: S.evidence, Support: S.support, Capital: S.capital, House: S.house, Senate: S.senate};
+  for (const [key, value] of Object.entries(values)) {
+    const change = lastBurdenValues ? Math.round(value - lastBurdenValues[key]) : 0;
+    if (!change) continue;
+    const number = document.getElementById(`v${key}`);
+    if (typeof number.animate !== 'function') continue;
+    number.getAnimations().forEach(animation => animation.cancel());
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) continue;
+    number.animate([{color: change > 0 ? '#94f2bd' : '#ff9f94', transform: 'scale(1.3)'}, {color: 'inherit', transform: 'scale(1)'}], {duration: 900, easing: 'cubic-bezier(.16,1,.3,1)'});
+    const delta = document.getElementById(`d${key}`);
+    delta.getAnimations().forEach(animation => animation.cancel());
+    delta.textContent = signed(change);
+    delta.dataset.tone = change > 0 ? 'good' : 'bad';
+    delta.animate([{opacity: 0, transform: 'translateY(5px) scale(.7)'}, {opacity: 1, transform: 'translateY(-8px) scale(1.1)', offset: .2}, {opacity: 1, transform: 'translateY(-12px)', offset: .65}, {opacity: 0, transform: 'translateY(-22px)'}], {duration: 1300, easing: 'ease-out'});
+  }
+  lastBurdenValues = values;
+}
 
 function renderFeed() {
   const fromBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight;
@@ -4598,9 +4652,11 @@ function renderFeed() {
   const latest = recent.at(-1);
   const previous = recent.length > 1 ? recent[0] : null;
   // Keep a move's result prominent, with its polling consequence just below it.
-  const supportUpdate = latest?.text?.key?.startsWith('PUBLIC OPINION');
-  const headline = supportUpdate && previous ? previous : latest;
-  const detail = supportUpdate && previous ? latest : previous;
+  const supportUpdate = latest?.source === 'move' && latest?.text?.key?.startsWith('PUBLIC OPINION');
+  const quietAfterBreakthrough = latest?.text === 'No blowback this turn. The administration fails to land a counterattack.' && previous?.text?.values?.[0] === 'BREAKTHROUGH';
+  const leadWithPrevious = previous && (supportUpdate || quietAfterBreakthrough);
+  const headline = leadWithPrevious ? previous : latest;
+  const detail = leadWithPrevious ? latest : previous;
   const priorLine = document.getElementById('previousDispatch');
   priorLine.textContent = headline ? t(headline.text) : '';
   priorLine.className = headline?.kind || '';
@@ -4611,17 +4667,15 @@ function renderFeed() {
   const tone = ['good', 'bad', 'gold'].includes(headline?.kind) ? headline.kind : 'sys';
   panel.dataset.tone = tone;
   panel.title = [priorLine.textContent, peek.textContent].filter(Boolean).join('\n');
-  document.getElementById('dispatchSignal').textContent = {good: '✓', bad: '!', gold: '✦', sys: '•'}[tone];
+  const blowback = Boolean(headline?.text?.key?.startsWith('BLOWBACK'));
+  panel.dataset.impact = blowback ? 'blowback' : tone;
+  document.getElementById('dispatchSignal').textContent = blowback ? '½' : {good: '✓', bad: '!', gold: '✦', sys: '•'}[tone];
   const signature = JSON.stringify(recent);
   if (signature !== lastDispatchSignature) {
-    const canAnimate = lastDispatchSignature && typeof panel.animate === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canAnimate = lastDispatchSignature;
     lastDispatchSignature = signature;
     if (canAnimate) {
-      panel.getAnimations().forEach(animation => animation.cancel());
-      panel.animate([{boxShadow: 'inset 0 0 0 1px var(--dispatch-accent), 0 0 18px var(--dispatch-glow)'}, {boxShadow: 'inset 0 0 0 0px transparent, 0 0 0 transparent'}], {duration: 850, easing: 'ease-out'});
-      const copy = panel.querySelector('.dispatch-copy');
-      copy.getAnimations().forEach(animation => animation.cancel());
-      copy.animate([{opacity: .3, transform: 'translateY(5px)'}, {opacity: 1, transform: 'translateY(0)'}], {duration: 240, easing: 'ease-out'});
+      animateResult(panel, tone, blowback);
     }
   }
 }
@@ -4689,6 +4743,7 @@ function render() {
 
   document.getElementById('vSenate').textContent = Math.min(Math.round(S.senate), 67) + ' / 67';
   document.getElementById('bSenate').style.width = clamp(S.senate / 67 * 100, 0, 100) + '%';
+  animateBurdenChanges();
 
   const names = {
     investigation: 'Phase I — Oversight & Evidence',
@@ -4854,15 +4909,18 @@ function renderMoves() {
     availableActions().forEach(action => {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'action'; button.dataset.moveId = action.id;
+      button.dataset.suit = action.extended ? 'extended' : S.phase;
       const translated = t(action.name);
       const firstSpace = translated.indexOf(' ');
       const hasIcon = firstSpace > 0 && /\p{Extended_Pictographic}/u.test(translated.slice(0, firstSpace));
       button.innerHTML = `
         <span class="card-face">
-        <span class="card-top"><span class="card-icon" aria-hidden="true">${hasIcon ? translated.slice(0, firstSpace) : '📜'}</span>${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}<span class="card-number" aria-hidden="true"></span></span>
+        <span class="card-art" aria-hidden="true"><span class="card-orbit"></span><span class="card-icon">${hasIcon ? translated.slice(0, firstSpace) : '📜'}</span></span>
+        <span class="card-top"><span class="card-suit">${t(METRIC_LABELS[PHASE_METRICS[S.phase]])}</span>${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}<span class="card-number" aria-hidden="true"></span></span>
         <span class="name"><span class="mobile-card-icon" aria-hidden="true">${hasIcon ? translated.slice(0, firstSpace) : '📜'} </span>${hasIcon ? translated.slice(firstSpace + 1) : translated}</span><span class="desc"></span>
-        <span class="move-odds"></span><span class="move-payoff"></span>
-        <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
+        <span class="card-metrics"><span class="odds-metric"><strong class="odds-number"></strong><span>${t('Success chance')}</span><i class="odds-meter" aria-hidden="true"><i></i></i></span><span class="gain-metric"><strong class="gain-number" dir="ltr">+${action.gain[0]}–${action.gain[1]}</strong><span>${t(METRIC_LABELS[PHASE_METRICS[S.phase]])}</span></span></span>
+        <span class="move-odds sr-only"></span><span class="move-payoff"><span class="payoff-support"></span><span class="payoff-risk"></span></span>
+        <span class="cost"><span>⚡ ${tr`Capital: ${action.cost}`}</span><span class="days">◷ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span><span class="play-card"><span class="play-label">${t('Play card')}</span><span aria-hidden="true">↗</span></span></span>`;
       button.onclick = () => {
         if (deckDragMoved) return;
@@ -4931,7 +4989,10 @@ function renderMoves() {
     const failure = tr`On failure: ${metric} −${action.loss[0]}–${action.loss[1]}; support −${action.supportLoss[0]}–${action.supportLoss[1]}.`;
     const evidenceCost = action.evidenceCost ? tr`Evidence cost on success: ${action.evidenceCost}.` : '';
     button.querySelector('.move-odds').textContent = odds;
-    button.querySelector('.move-payoff').textContent = `${support}. ${failure} ${evidenceCost}`.trim();
+    button.querySelector('.odds-number').textContent = `${moveChance(action)}%`;
+    button.querySelector('.odds-meter i').style.width = `${moveChance(action)}%`;
+    button.querySelector('.payoff-support').textContent = support;
+    button.querySelector('.payoff-risk').textContent = `${failure} ${evidenceCost}`.trim();
     button.querySelector('.move-status').textContent = t(status);
     button.querySelector('.play-label').textContent = t(disabled ? status : 'Play card');
     button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
@@ -5032,7 +5093,7 @@ document.querySelectorAll('.campaign-dialog').forEach(dialog => {
   dialog.addEventListener('close', () => { CALENDAR_CLOCK.lastNow = null; if (S.mode) render(); });
 });
 
-function log(text, kind = '') { S.log.push({ text, kind }); }
+function log(text, kind = '', source) { S.log.push(source ? { text, kind, source } : { text, kind }); }
 
 /* =========================================================
    ACTIVE-PLAY CALENDAR — 12 seconds = 1 remaining session day
@@ -5343,6 +5404,8 @@ function startGame(modeId) {
   S.senate = 0;
   S.over = false;
   S.log = [];
+  lastBurdenValues = null;
+  lastDispatchSignature = '';
   movePhaseKey = '';
 
   document.getElementById('startScreen').classList.remove('show');

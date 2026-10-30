@@ -2,6 +2,7 @@
 // Preserve all numbered placeholders when editing a translation.
 const TRANSLATIONS = {
   "es": {
+    "Success chance": "Probabilidad de éxito",
     "Language": "Idioma",
     "Articles of Impeachment": "Artículos de juicio político",
     "A Political Simulation · All Persons Fictitious": "Simulación política · Todos los personajes son ficticios",
@@ -422,6 +423,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "El apoyo cambia tras cada movimiento y día de juego activo. El tiempo en pausa no influye."
   },
   "fr": {
+    "Success chance": "Chance de réussite",
     "Language": "Langue",
     "Articles of Impeachment": "Articles de mise en accusation",
     "A Political Simulation · All Persons Fictitious": "Simulation politique · Personnages fictifs",
@@ -842,6 +844,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "Le soutien évolue après chaque action et jour de jeu actif. Les pauses n’ont aucun effet."
   },
   "ko": {
+    "Success chance": "성공 확률",
     "Language": "언어",
     "Articles of Impeachment": "대통령 탄핵안",
     "A Political Simulation · All Persons Fictitious": "정치 시뮬레이션 · 모든 인물은 허구입니다",
@@ -1262,6 +1265,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "국민 지지는 행동과 실제 플레이 하루마다 변합니다. 일시정지 시간에는 변하지 않습니다."
   },
   "fa": {
+    "Success chance": "احتمال موفقیت",
     "Language": "زبان",
     "Articles of Impeachment": "مواد استیضاح",
     "A Political Simulation · All Persons Fictitious": "شبیه‌سازی سیاسی · همهٔ شخصیت‌ها خیالی‌اند",
@@ -1682,6 +1686,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "حمایت پس از هر حرکت و هر روز بازی فعال تغییر می‌کند. زمان مکث اثری ندارد."
   },
   "he": {
+    "Success chance": "סיכויי הצלחה",
     "Language": "שפה",
     "Articles of Impeachment": "סעיפי הדחה",
     "A Political Simulation · All Persons Fictitious": "סימולציה פוליטית · כל הדמויות בדיוניות",
@@ -2102,6 +2107,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "התמיכה משתנה אחרי כל מהלך ויום משחק פעיל. זמן בהשהיה לא משפיע."
   },
   "zh": {
+    "Success chance": "成功率",
     "Language": "语言",
     "Articles of Impeachment": "总统弹劾案",
     "A Political Simulation · All Persons Fictitious": "政治模拟 · 所有人物均为虚构",
@@ -2522,6 +2528,7 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "每次行动和每个有效游玩日后，公众支持都会波动。暂停时间不会影响支持。"
   },
   "ja": {
+    "Success chance": "成功率",
     "Language": "言語",
     "Articles of Impeachment": "大統領弾劾条項",
     "A Political Simulation · All Persons Fictitious": "政治シミュレーション · 登場人物はすべて架空です",

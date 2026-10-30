@@ -1,0 +1,259 @@
+{
+  "hard": {
+    "games": 50,
+    "wins": 25,
+    "winCI": [
+      36.6,
+      63.4
+    ],
+    "reached": {
+      "investigation": 50,
+      "house": 48,
+      "senate": 44
+    },
+    "finalPhases": {
+      "senate": 44,
+      "house": 4,
+      "investigation": 2
+    },
+    "lossPhases": {
+      "senate": 19,
+      "house": 4,
+      "investigation": 2
+    },
+    "reasons": {
+      "THE TERM ENDS": 25,
+      "CONVICTED": 25
+    },
+    "average": {
+      "month": 22.12,
+      "moves": 36.22,
+      "adjourns": 16.94,
+      "capitalBlocked": 16.74,
+      "daysBlocked": 0.2,
+      "mixedBlocked": 0,
+      "strategicAdjourns": 0,
+      "zeroMoveMonths": 0,
+      "blowbacks": 12.88,
+      "capitalLost": 184.24,
+      "supportMin": 33.2,
+      "supportMax": 81.24,
+      "supportMean": 60.12,
+      "support": 72.94,
+      "capital": 5.8,
+      "meanCapitalAfterBlowback": 13.91,
+      "clockDays": 23.26,
+      "moveDays": 120.18,
+      "skippedDays": 75.24,
+      "elapsedDays": 218.68,
+      "score": 9850.4
+    },
+    "moveSuccessRate": 82.8,
+    "expectedMoveSuccessRate": 83.1,
+    "observedBlowbackRate": 61.0,
+    "blowbackCounts": [
+      644,
+      1056
+    ],
+    "longestBlowbackStreak": 11,
+    "winsAverageMonth": 20.2,
+    "winsMonthRange": [
+      15,
+      24
+    ],
+    "houseEntryMean": 9.4,
+    "senateEntryMean": 16.2,
+    "collapseAverageMonth": null,
+    "uniqueMovesChosen": 15,
+    "topMoves": [
+      {
+        "name": "📣 Explain the Paper Trail",
+        "phase": "investigation",
+        "times": 361,
+        "percent": 19.9
+      },
+      {
+        "name": "🏛️ The Constitutional Argument",
+        "phase": "senate",
+        "times": 320,
+        "percent": 17.7
+      },
+      {
+        "name": "🗳️ Whip the Caucus",
+        "phase": "house",
+        "times": 299,
+        "percent": 16.5
+      },
+      {
+        "name": "📣 Rally the Base",
+        "phase": "house",
+        "times": 215,
+        "percent": 11.9
+      },
+      {
+        "name": "🔬 Reconstruct the Timeline",
+        "phase": "investigation",
+        "times": 211,
+        "percent": 11.7
+      },
+      {
+        "name": "📁 Issue Subpoenas",
+        "phase": "investigation",
+        "times": 86,
+        "percent": 4.7
+      },
+      {
+        "name": "🤝 Interview the Archivist",
+        "phase": "investigation",
+        "times": 67,
+        "percent": 3.7
+      },
+      {
+        "name": "📰 Background to the Times",
+        "phase": "investigation",
+        "times": 65,
+        "percent": 3.6
+      }
+    ],
+    "supportDeltaAvg": {
+      "move": 89,
+      "opinion": -1.2,
+      "events": -20.6,
+      "decay": -30.2
+    },
+    "phaseDaysAvg": {
+      "investigation": 95.3,
+      "house": 71.6,
+      "senate": 51.8
+    }
+  },
+  "harder": {
+    "games": 50,
+    "wins": 6,
+    "winCI": [
+      5.6,
+      23.8
+    ],
+    "reached": {
+      "investigation": 50,
+      "house": 35,
+      "senate": 26
+    },
+    "finalPhases": {
+      "house": 9,
+      "senate": 26,
+      "investigation": 15
+    },
+    "lossPhases": {
+      "house": 9,
+      "senate": 20,
+      "investigation": 15
+    },
+    "reasons": {
+      "THE CASE COLLAPSES": 22,
+      "THE TERM ENDS": 22,
+      "CONVICTED": 6
+    },
+    "average": {
+      "month": 39.28,
+      "moves": 50.58,
+      "adjourns": 36.22,
+      "capitalBlocked": 35.4,
+      "daysBlocked": 0.08,
+      "mixedBlocked": 0,
+      "strategicAdjourns": 0.74,
+      "zeroMoveMonths": 0,
+      "blowbacks": 29.82,
+      "capitalLost": 342.72,
+      "supportMin": 13.96,
+      "supportMax": 68.26,
+      "supportMean": 44.77,
+      "support": 30.82,
+      "capital": 7.22,
+      "meanCapitalAfterBlowback": 11.29,
+      "clockDays": 40.08,
+      "moveDays": 165.76,
+      "skippedDays": 181.84,
+      "elapsedDays": 387.68,
+      "score": 3707.62
+    },
+    "moveSuccessRate": 75.7,
+    "expectedMoveSuccessRate": 76.4,
+    "observedBlowbackRate": 77.9,
+    "blowbackCounts": [
+      1491,
+      1914
+    ],
+    "longestBlowbackStreak": 20,
+    "winsAverageMonth": 40.3,
+    "winsMonthRange": [
+      25,
+      46
+    ],
+    "houseEntryMean": 19.5,
+    "senateEntryMean": 34.0,
+    "collapseAverageMonth": 30.3,
+    "uniqueMovesChosen": 17,
+    "topMoves": [
+      {
+        "name": "📣 Explain the Paper Trail",
+        "phase": "investigation",
+        "times": 978,
+        "percent": 38.7
+      },
+      {
+        "name": "📣 Constituent Letter Drive",
+        "phase": "house",
+        "times": 396,
+        "percent": 15.7
+      },
+      {
+        "name": "📣 Home-State Listening Tour",
+        "phase": "senate",
+        "times": 265,
+        "percent": 10.5
+      },
+      {
+        "name": "📣 Rally the Base",
+        "phase": "house",
+        "times": 182,
+        "percent": 7.2
+      },
+      {
+        "name": "🛡️ Shelter a Second Whistleblower",
+        "phase": "investigation",
+        "times": 140,
+        "percent": 5.5
+      },
+      {
+        "name": "🗳️ Whip the Caucus",
+        "phase": "house",
+        "times": 122,
+        "percent": 4.8
+      },
+      {
+        "name": "🔍 Forensic Audit of the Books",
+        "phase": "investigation",
+        "times": 75,
+        "percent": 3.0
+      },
+      {
+        "name": "🗃️ Public Records Request",
+        "phase": "investigation",
+        "times": 63,
+        "percent": 2.5
+      }
+    ],
+    "supportDeltaAvg": {
+      "move": 161.7,
+      "opinion": -1.9,
+      "events": -44.0,
+      "decay": -119.1
+    },
+    "phaseDaysAvg": {
+      "investigation": 214.3,
+      "house": 112.9,
+      "senate": 60.4
+    }
+  }
+}

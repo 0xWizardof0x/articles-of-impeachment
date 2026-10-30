@@ -74,7 +74,12 @@
       </div>
       <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys." data-i18n-aria="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
       <div id="deckExits" aria-hidden="true"></div>
-      <p id="deckEmpty" role="status" hidden></p>
+      <div id="deckEmpty" hidden>
+        <span class="empty-deck-seal" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M20 10h24M20 54h24M24 12c0 11 2 13 8 20-6 7-8 9-8 20m16-40c0 11-2 13-8 20 6 7 8 9 8 20"/><path d="m27 45 5-7 5 7Z"/></svg></span>
+        <h3 data-i18n="No moves available">No moves available</h3>
+        <p id="deckEmptyCopy" role="status"></p>
+        <div id="deckAdjournSlot"></div>
+      </div>
       <div class="carousel-bottom">
         <div class="move-pagination">
           <span id="moveOptionsLabel" data-i18n="Move Options">Move Options</span>
@@ -121,10 +126,10 @@
       <span class="dispatch-expand" aria-hidden="true">↗</span>
     </button>
 
-    <button id="endTurn" onclick="endTurn()" disabled>
+    <div id="adjournDock"><button id="endTurn" onclick="endTurn()" disabled>
       <span class="et-main" data-i18n="Adjourn — Advance the Calendar">Adjourn — Advance the Calendar</span>
       <span class="et-sub" id="endTurnSub"></span>
-    </button>
+    </button></div>
   </main>
 
 </div>

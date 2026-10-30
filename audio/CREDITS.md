@@ -1,0 +1,18 @@
+# Game audio
+
+The game bundles four small PCM WAV files locally. No third-party audio server is contacted during play.
+
+| Local file | Original asset | Creator / pack | License |
+| --- | --- | --- | --- |
+| card-slide.wav | card-slide-2.ogg | Kenney, Casino Audio 1.1 | CC0 |
+| card-place.wav | card-place-1.ogg | Kenney, Casino Audio 1.1 | CC0 |
+| gavel.wav | impactWood_heavy_000.ogg | Kenney, Impact Sounds 1.0 | CC0 |
+| knock.wav | impactWood_light_000.ogg | Kenney, Impact Sounds 1.0 | CC0 |
+
+Sources: [Casino Audio, uploaded by Kenney](https://opengameart.org/node/12742), [Impact Sounds official page](https://kenney.nl/assets/impact-sounds). Impact source files were downloaded from [this redistribution](https://github.com/GeorgeQLe/assets-sfx-combat/tree/main/assets/kenney/impact-sounds/Audio). Original license notices are included alongside this file.
+
+Processing: silence trimmed, DC removed, short edge fades, mono 22,050 Hz PCM16, peak normalized to approximately −3 dBFS. Combined WAV size: 76,676 bytes. The heavy wood recording is pitch-shifted and layered with a low body and a quieter rebound for the gavel.
+
+Pause and resume use a new instrumental chiptune arrangement of the opening of **Hail to the Chief**, James Sanderson's public-domain composition. The melody and dotted rhythms follow the [historical score in Johns Hopkins University's Levy Collection](https://levysheetmusic.mse.jhu.edu/collection/013/077). No modern recording or lyrics are included. Pause uses the first bar in a lower register; resume plays two bars an octave higher, resolving to the tonic.
+
+All remaining musical phrases and synthesis in sound.js are original to this game. A rounded pulse-wave lead, a bell overtone and triangle bass provide the arcade character. Audio respects the remembered mute control, user-gesture unlocking, hidden-tab suspension and bounded voice cleanup. If a sample cannot load, a procedural fallback plays immediately; a late download never replays the cue.

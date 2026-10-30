@@ -4790,6 +4790,31 @@ let deckResetRequested = false;
 let carouselFrame = null;
 let carouselTarget = null;
 let carouselSettleTimer = null;
+let adjournMotion = null;
+
+// Move the real control so keyboard focus, pause locking and one-click turn
+// handling remain identical in the empty Deck and the normal thumb dock.
+function placeAdjournInDeck(empty) {
+  const button = document.getElementById('endTurn');
+  const dock = document.getElementById('adjournDock');
+  const target = empty ? document.getElementById('deckAdjournSlot') : dock;
+  document.getElementById('movesPanel').classList.toggle('is-empty', empty);
+  dock.classList.toggle('is-vacant', empty);
+  if (button.parentElement === target) return;
+  const before = button.getBoundingClientRect();
+  const focused = document.activeElement === button;
+  adjournMotion?.cancel();
+  target.appendChild(button);
+  if (focused) button.focus({preventScroll: true});
+  const after = button.getBoundingClientRect();
+  if (before.width && after.width && typeof button.animate === 'function' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    adjournMotion = button.animate([
+      {transform: `translate(${before.left - after.left}px, ${before.top - after.top}px) scale(${before.width / after.width}, ${before.height / after.height})`},
+      {transform: 'translate(0,0) scale(1)'}
+    ], {duration: 560, easing: 'cubic-bezier(.22,1,.36,1)'});
+  }
+}
 
 function settleCarousel() {
   clearTimeout(carouselSettleTimer);
@@ -5023,8 +5048,10 @@ function renderMoves() {
   document.getElementById('movesSummary').textContent = tr`Deck: ${actions.length} / ${availableActions().length} cards available`;
   const empty = document.getElementById('deckEmpty');
   empty.hidden = actions.length > 0;
-  empty.textContent = t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
+  document.getElementById('deckEmptyCopy').textContent = t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
   moveTrack.hidden = actions.length === 0;
+  placeAdjournInDeck(actions.length === 0 && !S.over);
+  if (actions.length === 0 && hadDeckFocus && !isCalendarPaused()) document.getElementById('endTurn').focus({preventScroll: true});
   scheduleCarouselUpdate();
 }
 

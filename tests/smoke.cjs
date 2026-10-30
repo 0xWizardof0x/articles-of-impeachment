@@ -19,7 +19,7 @@ class Element {
   addEventListener() {}
   setAttribute(k,v) { this.attrs[k] = v; }
   getAttribute(k) { return this.attrs[k]; }
-  appendChild(el) { el.offsetLeft = this.children.length * 192; this.children.push(el); }
+  appendChild(el) { if(el.parentElement) el.parentElement.children=el.parentElement.children.filter(child=>child!==el); el.parentElement=this; el.offsetLeft = this.children.length * 192; this.children.push(el); }
   insertBefore(el, reference) {
     const oldIndex = this.children.indexOf(el);
     if (oldIndex >= 0) this.children.splice(oldIndex, 1);
@@ -35,6 +35,7 @@ class Element {
   insertAdjacentElement() {}
   scrollTo({left}) { this.scrollLeft=left; }
   getClientRects() { return []; }
+  getBoundingClientRect() { return {left:0,top:0,width:0,height:0}; }
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
@@ -168,9 +169,15 @@ S.capital=120;S.daysLeft=10;renderMoves();assertMoveOrder();
 assert.ok(document.activeElement===originalCards.get(focusedMove.id) || document.activeElement===moveTrack);
 assert.ok(Array.from(moveTrack.children).every(c=>originalCards.get(c.dataset.moveId)===c),'reuse card nodes');
 S.capital=focusedMove.cost;S.daysLeft=focusedMove.days;renderMoves();assert.ok(isMoveReady(focusedMove));assertMoveOrder();
-S.capital=0;renderMoves();assertMoveOrder();assert.equal(document.activeElement,moveTrack);
+S.capital=0;renderMoves();assertMoveOrder();assert.equal(document.activeElement,document.getElementById('endTurn'));
 assert.equal(moveTrack.children.length,0);assert.equal(moveDots.children.length,0);assert.equal(document.getElementById('deckEmpty').hidden,false);
-S.capital=25;S.daysLeft=3;renderMoves();assertMoveOrder();
+const adjournControl=document.getElementById('endTurn');
+assert.equal(adjournControl.parentElement,document.getElementById('deckAdjournSlot'),'Adjourn moves into the empty Deck');
+renderMoves();assert.equal(document.getElementById('deckAdjournSlot').children.length,1,'re-renders never duplicate the control');
+CALENDAR_CLOCK.manuallyPaused=true;render();assert.equal(adjournControl.disabled,true,'empty Deck still respects pause');
+CALENDAR_CLOCK.manuallyPaused=false;S.capital=25;S.daysLeft=3;render();assertMoveOrder();
+assert.equal(adjournControl.parentElement,document.getElementById('adjournDock'),'resources returning restores the footer');
+assert.equal(document.getElementById('deckAdjournSlot').children.length,0);assert.equal(adjournControl.disabled,false);
 const beforePause=orderedActions().map(a=>a.id);CALENDAR_CLOCK.manuallyPaused=true;renderMoves();
 assert.deepEqual(orderedActions().map(a=>a.id),beforePause);assert.ok(Array.from(moveTrack.children).every(c=>c.disabled));
 CALENDAR_CLOCK.manuallyPaused=false;renderMoves();
@@ -259,8 +266,11 @@ S.mode='easy';S.phase='investigation';S.over=false;S.capital=120;S.daysLeft=10;C
 renderMoves();animations.length=0;S.capital=0;renderMoves();
 assert.equal(moveTrack.children.length,0);assert.ok(document.getElementById('deckExits').children.length>0);
 assert.ok(animations.some(a=>a.options.duration===220));
+assert.equal(animations.filter(a=>a.options.duration===560).length,1,'Adjourn animates once into the empty Deck');
+renderMoves();assert.equal(animations.filter(a=>a.options.duration===560).length,1,'ordinary renders do not restart relocation');
 animations.forEach(a=>a.onfinish?.());assert.equal(document.getElementById('deckExits').children.length,0);
 S.capital=120;renderMoves();assert.ok(animations.some(a=>a.options.duration===320));
+assert.equal(animations.filter(a=>a.options.duration===560).length,2,'Adjourn animates back when playable cards return');
 `);
 run(`
 applyLanguage('en');animations.length=0;

@@ -4570,6 +4570,7 @@ function orderedActions() {
    FEED
    ========================================================= */
 const feedEl = document.getElementById('feed');
+let lastDispatchSignature = '';
 
 function renderFeed() {
   const fromBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight;
@@ -4593,11 +4594,36 @@ function renderFeed() {
   hint.textContent = S.log.length === 0
     ? t('No dispatches yet')
     : tr`Dispatches: ${shown} of ${S.log.length} · scroll for more`;
-  const latest = [...S.log].reverse().find(entry => !/^━+$/.test(t(entry.text).trim()));
+  const recent = S.log.filter(entry => !/^━+$/.test(t(entry.text).trim())).slice(-2);
+  const latest = recent.at(-1);
+  const previous = recent.length > 1 ? recent[0] : null;
+  // Keep a move's result prominent, with its polling consequence just below it.
+  const supportUpdate = latest?.text?.key?.startsWith('PUBLIC OPINION');
+  const headline = supportUpdate && previous ? previous : latest;
+  const detail = supportUpdate && previous ? latest : previous;
+  const priorLine = document.getElementById('previousDispatch');
+  priorLine.textContent = headline ? t(headline.text) : '';
+  priorLine.className = headline?.kind || '';
   const peek = document.getElementById('latestDispatch');
-  peek.textContent = latest ? t(latest.text) : t('No dispatches yet');
-  peek.className = latest?.kind || '';
-  document.getElementById('dispatchPeek').title = peek.textContent;
+  peek.textContent = detail ? t(detail.text) : headline ? '' : t('No dispatches yet');
+  peek.className = detail?.kind || '';
+  const panel = document.getElementById('dispatchPeek');
+  const tone = ['good', 'bad', 'gold'].includes(headline?.kind) ? headline.kind : 'sys';
+  panel.dataset.tone = tone;
+  panel.title = [priorLine.textContent, peek.textContent].filter(Boolean).join('\n');
+  document.getElementById('dispatchSignal').textContent = {good: '✓', bad: '!', gold: '✦', sys: '•'}[tone];
+  const signature = JSON.stringify(recent);
+  if (signature !== lastDispatchSignature) {
+    const canAnimate = lastDispatchSignature && typeof panel.animate === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    lastDispatchSignature = signature;
+    if (canAnimate) {
+      panel.getAnimations().forEach(animation => animation.cancel());
+      panel.animate([{boxShadow: 'inset 0 0 0 1px var(--dispatch-accent), 0 0 18px var(--dispatch-glow)'}, {boxShadow: 'inset 0 0 0 0px transparent, 0 0 0 transparent'}], {duration: 850, easing: 'ease-out'});
+      const copy = panel.querySelector('.dispatch-copy');
+      copy.getAnimations().forEach(animation => animation.cancel());
+      copy.animate([{opacity: .3, transform: 'translateY(5px)'}, {opacity: 1, transform: 'translateY(0)'}], {duration: 240, easing: 'ease-out'});
+    }
+  }
 }
 
 /* =========================================================
@@ -4834,7 +4860,7 @@ function renderMoves() {
       button.innerHTML = `
         <span class="card-face">
         <span class="card-top"><span class="card-icon" aria-hidden="true">${hasIcon ? translated.slice(0, firstSpace) : '📜'}</span>${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}<span class="card-number" aria-hidden="true"></span></span>
-        <span class="name">${hasIcon ? translated.slice(firstSpace + 1) : translated}</span><span class="desc"></span>
+        <span class="name"><span class="mobile-card-icon" aria-hidden="true">${hasIcon ? translated.slice(0, firstSpace) : '📜'} </span>${hasIcon ? translated.slice(firstSpace + 1) : translated}</span><span class="desc"></span>
         <span class="move-odds"></span><span class="move-payoff"></span>
         <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span><span class="play-card"><span class="play-label">${t('Play card')}</span><span aria-hidden="true">↗</span></span></span>`;

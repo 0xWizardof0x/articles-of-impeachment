@@ -108,8 +108,9 @@
   </section>
 
     <button type="button" id="dispatchPeek" aria-haspopup="dialog" aria-controls="dispatchDialog">
-      <span class="live"><i></i><span class="sr-only" data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
-      <span id="latestDispatch" aria-live="polite" data-i18n="No dispatches yet">No dispatches yet</span>
+      <span id="dispatchSignal" aria-hidden="true">•</span>
+      <span class="live"><i></i><span class="dispatch-title" data-i18n="Live — War Room Feed">Live — War Room Feed</span></span>
+      <span class="dispatch-copy" aria-live="polite" aria-atomic="true"><span id="previousDispatch"></span><span id="latestDispatch" data-i18n="No dispatches yet">No dispatches yet</span></span>
       <span class="dispatch-expand" aria-hidden="true">↗</span>
     </button>
 

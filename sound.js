@@ -34,10 +34,10 @@ window.GameAudio = (() => {
       if (!context) {
         context = new AudioContext();
         master = context.createGain();
-        master.gain.value = .22;
+        master.gain.value = .32;
         const compressor = context.createDynamicsCompressor();
-        compressor.threshold.value = -12; compressor.knee.value = 18; compressor.ratio.value = 4;
-        compressor.attack.value = .006; compressor.release.value = .08;
+        compressor.threshold.value = -10; compressor.knee.value = 12; compressor.ratio.value = 6;
+        compressor.attack.value = .003; compressor.release.value = .10;
         master.connect(compressor); compressor.connect(context.destination);
         noiseBuffer = context.createBuffer(1, Math.ceil(context.sampleRate * .25), context.sampleRate);
         const samples = noiseBuffer.getChannelData(0);
@@ -62,7 +62,9 @@ window.GameAudio = (() => {
     }
     const gain = context.createGain();
     gain.gain.setValueAtTime(0, at);
-    gain.gain.linearRampToValueAtTime(level, at + Math.min(.008, duration / 4));
+    const attack = Math.min(.002, duration / 4);
+    gain.gain.linearRampToValueAtTime(level, at + attack);
+    gain.gain.setValueAtTime(level, at + attack + Math.min(.018, duration * .15));
     gain.gain.exponentialRampToValueAtTime(.0001, at + duration);
     source.connect(filter || gain);
     if (filter) filter.connect(gain);
@@ -96,27 +98,33 @@ window.GameAudio = (() => {
         filter.frequency.value = frequency; filter.Q.value = .8;
         voice(source, at + offset, duration, level, filter);
       };
-      const chime = (notes, step = .065, duration = .25, level = .18) => notes.forEach((note, i) => {
-        tone(note, i * step, duration, level);
-        tone(note * 2, i * step, duration * .55, level * .13);
+      const thump = (offset = 0, level = .48) => {
+        tone(185, offset, .17, level, 'sine', 54);
+        rustle(offset, .035, level * .6, 1900);
+      };
+      const chime = (notes, step = .055, duration = .24, level = .24) => notes.forEach((note, i) => {
+        tone(note, i * step, duration, level, 'triangle');
+        tone(note * 2, i * step, duration * .42, level * .18);
       });
       switch (name) {
-        case 'select': tone(620, 0, .07, .13); break;
-        case 'shuffle': rustle(0, .055, .13, 2600); break;
-        case 'card': rustle(0, .09, .24, 2200); tone(240, .025, .09, .2, 'triangle', 130); break;
+        case 'select': tone(780, 0, .055, .22, 'triangle', 520); tone(190, 0, .055, .16); break;
+        case 'shuffle': rustle(0, .06, .26, 2400); break;
+        case 'card': rustle(0, .07, .4, 2400); tone(310, .01, .12, .36, 'triangle', 105); break;
         case 'gavel':
-          tone(180, 0, .2, .5, 'triangle', 65); tone(420, 0, .075, .2, 'sine', 230);
-          rustle(0, .055, .38, 1600); tone(150, .115, .12, .16, 'triangle', 70); break;
-        case 'success': chime([523.25, 659.25, 783.99]); break;
-        case 'setback': tone(330, 0, .28, .23, 'triangle', 165); tone(196, .09, .25, .18); break;
-        case 'breakthrough': chime([783.99, 987.77, 1174.66], .08, .38); break;
+          thump(0, .65); tone(210, 0, .23, .48, 'triangle', 62); tone(880, 0, .035, .24, 'sine', 410);
+          rustle(0, .055, .48, 1500); tone(160, .12, .10, .24, 'triangle', 65); break;
+        case 'success': thump(0, .28); chime([523.25, 659.25, 783.99]); break;
+        case 'setback': thump(0, .4); tone(430, 0, .22, .30, 'triangle', 120); tone(196, .075, .18, .22); break;
+        case 'breakthrough': thump(0, .4); chime([783.99, 987.77, 1174.66], .07, .32, .28); break;
         case 'blowback':
-          tone(125, 0, .55, .42, 'sine', 45); rustle(0, .16, .2, 800);
-          [330, 247, 165].forEach((note, i) => tone(note, i * .075, .28, .15, 'triangle')); break;
-        case 'phase': chime([392, 523.25, 659.25, 783.99], .10, .45); break;
-        case 'adjourn': rustle(0, .12, .18, 1800); rustle(.09, .09, .12, 2600); tone(220, .10, .12, .15, 'triangle', 110); break;
-        case 'victory': chime([392, 523.25, 659.25, 783.99, 1046.5], .12, .6, .2); break;
-        case 'defeat': chime([392, 311.13, 261.63, 196], .13, .5, .16); break;
+          thump(0, .65); tone(140, .08, .5, .55, 'sine', 42); rustle(0, .14, .35, 950);
+          [392, 247, 165].forEach((note, i) => tone(note, i * .065, .25, .24, 'triangle')); break;
+        case 'phase': thump(0, .4); chime([392, 523.25, 659.25, 783.99], .085, .4, .27); break;
+        case 'adjourn': rustle(0, .10, .30, 1800); rustle(.07, .07, .22, 2600); tone(260, .09, .12, .26, 'triangle', 95); break;
+        case 'pause': tone(660, 0, .11, .26, 'triangle', 520); tone(330, .09, .18, .30, 'triangle', 165); rustle(0, .035, .18, 1400); break;
+        case 'resume': tone(220, 0, .10, .26, 'triangle', 440); chime([523.25, 783.99], .065, .19, .27); break;
+        case 'victory': thump(0, .4); chime([392, 523.25, 659.25, 783.99, 1046.5], .10, .55, .28); break;
+        case 'defeat': thump(0, .35); chime([392, 311.13, 261.63, 196], .11, .42, .24); break;
         default: return false;
       }
       return true;

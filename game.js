@@ -4732,6 +4732,7 @@ function renderEndTurnSub() {
 
 function render() {
   if (!S.mode) return;
+  renderPauseLock();
 
   document.getElementById('vEvidence').textContent = Math.round(S.evidence);
   document.getElementById('bEvidence').style.width = clamp(S.evidence, 0, 100) + '%';
@@ -4827,17 +4828,19 @@ function scheduleCarouselUpdate() {
 
 function updateCarouselControls() {
   const cards = Array.from(moveTrack.children);
+  const paused = isCalendarPaused();
   const left = carouselPosition();
   const selected = carouselTarget?.index ?? nearestMoveIndex();
-  document.getElementById('movesPrev').disabled = selected <= 0;
-  document.getElementById('movesNext').disabled = selected >= cards.length - 1;
+  document.getElementById('movesPrev').disabled = paused || selected <= 0;
+  document.getElementById('movesNext').disabled = paused || selected >= cards.length - 1;
+  moveTrack.tabIndex = paused ? -1 : 0;
   document.getElementById('movesRange').textContent = `${cards.length ? selected + 1 : 0} / ${cards.length}`;
   moveTrack.dataset.selectedIndex = String(selected);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   cards.forEach((card, index) => {
     card.classList.toggle('is-current', index === selected);
     card.setAttribute('aria-current', index === selected ? 'true' : 'false');
-    card.tabIndex = index === selected ? 0 : -1;
+    card.tabIndex = !paused && index === selected ? 0 : -1;
     // The button owns layout/focus; its face owns the 3D presentation.
     // Availability animations can therefore move the button independently.
     const distance = (cardStart(card) + card.offsetWidth / 2 - left - moveTrack.clientWidth / 2) / card.offsetWidth;
@@ -4848,6 +4851,7 @@ function updateCarouselControls() {
     card.style.zIndex = String(20 - Math.round(depth * 5));
   });
   Array.from(moveDots.children).forEach((dot, index) => {
+    dot.disabled = paused;
     dot.setAttribute('aria-current', index === selected ? 'true' : 'false');
     // A compact moving window prevents 56 pagination buttons taking over mobile.
     const start = clamp(selected - 3, 0, Math.max(0, cards.length - 7));
@@ -4856,6 +4860,7 @@ function updateCarouselControls() {
 }
 
 function scrollToMove(index) {
+  if (isCalendarPaused()) return;
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   index = clamp(index, 0, cards.length - 1);
@@ -5041,6 +5046,7 @@ for (const eventName of ['pointerdown', 'touchstart', 'wheel']) {
   }, { passive: true });
 }
 moveTrack.addEventListener('keydown', event => {
+  if (isCalendarPaused()) return;
   if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
     event.preventDefault();
@@ -5062,11 +5068,12 @@ if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).obser
 // Touch keeps native momentum scrolling. A mouse can also drag the deck.
 let deckDrag = null, deckDragMoved = false;
 moveTrack.addEventListener('pointerdown', event => {
+  if (isCalendarPaused()) return;
   deckDragMoved = false;
   if (event.pointerType === 'mouse' && event.button === 0) deckDrag = {x: event.clientX, left: moveTrack.scrollLeft, id: event.pointerId};
 });
 moveTrack.addEventListener('pointermove', event => {
-  if (!deckDrag) return;
+  if (!deckDrag || isCalendarPaused()) return;
   const delta = event.clientX - deckDrag.x;
   if (Math.abs(delta) > 6) {
     deckDragMoved = true;
@@ -5088,6 +5095,7 @@ moveTrack.addEventListener('pointercancel', finishDeckDrag);
 
 // Detail sheets give small screens room to play, and pause the calendar.
 function openCampaignSheet(id) {
+  if (CALENDAR_CLOCK.manuallyPaused) return;
   syncCalendarClock();
   document.getElementById(id).showModal();
   CALENDAR_CLOCK.lastNow = null;
@@ -5117,6 +5125,29 @@ const CALENDAR_CLOCK = {
   interval: null,
   manuallyPaused: false
 };
+
+// A native modal and an inert game surface lock pointer, touch, keyboard and
+// assistive-technology interaction. Resume is the only available game control.
+function renderPauseLock() {
+  const paused = Boolean(S.mode && !S.over && CALENDAR_CLOCK.manuallyPaused);
+  const app = document.getElementById('app');
+  const dialog = document.getElementById('pauseDialog');
+  app.inert = paused || S.over;
+  app.classList.toggle('is-paused', paused);
+  if (paused && !dialog.open) {
+    deckDrag = null; deckDragMoved = false;
+    moveTrack.classList.remove('is-dragging');
+    // Stop a smooth scroll already in flight without changing the chosen card.
+    moveTrack.scrollTo({left: moveTrack.scrollLeft, behavior: 'instant'});
+    settleCarousel();
+    updateCarouselControls();
+    dialog.showModal();
+    document.getElementById('resumeSession').focus({preventScroll: true});
+  } else if (!paused && dialog.open) {
+    dialog.close();
+    if (!S.over) document.getElementById('clockPause').focus({preventScroll: true});
+  }
+}
 
 function hasOpenCampaignDialog() {
   return document.getElementById('startScreen').classList.contains('show') ||
@@ -5206,10 +5237,10 @@ function toggleCalendarPause() {
   if (!CALENDAR_CLOCK.manuallyPaused) syncCalendarClock();
   if (S.over) return;
   CALENDAR_CLOCK.manuallyPaused = !CALENDAR_CLOCK.manuallyPaused;
-  if (CALENDAR_CLOCK.manuallyPaused) window.GameAudio?.stop();
-  else window.GameAudio?.play('select', {gesture: true});
-  CALENDAR_CLOCK.lastNow = isCalendarPaused() ? null : performance.now();
+  window.GameAudio?.stop();
+  window.GameAudio?.play(CALENDAR_CLOCK.manuallyPaused ? 'pause' : 'resume', {gesture: true});
   render();
+  CALENDAR_CLOCK.lastNow = isCalendarPaused() ? null : performance.now();
 }
 
 // Reset only the timestamp, NOT elapsedMs, on visibility/dialog transitions.
@@ -5221,6 +5252,14 @@ function refreshCalendarPauseState() {
 }
 
 document.getElementById('clockPause').addEventListener('click', toggleCalendarPause);
+document.getElementById('resumeSession').addEventListener('click', toggleCalendarPause);
+document.getElementById('pauseDialog').addEventListener('cancel', event => {
+  event.preventDefault();
+  if (CALENDAR_CLOCK.manuallyPaused) toggleCalendarPause();
+});
+document.getElementById('pauseDialog').addEventListener('close', () => {
+  if (CALENDAR_CLOCK.manuallyPaused && !S.over && !document.getElementById('pauseDialog').open) toggleCalendarPause();
+});
 document.addEventListener('visibilitychange', refreshCalendarPauseState);
 window.addEventListener('pagehide', () => { CALENDAR_CLOCK.lastNow = null; });
 window.addEventListener('pageshow', refreshCalendarPauseState);

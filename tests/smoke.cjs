@@ -35,6 +35,8 @@ class Element {
   insertAdjacentElement() {}
   scrollTo({left}) { this.scrollLeft=left; }
   getClientRects() { return []; }
+  showModal() { this.open = true; }
+  close() { this.open = false; }
 }
 const get = id => { if (!elements.has(id)) elements.set(id,new Element()); return elements.get(id); };
 const docEvents = {};
@@ -192,6 +194,36 @@ doAction(orderedActions()[4]);assert.equal(moveTrack.dataset.selectedIndex,'0');
 assert.ok(Array.from(moveTrack.children).every(card=>isMoveReady(availableActions().find(a=>a.id===card.dataset.moveId))));
 verifyMessage(msg\`Deck: \${1} / \${28} cards available\`);
 
+`);
+// Explicit pause locks the whole game and preserves the partial calendar day.
+run(`
+S.over=false;S.mode='harder';S.turn=1;S.phase='investigation';S.capital=100;S.daysLeft=10;
+document.getElementById('startScreen').classList.remove('show');document.getElementById('overlay').classList.remove('show');
+CALENDAR_CLOCK.manuallyPaused=false;CALENDAR_CLOCK.lastNow=null;CALENDAR_CLOCK.elapsedMs=3456;render();
+scrollToMove(3);
+const pauseCues=[];window.GameAudio={play:name=>pauseCues.push(name),stop:()=>{}};
+const beforeLock=JSON.stringify(S), scrollBeforeLock=moveTrack.scrollLeft;
+toggleCalendarPause();
+assert.equal(document.getElementById('app').inert,true);
+assert.equal(document.getElementById('pauseDialog').open,true);
+assert.equal(document.activeElement,document.getElementById('resumeSession'));
+assert.equal(pauseCues.at(-1),'pause');
+updateCarouselControls();
+assert.ok(document.getElementById('movesPrev').disabled && document.getElementById('movesNext').disabled);
+assert.ok(moveDots.children.every(dot=>dot.disabled));
+assert.ok(moveTrack.children.every(card=>card.disabled && card.tabIndex===-1));
+assert.equal(moveTrack.tabIndex,-1);
+scrollToMove(8);scrollMoves(1);doAction(orderedActions()[0]);endTurn();consumeActiveCalendarTime(120000);openCampaignSheet('briefingDialog');
+assert.equal(JSON.stringify(S),beforeLock,'paused actions cannot change the simulation');
+assert.equal(moveTrack.scrollLeft,scrollBeforeLock,'paused navigation cannot move the Deck');
+assert.equal(document.getElementById('briefingDialog').open,undefined,'paused detail buttons cannot open sheets');
+assert.equal(CALENDAR_CLOCK.elapsedMs,3456,'pause preserves the partial day');
+toggleCalendarPause();updateCarouselControls();
+assert.equal(document.getElementById('app').inert,false);assert.equal(document.getElementById('pauseDialog').open,false);
+assert.equal(document.activeElement,document.getElementById('clockPause'));assert.equal(pauseCues.at(-1),'resume');
+assert.equal(CALENDAR_CLOCK.elapsedMs,3456);assert.equal(moveTrack.tabIndex,0);
+assert.ok(moveDots.children.every(dot=>!dot.disabled));assert.equal(document.getElementById('movesNext').disabled,false);
+window.GameAudio=undefined;
 `);
 // Centered navigation must reach the first and last card in both directions.
 run(`

@@ -2,6 +2,8 @@
 // Preserve all numbered placeholders when editing a translation.
 const TRANSLATIONS = {
   "es": {
+    "Session paused": "Sesión pausada",
+    "Resume to unlock the controls.": "Reanuda para desbloquear los controles.",
     "Sound effects": "Efectos de sonido",
     "Sound on": "Sonido activado",
     "Sound off": "Sonido desactivado",
@@ -427,6 +429,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "El apoyo cambia tras cada movimiento y día de juego activo. El tiempo en pausa no influye."
   },
   "fr": {
+    "Session paused": "Session en pause",
+    "Resume to unlock the controls.": "Reprenez pour déverrouiller les commandes.",
     "Sound effects": "Effets sonores",
     "Sound on": "Son activé",
     "Sound off": "Son désactivé",
@@ -852,6 +856,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "Le soutien évolue après chaque action et jour de jeu actif. Les pauses n’ont aucun effet."
   },
   "ko": {
+    "Session paused": "세션 일시정지",
+    "Resume to unlock the controls.": "재개하면 조작할 수 있습니다.",
     "Sound effects": "효과음",
     "Sound on": "소리 켜짐",
     "Sound off": "소리 꺼짐",
@@ -1277,6 +1283,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "국민 지지는 행동과 실제 플레이 하루마다 변합니다. 일시정지 시간에는 변하지 않습니다."
   },
   "fa": {
+    "Session paused": "جلسه متوقف شده",
+    "Resume to unlock the controls.": "برای فعال شدن کنترل‌ها، ادامه دهید.",
     "Sound effects": "جلوه‌های صوتی",
     "Sound on": "صدا روشن",
     "Sound off": "صدا خاموش",
@@ -1702,6 +1710,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "حمایت پس از هر حرکت و هر روز بازی فعال تغییر می‌کند. زمان مکث اثری ندارد."
   },
   "he": {
+    "Session paused": "המשחק מושהה",
+    "Resume to unlock the controls.": "המשיכו כדי להפעיל מחדש את הפקדים.",
     "Sound effects": "אפקטים קוליים",
     "Sound on": "צליל פעיל",
     "Sound off": "צליל כבוי",
@@ -2127,6 +2137,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "התמיכה משתנה אחרי כל מהלך ויום משחק פעיל. זמן בהשהיה לא משפיע."
   },
   "zh": {
+    "Session paused": "游戏已暂停",
+    "Resume to unlock the controls.": "继续游戏以解锁操作。",
     "Sound effects": "音效",
     "Sound on": "声音已开启",
     "Sound off": "声音已关闭",
@@ -2552,6 +2564,8 @@ const TRANSLATIONS = {
     "Public support shifts after every move and active-play day. Paused time does not affect it.": "每次行动和每个有效游玩日后，公众支持都会波动。暂停时间不会影响支持。"
   },
   "ja": {
+    "Session paused": "セッション一時停止中",
+    "Resume to unlock the controls.": "再開すると操作できるようになります。",
     "Sound effects": "効果音",
     "Sound on": "サウンドオン",
     "Sound off": "サウンドオフ",

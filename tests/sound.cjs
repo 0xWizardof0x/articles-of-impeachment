@@ -36,7 +36,7 @@ function setup({saved = null, supported = true, blocked = false, pending = false
   assert.equal(await s.audio.play('gavel',{gesture:true,delay:.42}),true);
   assert.equal(s.contexts.length,1);
   assert.ok(s.nodes[0].startAt >= .42,'gavel follows the visual strike');
-  for (const cue of ['select','shuffle','card','success','setback','breakthrough','blowback','phase','adjourn','victory','defeat']) {
+  for (const cue of ['select','shuffle','card','success','setback','breakthrough','blowback','phase','adjourn','pause','resume','victory','defeat']) {
     const before=s.nodes.length; assert.equal(await s.audio.play(cue),true,cue); assert.ok(s.nodes.length>before,cue+' schedules audio');
     s.nodes.slice(before).forEach(n=>{assert.ok(n.stopAt > n.startAt && n.stopAt-n.startAt<1,'every voice has a bounded lifetime'); n.onended();});
   }
@@ -53,5 +53,5 @@ function setup({saved = null, supported = true, blocked = false, pending = false
   const unsupported = setup({supported:false}); assert.ok(unsupported.buttons.every(b=>b.disabled)); assert.equal(await unsupported.audio.play('gavel',{gesture:true}),false);
   const delayed = setup({pending:true}); const oldCue=delayed.audio.play('gavel',{gesture:true}); delayed.buttons[0].click(); delayed.resume(); assert.equal(await oldCue,false,'muting invalidates pending resume cues'); assert.equal(delayed.nodes.length,0);
   const stale = setup({pending:true}); const staleCue=stale.audio.play('gavel',{gesture:true}); stale.advance(500); stale.resume(); assert.equal(await staleCue,false,'late browser unlock never replays a stale cue');
-  console.log('PASS: 12 bounded cues; gesture-only unlock; saved mute; synchronized controls; voice cleanup; hidden tabs; blocked/unsupported audio; stale cue cancellation; no game RNG.');
+  console.log('PASS: 14 bounded cues including pause/resume; gesture-only unlock; saved mute; synchronized controls; voice cleanup; hidden tabs; blocked/unsupported audio; stale cue cancellation; no game RNG.');
 })().catch(error => {console.error(error);process.exitCode=1;});

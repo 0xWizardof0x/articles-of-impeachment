@@ -150,7 +150,7 @@ const rolls=[0,0.99,0,0.2,0];Math.random=()=>rolls.shift() ?? 0.99;endTurn('cloc
 `);
 // Availability changes remove unplayable cards and update navigation.
 run(`
-// Ready moves always lead, while both groups retain the source order.
+// The initial Deck follows source order and hides unavailable cards.
 S.over=false;S.mode='harder';S.phase='investigation';S.evidence=0;S.capital=25;S.daysLeft=3;
 CALENDAR_CLOCK.manuallyPaused=false;applyLanguage('en');
 const assertMoveOrder = () => {
@@ -261,6 +261,27 @@ Element.prototype.getAnimations=function(){return [];};
 Element.prototype.cloneNode=function(){const clone=new Element();clone.innerHTML=this.innerHTML;return clone;};
 Element.prototype.remove=function(){get('deckExits').children=get('deckExits').children.filter(el=>el!==this);};
 Element.prototype.animate=function(frames,options){const animation={frames,options,onfinish:null,oncancel:null,cancel(){this.oncancel?.();}};animations.push(animation);return animation;};
+// Post-move shuffling changes exposure without changing rules or random rolls.
+reduced=false;
+run(`
+startGame('easy');S.capital=120;S.daysLeft=10;renderMoves();
+const shuffleNodes=new Map(deckCards),played=orderedActions()[0],oldHead=played.id;
+Math.random=()=>.5;doAction(played);
+assert.equal(moveTrack.scrollLeft,0);assert.equal(moveTrack.dataset.selectedIndex,'0');
+assert.notEqual(orderedActions()[0].id,played.id,'a fresh available option leads after play');
+assert.deepEqual([...orderedActions().map(a=>a.id)].sort(),[...availableActions().filter(isMoveReady).map(a=>a.id)].sort(),'shuffle preserves the exact available set');
+assert.ok(Array.from(moveTrack.children).every(c=>shuffleNodes.get(c.dataset.moveId)===c),'shuffle reuses the real cards');
+assert.ok(deckShuffleAnimations.length>1);assert.ok(deckShuffleAnimations.every(a=>a.options.duration+a.options.delay<=1000),'entire shuffle finishes within one second');
+const shuffledIds=orderedActions().map(a=>a.id);renderMoves();assert.deepEqual(orderedActions().map(a=>a.id),shuffledIds,'routine renders keep the shuffle');
+applyLanguage('fr');assert.deepEqual(orderedActions().map(a=>a.id),shuffledIds,'translation keeps the shuffle');
+Math.random=()=>{throw Error('Presentation shuffle used gameplay RNG');};
+for(let i=0;i<20;i++){const head=orderedActions()[0].id;shuffleDeck(head,head);assert.notEqual(orderedActions()[0].id,head);}
+S.capital=0;const shuffleSeedBefore=deckShuffleSeed;doAction(availableActions()[0]);assert.equal(deckShuffleSeed,shuffleSeedBefore,'rejected moves do not shuffle');
+S.capital=120;S.daysLeft=10;CALENDAR_CLOCK.lastNow=null;Math.random=()=>.5;
+`);
+reduced=true;
+run(`animations.length=0;doAction(orderedActions()[0]);assert.equal(deckShuffleAnimations.length,0,'reduced motion still shuffles without animation');`);
+reduced=false;
 run(`
 S.mode='easy';S.phase='investigation';S.over=false;S.capital=120;S.daysLeft=10;CALENDAR_CLOCK.manuallyPaused=false;
 renderMoves();animations.length=0;S.capital=0;renderMoves();
@@ -315,7 +336,7 @@ soundCues.length=0;S.over=false;finish(false,'THE TERM ENDS','');assert.deepEqua
 `);
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
-// Pointer release carries velocity, loses momentum, then settles in LTR/RTL.
+// Pointer release carries velocity, loses momentum, then rests freely in LTR/RTL.
 reduced=false;
 run(`startGame('hard');CALENDAR_CLOCK.lastNow=null;moveTrack.scrollLeft=200;
 const pointer=(type,x)=>({type,clientX:x,clientY:100,button:0,pointerId:1,isPrimary:true,preventDefault(){}});
@@ -327,6 +348,17 @@ const releasedAt=moveTrack.scrollLeft,initialVelocity=deckMomentum.velocity;
 stepDeckMomentum(performance.now()+16);assert.ok(moveTrack.scrollLeft>releasedAt);assert.ok(deckMomentum.velocity<initialVelocity);
 for(let time=performance.now()+32;deckMomentum && time<performance.now()+3000;time+=16)stepDeckMomentum(time);
 assert.equal(deckMomentum,null,'friction eventually settles');
+assert.equal(carouselTarget,null,'a free swipe stops without centering or snapping');
+moveTrack.listeners.pointerdown[0](pointer('pointerdown',300));`);
+now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',220));
+const cancelAt=moveTrack.scrollLeft;moveTrack.listeners.pointercancel[0](pointer('pointercancel',220));
+assert.equal(moveTrack.scrollLeft,cancelAt);assert.equal(carouselTarget,null,'touch cancellation never jumps to a card');
+const duplicate=pointer('pointermove',220);duplicate.timeStamp=performance.now();
+moveTrack.listeners.pointerdown[0]({...pointer('pointerdown',300),pointerType:'touch',timeStamp:performance.now()});`);
+now+=20;run(`moveTrack.listeners.pointermove[0]({...pointer('pointermove',220),pointerType:'touch',timeStamp:performance.now()});`);
+now+=10;run(`moveTrack.listeners.pointermove[0]({...pointer('pointermove',220),pointerType:'touch',timeStamp:performance.now()});
+moveTrack.listeners.pointerup[0]({...pointer('pointerup',220),pointerType:'touch',timeStamp:performance.now()});
+assert.ok(deckMomentum && deckMomentum.velocity>0,'stationary terminal touch events do not erase swipe velocity');stopDeckMomentum();
 document.documentElement.dir='rtl';moveTrack.scrollLeft=-300;deckDragMoved=false;
 moveTrack.listeners.pointerdown[0](pointer('pointerdown',100));`);
 now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',180));moveTrack.listeners.pointerup[0](pointer('pointerup',180));
@@ -366,5 +398,5 @@ for (const mode of ['easy','hard','harder']) for (const seed of [721,927]) {
   run(`assert.ok(document.getElementById('postScore').hidden);assert.ok(document.getElementById('scoreIdentity').textContent.includes('Simulation'));
   var endSnapshot=JSON.stringify(S);window.Simulator.advance(600000);assert.equal(JSON.stringify(S),endSnapshot,'completed simulation stays stopped');`);
 }
-console.log('PASS: momentum + friction + pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
+console.log('PASS: post-move shuffle, fresh available head, persistent order, <1s animation, no game RNG; free momentum + friction + touch-cancel/terminal events + pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
 console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

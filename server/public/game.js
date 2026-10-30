@@ -4562,9 +4562,28 @@ function isMoveReady(action) {
   return (!action.requires || action.requires()) && S.capital >= action.cost && S.daysLeft >= action.days;
 }
 
+let deckOrderKey = '', deckOrder = [];
+let deckShuffleSeed = (Date.now() ^ Math.trunc(performance.now() * 1000)) >>> 0;
 function orderedActions() {
-  // Pausing disables play without discarding the current deck.
-  return availableActions().filter(isMoveReady);
+  const key = `${S.mode}:${S.phase}`;
+  if (deckOrderKey !== key) { deckOrderKey = key; deckOrder = [...availableActions()]; }
+  // Availability and translation renders preserve the most recent shuffle.
+  return deckOrder.filter(isMoveReady);
+}
+
+function shuffleDeck(previousFirst, playedId) {
+  orderedActions(); // Initialize a new phase's catalog before shuffling it.
+  for (let i = deckOrder.length - 1; i > 0; i--) {
+    // Presentation randomness must not consume any gameplay rolls.
+    deckShuffleSeed = (Math.imul(deckShuffleSeed, 1664525) + 1013904223) >>> 0;
+    const j = Math.floor(deckShuffleSeed / 4294967296 * (i + 1));
+    [deckOrder[i], deckOrder[j]] = [deckOrder[j], deckOrder[i]];
+  }
+  const ready = deckOrder.filter(isMoveReady);
+  // Expose a fresh option whenever possible, even if the played card remains affordable.
+  const first = ready.find(a => a.id !== playedId && a.id !== previousFirst)
+    || ready.find(a => a.id !== playedId) || ready[0];
+  if (first) { const index = deckOrder.indexOf(first); [deckOrder[0], deckOrder[index]] = [deckOrder[index], deckOrder[0]]; }
 }
 
 /* =========================================================
@@ -4733,7 +4752,7 @@ function renderEndTurnSub() {
 
 function render() {
   if (!S.mode) return;
-  if (isCalendarPaused()) { stopDeckMomentum(); deckDrag = null; moveTrack.classList.remove('is-dragging'); }
+  if (isCalendarPaused()) { stopDeckMomentum(); stopDeckShuffle(); deckDrag = null; moveTrack.classList.remove('is-dragging'); }
   renderPauseLock();
 
   document.getElementById('vEvidence').textContent = Math.round(S.evidence);
@@ -4790,10 +4809,35 @@ const moveDots = document.getElementById('moveDots');
 let movePhaseKey = '';
 let deckCards = new Map(), deckDots = new Map();
 let deckResetRequested = false;
+let deckShuffleRequested = false, lastPlayedMoveId = '';
+let deckShuffleAnimations = [];
 let carouselFrame = null;
 let carouselTarget = null;
 let carouselSettleTimer = null;
 let adjournMotion = null;
+
+function stopDeckShuffle() {
+  deckShuffleAnimations.forEach(animation => animation.cancel());
+  deckShuffleAnimations = [];
+}
+
+function animateDeckShuffle() {
+  stopDeckShuffle();
+  if (isCalendarPaused() || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const direction = carouselIsRTL() ? -1 : 1;
+  for (const [index, card] of Array.from(moveTrack.children).entries()) {
+    if (typeof card.animate !== 'function') continue;
+    const fan = (index % 2 ? 1 : -1) * direction;
+    const animation = card.animate([
+      {opacity: .35, transform: `translate(${fan * 22}px, 16px) rotate(${fan * 4}deg) scale(.94)`},
+      {offset: .4, opacity: 1, transform: `translate(${-fan * 9}px, -7px) rotate(${-fan * 1.5}deg) scale(1.015)`},
+      {opacity: 1, transform: 'translate(0,0) rotate(0deg) scale(1)'}
+    ], {duration: 620, delay: Math.min(index, 4) * 18, easing: 'cubic-bezier(.2,.75,.25,1)'});
+    deckShuffleAnimations.push(animation);
+    animation.onfinish = () => { deckShuffleAnimations = deckShuffleAnimations.filter(item => item !== animation); };
+  }
+  if (moveTrack.children.length > 1) window.GameAudio?.play('shuffle');
+}
 
 // Move the real control so keyboard focus, pause locking and one-click turn
 // handling remain identical in the empty Deck and the normal thumb dock.
@@ -4890,6 +4934,7 @@ function updateCarouselControls() {
 function scrollToMove(index, source = 'manual') {
   if (isCalendarPaused() || (S.simulated && source !== 'simulation')) return;
   stopDeckMomentum();
+  stopDeckShuffle();
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   index = clamp(index, 0, cards.length - 1);
@@ -4935,6 +4980,8 @@ function animateDeckExit(card) {
 }
 
 function renderMoves() {
+  const shuffled = deckShuffleRequested && !S.over;
+  if (shuffled) shuffleDeck(moveTrack.children[0]?.dataset.moveId, lastPlayedMoveId);
   const actions = orderedActions();
   const phaseKey = `${S.mode}:${S.phase}:${language}`;
   const phaseChanged = movePhaseKey !== phaseKey;
@@ -4963,8 +5010,8 @@ function renderMoves() {
         <span class="move-odds sr-only"></span><span class="move-payoff"><span class="payoff-support"></span><span class="payoff-risk"></span></span>
         <span class="cost"><span>⚡ ${tr`Capital: ${action.cost}`}</span><span class="days">◷ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span><span class="play-card"><span class="play-label">${t('Play card')}</span><span aria-hidden="true">↗</span></span></span>`;
-      button.onclick = () => {
-        if (deckDragMoved) return;
+      button.onclick = event => {
+        if (deckDragMoved || (event?.detail && performance.now() < suppressDeckClickUntil)) return;
         const index = Array.from(moveTrack.children).indexOf(button);
         if (index !== nearestMoveIndex()) { scrollToMove(index); return; }
         doAction(action);
@@ -4983,7 +5030,7 @@ function renderMoves() {
     if (!phaseChanged) previousCards.filter(card => !actions.some(a => a.id === card.dataset.moveId)).forEach(animateDeckExit);
     moveTrack.replaceChildren(...actions.map(action => deckCards.get(action.id)));
     moveDots.replaceChildren(...actions.map(action => deckDots.get(action.id)));
-    if (!phaseChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!shuffled && !phaseChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       Array.from(moveTrack.children).forEach(card => {
         if (typeof card.animate !== 'function') return;
         card.getAnimations().forEach(animation => animation.cancel());
@@ -5041,9 +5088,10 @@ function renderMoves() {
     button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
   });
   if (shouldReset) {
+    stopDeckMomentum();
     settleCarousel(); moveTrack.dataset.selectedIndex = '0';
     carouselTarget = actions.length ? {index: 0, left: 0} : null;
-    const instant = phaseChanged || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const instant = shuffled || phaseChanged || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     moveTrack.scrollTo({left: 0, behavior: instant ? 'instant' : 'smooth'});
     carouselSettleTimer = setTimeout(settleCarousel, 180);
     if (hadDeckFocus) moveTrack.focus({preventScroll:true});
@@ -5051,6 +5099,7 @@ function renderMoves() {
     moveTrack.dataset.selectedIndex = String(Math.max(0, actions.findIndex(a => a.id === selectedId)));
   }
   deckResetRequested = false;
+  deckShuffleRequested = false;
   document.getElementById('movesSummary').textContent = tr`Deck: ${actions.length} / ${availableActions().length} cards available`;
   const empty = document.getElementById('deckEmpty');
   empty.hidden = actions.length > 0;
@@ -5058,6 +5107,7 @@ function renderMoves() {
   moveTrack.hidden = actions.length === 0;
   placeAdjournInDeck(actions.length === 0 && !S.over);
   if (actions.length === 0 && hadDeckFocus && !isCalendarPaused()) document.getElementById('endTurn').focus({preventScroll: true});
+  if (shuffled) animateDeckShuffle();
   scheduleCarouselUpdate();
 }
 
@@ -5098,9 +5148,10 @@ moveTrack.addEventListener('keydown', event => {
 window.addEventListener('resize', () => { stopDeckMomentum(); settleCarousel(); });
 if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).observe(moveTrack);
 
-// Pointer physics: preserve release velocity, coast with exponential friction,
-// then center the nearest card. The same model supports mouse, pen and touch.
+// Pointer physics: preserve release velocity and coast with exponential friction.
+// Free swipes rest without snapping. Mouse, pen and touch share the same model.
 let deckDrag = null, deckDragMoved = false;
+let suppressDeckClickUntil = 0;
 let deckMomentum = null, deckMomentumFrame = null;
 function stopDeckMomentum() {
   if (deckMomentumFrame !== null) cancelAnimationFrame(deckMomentumFrame);
@@ -5120,18 +5171,21 @@ function stepDeckMomentum(now) {
   moveTrack.scrollLeft = next;
   deckMomentum.velocity *= decay;
   if (Math.abs(deckMomentum.velocity) < .035 || (dt > 0 && Math.abs(next - before) < .1)) {
-    stopDeckMomentum(); scrollToMove(nearestMoveIndex());
+    // Rest where friction leaves the deck; only explicit navigation centers a card.
+    stopDeckMomentum(); settleCarousel();
   } else deckMomentumFrame = requestAnimationFrame(stepDeckMomentum);
 }
 moveTrack.addEventListener('pointerdown', event => {
   if (isCalendarPaused() || S.simulated || event.button !== 0 || event.isPrimary === false) return;
   deckDragMoved = Boolean(deckMomentum); // A tap first catches a moving deck.
   stopDeckMomentum();
+  stopDeckShuffle();
   if (deckDragMoved) moveTrack.classList.add('is-dragging');
   moveTrack.scrollTo({left: moveTrack.scrollLeft, behavior: 'instant'});
   delete moveTrack.dataset.selectedIndex;
   settleCarousel();
-  deckDrag = {x:event.clientX,y:event.clientY,left:moveTrack.scrollLeft,lastX:event.clientX,lastTime:performance.now(),velocity:0,id:event.pointerId};
+  const now = Number.isFinite(event.timeStamp) ? event.timeStamp : performance.now();
+  deckDrag = {x:event.clientX,y:event.clientY,left:moveTrack.scrollLeft,lastTime:now,velocity:0,id:event.pointerId,samples:[{x:event.clientX,time:now}]};
 });
 moveTrack.addEventListener('pointermove', event => {
   if (!deckDrag || event.pointerId !== deckDrag.id || isCalendarPaused() || S.simulated) return;
@@ -5145,10 +5199,14 @@ moveTrack.addEventListener('pointermove', event => {
   }
   if (deckDragMoved) {
     event.preventDefault();
-    const now = performance.now(), dt = Math.max(4, now - deckDrag.lastTime);
-    const velocity = clamp((deckDrag.lastX - event.clientX) / dt, -3.2, 3.2);
-    deckDrag.velocity = deckDrag.velocity * .35 + velocity * .65;
-    deckDrag.lastX = event.clientX; deckDrag.lastTime = now;
+    const now = Number.isFinite(event.timeStamp) ? event.timeStamp : performance.now();
+    if (event.clientX !== deckDrag.samples.at(-1).x) {
+      deckDrag.samples.push({x:event.clientX,time:now});
+      while (deckDrag.samples.length > 2 && now - deckDrag.samples[0].time > 100) deckDrag.samples.shift();
+      const first = deckDrag.samples[0];
+      deckDrag.velocity = clamp((first.x - event.clientX) / Math.max(4, now - first.time), -3.2, 3.2);
+      deckDrag.lastTime = now;
+    }
     const limit = Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth);
     moveTrack.scrollLeft = clamp(deckDrag.left - delta, carouselIsRTL() ? -limit : 0, carouselIsRTL() ? 0 : limit);
   }
@@ -5156,7 +5214,8 @@ moveTrack.addEventListener('pointermove', event => {
 function finishDeckDrag(event) {
   if (!deckDrag) return;
   if (event && event.pointerId !== deckDrag.id) return;
-  const velocity = performance.now() - deckDrag.lastTime > 90 ? 0 : deckDrag.velocity;
+  const now = Number.isFinite(event?.timeStamp) ? event.timeStamp : performance.now();
+  const velocity = now - deckDrag.lastTime > 100 ? 0 : deckDrag.velocity;
   deckDrag = null;
   const coast = deckDragMoved && event?.type !== 'pointercancel' && Math.abs(velocity) > .08 && !isCalendarPaused() && !S.simulated && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (coast) moveTrack.classList.add('is-coasting');
@@ -5164,7 +5223,8 @@ function finishDeckDrag(event) {
   if (coast) {
     deckMomentum = {velocity, lastTime:performance.now()};
     deckMomentumFrame = requestAnimationFrame(stepDeckMomentum);
-  } else if (deckDragMoved) scrollToMove(nearestMoveIndex());
+  } else if (deckDragMoved) settleCarousel();
+  if (deckDragMoved) suppressDeckClickUntil = performance.now() + 400;
   // Suppress the click immediately following a drag, then restore keyboard play.
   setTimeout(() => { deckDragMoved = false; }, 0);
 }
@@ -5373,7 +5433,10 @@ function doAction(action, source = 'manual') {
   if (S.capital < action.cost || S.daysLeft < action.days) return;
 
   window.GameAudio?.play('card', {gesture: !S.simulated});
+  stopDeckShuffle();
   deckResetRequested = true;
+  deckShuffleRequested = true;
+  lastPlayedMoveId = action.id;
   S.capital -= action.cost;
   S.daysLeft -= action.days;
 
@@ -5549,6 +5612,9 @@ function startGame(modeId, {simulation = false} = {}) {
   lastBurdenValues = null;
   lastDispatchSignature = '';
   movePhaseKey = '';
+  deckOrderKey = '';
+  deckShuffleRequested = false;
+  stopDeckMomentum(); stopDeckShuffle();
 
   document.getElementById('startScreen').classList.remove('show');
   document.getElementById('app').inert = false;

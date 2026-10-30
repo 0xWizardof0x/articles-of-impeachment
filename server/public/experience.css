@@ -40,11 +40,12 @@ main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .moves-controls { gap: 7px; }
 .carousel-arrow { width: 34px; height: 34px; border-radius: 50%; font-size: 17px; background: #19232d; border-color: #465041; }
 #movesRange { min-width: 50px; font-size: 10px; font-variant-numeric: tabular-nums; }
-#actions { display: flex; gap: 0; padding: 14px calc((100% - var(--card-width)) / 2) 18px; min-width: 0; margin: 0; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x mandatory; cursor: grab; user-select: none; -webkit-user-select: none; }
+#actions { display: flex; gap: 0; padding: 14px calc((100% - var(--card-width)) / 2) 18px; min-width: 0; margin: 0; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: none; scroll-behavior: auto; cursor: grab; user-select: none; -webkit-user-select: none; }
 #actions::-webkit-scrollbar { display: none; }
 #actions[hidden] { display: none; }
 #actions.is-dragging { scroll-snap-type: none; scroll-behavior: auto; cursor: grabbing; }
-#actions { touch-action: pan-y; overscroll-behavior-x: contain; }
+#actions { touch-action: pan-y; overscroll-behavior-x: contain; -webkit-touch-callout: none; }
+#actions .action { touch-action: pan-y; }
 #actions.is-coasting { scroll-snap-type: none; scroll-behavior: auto; }
 #actions .action { flex: 0 0 var(--card-width); width: var(--card-width); height: var(--card-height); min-height: 0; padding: 0; margin-inline-end: -62px; scroll-snap-align: center; border: 0; border-radius: 14px; background: none; box-shadow: none; transition: none; transform: none; cursor: pointer; overflow: visible; }
 #actions .action:last-child { margin-inline-end: 0; }

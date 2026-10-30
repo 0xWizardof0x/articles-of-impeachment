@@ -99,7 +99,7 @@
     <section id="movesPanel" aria-labelledby="movesTitle" aria-roledescription="carousel">
       <div class="moves-head">
         <div>
-          <h2 id="movesTitle" data-i18n="Your next move">Your next move</h2>
+          <h2 id="movesTitle" data-i18n="Deck">Deck</h2>
           <p id="movesSummary" aria-live="polite"></p>
         </div>
         <div class="moves-controls">
@@ -109,6 +109,8 @@
         </div>
       </div>
       <div id="actions" tabindex="0" role="group" aria-label="Campaign moves. Swipe, scroll, or use left and right arrow keys." data-i18n-aria="Campaign moves. Swipe, scroll, or use left and right arrow keys."></div>
+      <div id="deckExits" aria-hidden="true"></div>
+      <p id="deckEmpty" role="status" hidden></p>
       <div class="carousel-bottom">
         <div class="move-pagination">
           <span id="moveOptionsLabel" data-i18n="Move Options">Move Options</span>
@@ -145,6 +147,12 @@
     <p id="profileError" role="alert"></p>
     <button type="button" class="board-button" data-open-leaderboard data-i18n="Leaderboards">Leaderboards</button>
     <div class="mode-grid" role="group" aria-label="Choose your campaign" data-i18n-aria="Choose your campaign">
+      <button type="button" class="mode-card easy" data-mode="easy" aria-pressed="false" onclick="selectMode('easy')">
+        <span class="mode-tag" data-i18n="EASY">EASY</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
+        <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
+        <span class="mode-desc" data-i18n="A gentler introduction. More starting resources, better odds, and 28 cards per phase.">A gentler introduction. More starting resources, better odds, and 28 cards per phase.</span>
+        <span class="mode-meta" data-i18n="Monthly: 28–34 capital · support −1 · 35% blowback risk">Monthly: 28–34 capital · support −1 · 35% blowback risk</span>
+      </button>
       <button type="button" class="mode-card" data-mode="hard" aria-pressed="false" onclick="selectMode('hard')">
         <span class="mode-tag" data-i18n="HARD">HARD</span><span class="mode-name" data-i18n="2 Years">2 Years</span>
         <span class="mode-months" data-i18n="24 months · 240 session days">24 months · 240 session days</span>
@@ -195,7 +203,7 @@
   <div class="board-heading"><h2 id="leaderboardTitle" data-i18n="Leaderboards">Leaderboards</h2><button type="button" id="closeLeaderboard" data-i18n="Close">Close</button></div>
   <div class="board-filters">
     <div class="board-tabs" role="group" aria-label="Leaderboard scope" data-i18n-aria="Leaderboard scope"><button type="button" id="boardOverall" aria-pressed="true" data-i18n="Overall">Overall</button><button type="button" id="boardByCountry" aria-pressed="false" data-i18n="By country">By country</button></div>
-    <label><span data-i18n="Difficulty">Difficulty</span><select id="boardMode"><option value="hard" data-i18n="HARD">HARD</option><option value="harder" data-i18n="HARDER">HARDER</option></select></label>
+    <label><span data-i18n="Difficulty">Difficulty</span><select id="boardMode"><option value="easy" data-i18n="EASY">EASY</option><option value="hard" data-i18n="HARD">HARD</option><option value="harder" data-i18n="HARDER">HARDER</option></select></label>
     <label id="boardCountryLabel" hidden><span data-i18n="Country / territory">Country / territory</span><select id="boardCountry"></select></label>
     <button type="button" id="refreshLeaderboard" data-i18n="Refresh">Refresh</button>
   </div>

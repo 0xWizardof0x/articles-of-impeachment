@@ -3,6 +3,13 @@
    MODES
    ========================================================= */
 const MODES = {
+  easy: {
+    id: 'easy', name: '2 Years', tag: 'EASY', months: 24, daysPerMonth: 10,
+    capitalRegen: [28, 34], supportDecay: 1, fatigueCap: 0, evidenceDecay: 0,
+    startCapital: 70, startSupport: 55, startEvidence: 12, evidenceThreshold: 75,
+    blowbackChance: 0.35, positiveEventChance: 0.40, extendedToolkit: false,
+    successBonus: 10
+  },
   hard: {
     id: 'hard', name: '2 Years', tag: 'HARD',
     months: 24,
@@ -4465,7 +4472,7 @@ const METRIC_LABELS = { evidence: 'Evidence', house: 'House Votes', senate: 'Sen
 const signed = n => n > 0 ? `+${n}` : String(n);
 function moveChance(action) {
   const publicMood = clamp(Math.round((S.support - 40) / 10), -6, 6);
-  return clamp(action.chance + publicMood - (S.mode === 'harder' ? 8 : 0), 25, 94);
+  return clamp(action.chance + publicMood + (MODES[S.mode]?.successBonus || 0) - (S.mode === 'harder' ? 8 : 0), 25, 94);
 }
 function resolveMove(action, phase) {
   const metric = PHASE_METRICS[phase];
@@ -4555,9 +4562,8 @@ function isMoveReady(action) {
 }
 
 function orderedActions() {
-  const actions = availableActions();
-  // Preserve the original order inside each group. Pausing does not reshuffle cards.
-  return [...actions.filter(isMoveReady), ...actions.filter(action => !isMoveReady(action))];
+  // Pausing disables play without discarding the current deck.
+  return availableActions().filter(isMoveReady);
 }
 
 /* =========================================================
@@ -4686,6 +4692,8 @@ function render() {
 const moveTrack = document.getElementById('actions');
 const moveDots = document.getElementById('moveDots');
 let movePhaseKey = '';
+let deckCards = new Map(), deckDots = new Map();
+let deckResetRequested = false;
 let carouselFrame = null;
 let carouselTarget = null;
 let carouselSettleTimer = null;
@@ -4780,61 +4788,77 @@ function scrollMoves(direction) {
   scrollToMove(index);
 }
 
+function animateDeckExit(card) {
+  if (typeof card.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rect = card.getBoundingClientRect(), track = moveTrack.getBoundingClientRect();
+  if (rect.right <= track.left || rect.left >= track.right) return;
+  const layer = document.getElementById('deckExits'), origin = layer.getBoundingClientRect();
+  const ghost = card.cloneNode(true);
+  ghost.disabled = true;
+  ghost.tabIndex = -1;
+  ghost.classList.add('deck-exit');
+  ghost.setAttribute('aria-hidden', 'true');
+  Object.assign(ghost.style, {left: `${rect.left-origin.left}px`, top: `${rect.top-origin.top}px`, width: `${rect.width}px`, height: `${rect.height}px`});
+  layer.appendChild(ghost);
+  const animation = ghost.animate([
+    {opacity: 0.8, transform: 'translateY(0) scale(1)', filter: 'blur(0px)'},
+    {opacity: 0, transform: 'translateY(-14px) scale(.88)', filter: 'blur(3px)'}
+  ], {duration: 220, easing: 'ease-in', fill: 'forwards'});
+  animation.onfinish = () => ghost.remove();
+  animation.oncancel = () => ghost.remove();
+}
+
 function renderMoves() {
   const actions = orderedActions();
   const phaseKey = `${S.mode}:${S.phase}:${language}`;
-  let reordered = false;
-  let anchorId;
-  let focusedElement;
-  if (movePhaseKey !== phaseKey) {
-    const hadFocus = moveTrack.contains(document.activeElement);
+  const phaseChanged = movePhaseKey !== phaseKey;
+  const previousCards = Array.from(moveTrack.children);
+  const previousOffsets = new Map(previousCards.map(card => [card.dataset.moveId, card.offsetLeft]));
+  const focusedElement = document.activeElement;
+  const hadDeckFocus = moveTrack.contains(focusedElement) || moveDots.contains(focusedElement);
+  const selectedId = previousCards[carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0)]?.dataset.moveId;
+  if (phaseChanged) {
     movePhaseKey = phaseKey;
-    settleCarousel();
-    moveTrack.replaceChildren();
-    moveDots.replaceChildren();
-    moveTrack.dataset.selectedIndex = '0';
-    actions.forEach((action, index) => {
+    deckCards = new Map(); deckDots = new Map();
+    document.getElementById('deckExits').replaceChildren();
+    availableActions().forEach(action => {
       const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'action';
-      button.dataset.moveId = action.id;
+      button.type = 'button'; button.className = 'action'; button.dataset.moveId = action.id;
       button.innerHTML = `
         ${action.extended ? `<span class="ext">${t('EXT')}</span>` : ''}
-        <span class="name">${t(action.name)}</span>
-        <span class="desc"></span>
-        <span class="move-odds"></span>
-        <span class="move-payoff"></span>
+        <span class="name">${t(action.name)}</span><span class="desc"></span>
+        <span class="move-odds"></span><span class="move-payoff"></span>
         <span class="cost">◈ ${tr`Capital: ${action.cost}`} <span class="sep">·</span> <span class="days">⏱ ${tr`Days: ${action.days}`}</span></span>
         <span class="move-status"></span>`;
       button.onclick = () => doAction(action);
-      moveTrack.appendChild(button);
+      deckCards.set(action.id, button);
       const dot = document.createElement('button');
-      dot.type = 'button';
-      dot.className = 'move-dot';
-      dot.dataset.moveId = action.id;
-      dot.setAttribute('aria-controls', 'actions');
-      moveDots.appendChild(dot);
+      dot.type = 'button'; dot.className = 'move-dot'; dot.dataset.moveId = action.id;
+      dot.setAttribute('aria-controls', 'actions'); deckDots.set(action.id, dot);
     });
-    moveTrack.scrollTo({ left: 0, behavior: 'instant' });
-    if (hadFocus) moveTrack.focus({ preventScroll: true });
-  } else if (actions.some((action, index) => moveTrack.children[index].dataset.moveId !== action.id)) {
-    reordered = true;
-    const cards = Array.from(moveTrack.children);
-    const dots = Array.from(moveDots.children);
-    focusedElement = document.activeElement;
-    const selected = carouselTarget?.index ?? Number(moveTrack.dataset.selectedIndex || 0);
-    anchorId = (cards.includes(focusedElement) ? focusedElement : cards[selected])?.dataset.moveId;
-    const anchor = actions.find(action => action.id === anchorId);
-    if (!anchor || !isMoveReady(anchor)) anchorId = actions.find(isMoveReady)?.id ?? anchorId;
+  }
+  const changed = phaseChanged || actions.length !== previousCards.length || actions.some((action, i) => action.id !== previousCards[i]?.dataset.moveId);
+  const shouldReset = phaseChanged || deckResetRequested || (changed && !actions.some(a => a.id === selectedId));
+  if (changed) {
     settleCarousel();
-    const cardById = new Map(cards.map(card => [card.dataset.moveId, card]));
-    const dotById = new Map(dots.map(dot => [dot.dataset.moveId, dot]));
-    actions.forEach((action, index) => {
-      const card = cardById.get(action.id);
-      const dot = dotById.get(action.id);
-      if (moveTrack.children[index] !== card) moveTrack.insertBefore(card, moveTrack.children[index]);
-      if (moveDots.children[index] !== dot) moveDots.insertBefore(dot, moveDots.children[index]);
-    });
+    if (!phaseChanged) previousCards.filter(card => !actions.some(a => a.id === card.dataset.moveId)).forEach(animateDeckExit);
+    moveTrack.replaceChildren(...actions.map(action => deckCards.get(action.id)));
+    moveDots.replaceChildren(...actions.map(action => deckDots.get(action.id)));
+    if (!phaseChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      Array.from(moveTrack.children).forEach(card => {
+        if (typeof card.animate !== 'function') return;
+        card.getAnimations().forEach(animation => animation.cancel());
+        const oldLeft = previousOffsets.get(card.dataset.moveId);
+        const delta = oldLeft === undefined ? 0 : oldLeft - card.offsetLeft;
+        card.animate(oldLeft === undefined
+          ? [{opacity: 0, transform: 'translateY(12px)'}, {opacity: 1, transform: 'translateY(0)'}]
+          : [{transform: `translateX(${delta}px)`}, {transform: 'translateX(0)'}],
+          {duration: 320, easing: 'cubic-bezier(.2,.75,.25,1)'});
+      });
+    }
+    if (hadDeckFocus) {
+      (moveTrack.contains(focusedElement) || moveDots.contains(focusedElement) ? focusedElement : moveTrack).focus({preventScroll:true});
+    }
   }
   let playable = 0;
   const paused = isCalendarPaused();
@@ -4871,16 +4895,21 @@ function renderMoves() {
     button.querySelector('.move-status').textContent = t(status);
     button.setAttribute('aria-label', tr`${action.name}. Move ${index + 1} of ${actions.length}. ${status}. Capital: ${action.cost}. Days: ${action.days}. ${action.desc}` + ` ${odds}. ${support}. ${failure} ${evidenceCost}`);
   });
-  if (reordered) {
-    const index = Math.max(0, actions.findIndex(action => action.id === anchorId));
-    moveTrack.dataset.selectedIndex = String(index);
-    moveTrack.scrollTo({ left: (carouselIsRTL() ? -1 : 1) * moveDestination(moveTrack.children[index]), behavior: 'instant' });
-    if (moveTrack.contains(focusedElement) || moveDots.contains(focusedElement)) {
-      (focusedElement.disabled ? moveTrack : focusedElement).focus({ preventScroll: true });
-    }
+  if (shouldReset) {
+    settleCarousel(); moveTrack.dataset.selectedIndex = '0';
+    carouselTarget = actions.length ? {index: 0, left: 0} : null;
+    const instant = phaseChanged || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    moveTrack.scrollTo({left: 0, behavior: instant ? 'instant' : 'smooth'});
+    carouselSettleTimer = setTimeout(settleCarousel, 180);
+    if (hadDeckFocus) moveTrack.focus({preventScroll:true});
+  } else if (changed) {
+    moveTrack.dataset.selectedIndex = String(Math.max(0, actions.findIndex(a => a.id === selectedId)));
   }
-  document.getElementById('movesSummary').textContent = tr`Moves: ${actions.length} · Available: ${playable}`;
-  if (!playable && !paused && !S.over) document.getElementById('movesSummary').textContent += ' · ' + t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
+  deckResetRequested = false;
+  document.getElementById('movesSummary').textContent = tr`Deck: ${actions.length} / ${availableActions().length} cards available`;
+  const empty = document.getElementById('deckEmpty');
+  empty.hidden = actions.length > 0;
+  empty.textContent = t('No affordable moves. Adjourn to rebuild capital; blowback can halve the recovery.');
   scheduleCarouselUpdate();
 }
 
@@ -5061,6 +5090,7 @@ function doAction(action) {
   if (action.requires && !action.requires()) return;
   if (S.capital < action.cost || S.daysLeft < action.days) return;
 
+  deckResetRequested = true;
   S.capital -= action.cost;
   S.daysLeft -= action.days;
 

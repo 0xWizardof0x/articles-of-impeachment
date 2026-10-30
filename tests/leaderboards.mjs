@@ -3,9 +3,11 @@ import {validateResult,COUNTRIES} from '../server/lib/leaderboard-core.mjs';
 const base={name:'Test '+crypto.randomUUID().slice(0,8),country:'PR',mode:'hard',won:false,evidence:30,house:0,senate:0,support:50,capital:20,daysRemaining:100,runId:crypto.randomUUID()};
 assert.equal(COUNTRIES.size,249);
 assert.equal(validateResult({...base,score:9999999}).score,820);
-for(const change of [{name:'<script>'},{name:'x'},{country:'XX'},{support:101},{capital:-1},{evidence:1.5},{won:true},{senate:67},{mode:'easy'},{runId:'bad'}]) assert.throws(()=>validateResult({...base,...change}));
+for(const change of [{name:'<script>'},{name:'x'},{country:'XX'},{support:101},{capital:-1},{evidence:1.5},{won:true},{senate:67},{mode:'unknown'},{runId:'bad'}]) assert.throws(()=>validateResult({...base,...change}));
 for(const name of ['José','日本語','한국어','ישראל','پارسا']) assert.equal(validateResult({...base,name}).name,name);
 assert.ok(validateResult({...base,won:true,house:218,senate:67}).score>10000);
+assert.equal(validateResult({...base,mode:'easy',daysRemaining:240}).score,820);
+assert.throws(()=>validateResult({...base,mode:'easy',daysRemaining:241}));
 const origin=process.env.TEST_ORIGIN;
 if(origin){
  const get=async(query='')=>(await fetch(origin+'/api/leaderboard?mode=hard'+query)).json();
@@ -18,6 +20,8 @@ if(origin){
  const duplicate=await post(base,one.cookie);assert.equal(duplicate.status,200);assert.equal(duplicate.data.score,820);
  const better=await post({...base,runId:crypto.randomUUID(),support:60},one.cookie);assert.equal(better.status,201);
  const two=await post({...base,runId:crypto.randomUUID(),name:'Other Player',country:'JP',support:55});assert.equal(two.status,201);
+ const easy=await post({...base,runId:crypto.randomUUID(),mode:'easy'},one.cookie);assert.equal(easy.status,201);
+ const easyBoard=await (await fetch(origin+'/api/leaderboard?mode=easy')).json();assert.ok(easyBoard.entries.some(e=>e.name===base.name));
  const harder=await post({...base,runId:crypto.randomUUID(),mode:'harder'},one.cookie);assert.equal(harder.status,201);
  assert.equal((await post({...base,runId:crypto.randomUUID(),name:'<img>'},one.cookie)).status,400);
  assert.equal((await post({...base,runId:crypto.randomUUID()},one.cookie,'https://wrong.example')).status,403);

@@ -218,3 +218,55 @@ for (const [code, messages] of Object.entries({
     "Rankings are unavailable. Refresh to try again.": "排行榜暂时不可用。请刷新重试。"
   }
 })) Object.assign(TRANSLATIONS[code], messages);
+
+for (const [code, messages] of Object.entries({
+  "es": {
+    "Deck": "Mazo",
+    "EASY": "F\u00c1CIL",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "Una introducci\u00f3n m\u00e1s accesible. M\u00e1s recursos iniciales, mejores probabilidades y 28 cartas por fase.",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "Mensual: 28\u201334 de capital \u00b7 apoyo \u22121 \u00b7 35% de riesgo de reacci\u00f3n",
+    "Deck: {0} / {1} cards available": "Mazo: {0} / {1} cartas disponibles"
+  },
+  "fr": {
+    "Deck": "Paquet de cartes",
+    "EASY": "FACILE",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "Une initiation plus accessible. Plus de ressources au d\u00e9part, de meilleures chances et 28 cartes par phase.",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "Par mois : 28\u201334 de capital \u00b7 soutien \u22121 \u00b7 35 % de risque de retour de b\u00e2ton",
+    "Deck: {0} / {1} cards available": "Paquet : {0} / {1} cartes disponibles"
+  },
+  "ko": {
+    "Deck": "\ub371",
+    "EASY": "\uc26c\uc6c0",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "\ub354 \uc26c\uc6b4 \uc785\ubb38 \ubaa8\ub4dc. \uc2dc\uc791 \uc790\uc6d0\uacfc \uc131\uacf5 \ud655\ub960\uc774 \ub192\uace0 \ub2e8\uacc4\ub9c8\ub2e4 \uce74\ub4dc 28\uc7a5\uc774 \uc788\uc2b5\ub2c8\ub2e4.",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "\ub9e4\uc6d4: \uc790\ubcf8 28~34 \u00b7 \uc9c0\uc9c0\uc728 \u22121 \u00b7 \uc5ed\ud48d \ud655\ub960 35%",
+    "Deck: {0} / {1} cards available": "\ub371: \uc0ac\uc6a9 \uac00\ub2a5\ud55c \uce74\ub4dc {0} / {1}\uc7a5"
+  },
+  "fa": {
+    "Deck": "\u062f\u0633\u062a\u0647\u0654 \u06a9\u0627\u0631\u062a",
+    "EASY": "\u0622\u0633\u0627\u0646",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "\u0634\u0631\u0648\u0639\u06cc \u0622\u0633\u0627\u0646\u200c\u062a\u0631 \u0628\u0627 \u0645\u0646\u0627\u0628\u0639 \u0627\u0648\u0644\u06cc\u0647\u0654 \u0628\u06cc\u0634\u062a\u0631\u060c \u0634\u0627\u0646\u0633 \u0628\u0647\u062a\u0631 \u0648 \u06f2\u06f8 \u06a9\u0627\u0631\u062a \u062f\u0631 \u0647\u0631 \u0645\u0631\u062d\u0644\u0647.",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "\u0645\u0627\u0647\u0627\u0646\u0647: \u06f2\u06f8\u2013\u06f3\u06f4 \u0633\u0631\u0645\u0627\u06cc\u0647 \u00b7 \u062d\u0645\u0627\u06cc\u062a \u06f1\u2212 \u00b7 \u0627\u062d\u062a\u0645\u0627\u0644 \u0648\u0627\u06a9\u0646\u0634 \u0645\u0646\u0641\u06cc \u06f3\u06f5\u066a",
+    "Deck: {0} / {1} cards available": "\u062f\u0633\u062a\u0647\u0654 \u06a9\u0627\u0631\u062a: {0} \u0627\u0632 {1} \u06a9\u0627\u0631\u062a \u062f\u0631 \u062f\u0633\u062a\u0631\u0633"
+  },
+  "he": {
+    "Deck": "\u05d7\u05e4\u05d9\u05e1\u05ea \u05e7\u05dc\u05e4\u05d9\u05dd",
+    "EASY": "\u05e7\u05dc",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "\u05e4\u05ea\u05d9\u05d7\u05d4 \u05e7\u05dc\u05d4 \u05d9\u05d5\u05ea\u05e8. \u05d9\u05d5\u05ea\u05e8 \u05de\u05e9\u05d0\u05d1\u05d9\u05dd \u05d4\u05ea\u05d7\u05dc\u05ea\u05d9\u05d9\u05dd, \u05e1\u05d9\u05db\u05d5\u05d9\u05d9\u05dd \u05d8\u05d5\u05d1\u05d9\u05dd \u05d9\u05d5\u05ea\u05e8 \u05d5\u05be28 \u05e7\u05dc\u05e4\u05d9\u05dd \u05d1\u05db\u05dc \u05e9\u05dc\u05d1.",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "\u05de\u05d3\u05d9 \u05d7\u05d5\u05d3\u05e9: 28\u201334 \u05d4\u05d5\u05df \u00b7 \u05ea\u05de\u05d9\u05db\u05d4 \u22121 \u00b7 \u05e1\u05d9\u05db\u05d5\u05df \u05dc\u05ea\u05d2\u05d5\u05d1\u05ea \u05e0\u05d2\u05d3 35%",
+    "Deck: {0} / {1} cards available": "\u05d7\u05e4\u05d9\u05e1\u05d4: {0} / {1} \u05e7\u05dc\u05e4\u05d9\u05dd \u05d6\u05de\u05d9\u05e0\u05d9\u05dd"
+  },
+  "ja": {
+    "Deck": "\u30c7\u30c3\u30ad",
+    "EASY": "\u3084\u3055\u3057\u3044",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "\u6c17\u8efd\u306b\u59cb\u3081\u3089\u308c\u308b\u30e2\u30fc\u30c9\u3002\u521d\u671f\u8cc7\u6e90\u304c\u591a\u304f\u6210\u529f\u7387\u3082\u9ad8\u3081\u3002\u5404\u6bb5\u968e28\u679a\u306e\u30ab\u30fc\u30c9\u3002",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "\u6bce\u6708\uff1a\u8cc7\u672c28\uff5e34\u30fb\u652f\u6301\u7387\u22121\u30fb\u53cd\u767a\u30ea\u30b9\u30af35%",
+    "Deck: {0} / {1} cards available": "\u30c7\u30c3\u30ad\uff1a{0} / {1}\u679a\u304c\u4f7f\u7528\u53ef\u80fd"
+  },
+  "zh": {
+    "Deck": "\u724c\u7ec4",
+    "EASY": "\u7b80\u5355",
+    "A gentler introduction. More starting resources, better odds, and 28 cards per phase.": "\u66f4\u8f7b\u677e\u7684\u5165\u95e8\u6a21\u5f0f\u3002\u66f4\u591a\u521d\u59cb\u8d44\u6e90\u3001\u66f4\u9ad8\u6210\u529f\u7387\uff0c\u6bcf\u9636\u6bb528\u5f20\u5361\u724c\u3002",
+    "Monthly: 28\u201334 capital \u00b7 support \u22121 \u00b7 35% blowback risk": "\u6bcf\u6708\uff1a\u8d44\u672c28\u201334 \u00b7 \u652f\u6301\u7387\u22121 \u00b7 \u53cd\u566c\u98ce\u966935%",
+    "Deck: {0} / {1} cards available": "\u724c\u7ec4\uff1a{0} / {1}\u5f20\u53ef\u7528"
+  }
+})) Object.assign(TRANSLATIONS[code], messages);

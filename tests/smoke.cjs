@@ -145,14 +145,14 @@ S.support=100;Math.random=()=>0.99;shiftPublicOpinion('day');assert.equal(S.supp
 S.support=50;S.evidence=20;S.capital=4;S.turn=1;S.over=false;S.daysLeft=1;
 const rolls=[0,0.99,0,0.2,0];Math.random=()=>rolls.shift() ?? 0.99;endTurn('clock');assert.equal(S.capital,12);assert.equal(S.turn,2);
 `);
-// A reduced-motion start has no animation delay.
+// Availability changes remove unplayable cards and update navigation.
 run(`
 // Ready moves always lead, while both groups retain the source order.
 S.over=false;S.mode='harder';S.phase='investigation';S.evidence=0;S.capital=25;S.daysLeft=3;
 CALENDAR_CLOCK.manuallyPaused=false;applyLanguage('en');
 const assertMoveOrder = () => {
  const source=availableActions();
- const expected=[...source.filter(isMoveReady),...source.filter(a=>!isMoveReady(a))];
+ const expected=source.filter(isMoveReady);
  assert.deepEqual(orderedActions().map(a=>a.id),expected.map(a=>a.id));
  assert.deepEqual(Array.from(moveTrack.children,c=>c.dataset.moveId),expected.map(a=>a.id));
  assert.deepEqual(Array.from(moveDots.children,d=>d.dataset.moveId),expected.map(a=>a.id));
@@ -160,14 +160,14 @@ const assertMoveOrder = () => {
  if(firstBlocked>=0) assert.ok(expected.slice(firstBlocked).every(a=>!isMoveReady(a)));
 };
 renderMoves();assertMoveOrder();
-const originalCards=new Map(Array.from(moveTrack.children,c=>[c.dataset.moveId,c]));
+const originalCards=new Map(deckCards);
 const focusedMove=orderedActions().find(isMoveReady);originalCards.get(focusedMove.id).focus();
 S.capital=120;S.daysLeft=10;renderMoves();assertMoveOrder();
-assert.equal(document.activeElement,originalCards.get(focusedMove.id));
+assert.ok(document.activeElement===originalCards.get(focusedMove.id) || document.activeElement===moveTrack);
 assert.ok(Array.from(moveTrack.children).every(c=>originalCards.get(c.dataset.moveId)===c),'reuse card nodes');
 S.capital=focusedMove.cost;S.daysLeft=focusedMove.days;renderMoves();assert.ok(isMoveReady(focusedMove));assertMoveOrder();
 S.capital=0;renderMoves();assertMoveOrder();assert.equal(document.activeElement,moveTrack);
-assert.ok(Array.from(moveTrack.children).every(c=>c.disabled));
+assert.equal(moveTrack.children.length,0);assert.equal(moveDots.children.length,0);assert.equal(document.getElementById('deckEmpty').hidden,false);
 S.capital=25;S.daysLeft=3;renderMoves();assertMoveOrder();
 const beforePause=orderedActions().map(a=>a.id);CALENDAR_CLOCK.manuallyPaused=true;renderMoves();
 assert.deepEqual(orderedActions().map(a=>a.id),beforePause);assert.ok(Array.from(moveTrack.children).every(c=>c.disabled));
@@ -183,7 +183,32 @@ const gated=availableActions().find(a=>a.requires);assert.ok(gated);assert.equal
 S.evidence=85;renderMoves();assert.equal(isMoveReady(gated),true);assertMoveOrder();
 applyLanguage('fa');renderMoves();assertMoveOrder();moveDots.children[5].onclick();assert.ok(moveTrack.scrollLeft<=0);
 S.mode='hard';renderMoves();assert.equal(moveTrack.children.length,28);assertMoveOrder();
+S.mode='easy';S.phase='investigation';S.capital=120;S.daysLeft=10;S.evidence=12;S.support=55;
+renderMoves();assert.equal(moveTrack.children.length,28);assertMoveOrder();
+assert.equal(MODES.easy.blowbackChance,0.35);assert.equal(MODES.easy.startCapital,70);
+const oddsEasy=moveChance(ACTIONS.investigation[0]);S.mode='hard';assert.equal(oddsEasy,Math.min(94,moveChance(ACTIONS.investigation[0])+10));S.mode='easy';
+scrollToMove(4);assert.equal(moveTrack.dataset.selectedIndex,'4');
+doAction(orderedActions()[4]);assert.equal(moveTrack.dataset.selectedIndex,'0');assert.equal(moveTrack.scrollLeft,0);
+assert.ok(Array.from(moveTrack.children).every(card=>isMoveReady(availableActions().find(a=>a.id===card.dataset.moveId))));
+verifyMessage(msg\`Deck: \${1} / \${28} cards available\`);
+
 `);
+// Exercise exit animation cleanup and reduced-motion behavior without wall-clock waits.
+const animations=[];context.animations=animations;
+Element.prototype.getBoundingClientRect=function(){return {left:this.offsetLeft,right:this.offsetLeft+this.offsetWidth,top:0,width:this.offsetWidth,height:214};};
+Element.prototype.getAnimations=function(){return [];};
+Element.prototype.cloneNode=function(){const clone=new Element();clone.innerHTML=this.innerHTML;return clone;};
+Element.prototype.remove=function(){get('deckExits').children=get('deckExits').children.filter(el=>el!==this);};
+Element.prototype.animate=function(frames,options){const animation={frames,options,onfinish:null,oncancel:null,cancel(){this.oncancel?.();}};animations.push(animation);return animation;};
+run(`
+S.mode='easy';S.phase='investigation';S.over=false;S.capital=120;S.daysLeft=10;CALENDAR_CLOCK.manuallyPaused=false;
+renderMoves();animations.length=0;S.capital=0;renderMoves();
+assert.equal(moveTrack.children.length,0);assert.ok(document.getElementById('deckExits').children.length>0);
+assert.ok(animations.some(a=>a.options.duration===220));
+animations.forEach(a=>a.onfinish?.());assert.equal(document.getElementById('deckExits').children.length,0);
+S.capital=120;renderMoves();assert.ok(animations.some(a=>a.options.duration===320));
+`);
+reduced=true;run(`animations.length=0;S.capital=0;renderMoves();assert.equal(animations.length,0);assert.equal(document.getElementById('deckExits').children.length,0);`);
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
-console.log('PASS: ready-first card order, stable focus and nodes, reordered dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');
+console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

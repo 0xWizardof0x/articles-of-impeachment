@@ -711,3 +711,16 @@ header > .board-button {float:inline-start;}
 #postScore:disabled {opacity:.55;cursor:default;}
 .modal .board-button {margin:8px;}
 @media(max-width:560px) {#leaderboardDialog {padding:16px;}.player-fields label {flex-basis:100%;}.board-tabs {width:100%;}.board-table-wrap th,.board-table-wrap td {padding:10px 7px;font-size:12px;} header > .board-button {float:none;margin-bottom:12px;}}
+
+/* The deck contains playable cards only. Exit ghosts never affect layout or focus. */
+#movesPanel {position:relative;}
+#deckExits {position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2;}
+#deckExits .deck-exit {position:absolute;display:flex;flex-direction:column;min-width:0;padding:17px;border-radius:8px;box-sizing:border-box;pointer-events:none;}
+#deckExits .deck-exit .name {font-size:15px;line-height:1.4;margin-bottom:10px;}
+#deckExits .deck-exit .cost {margin-top:auto;}
+#deckEmpty {padding:30px 18px;border:1px dashed var(--gold-dim);border-radius:8px;color:var(--muted);font-size:14px;line-height:1.6;}
+#deckEmpty[hidden] {display:none;}
+.mode-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+.mode-card.easy {border-color:#608f75;}
+.mode-card.easy .mode-tag {color:#9ed7b8;}
+@media(max-width:850px){.mode-grid {grid-template-columns:1fr;}}

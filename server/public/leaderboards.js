@@ -39,7 +39,7 @@
   function renderResult() {
     if(!completed) return;
     byId('finalScore').textContent=t('Score')+': '+t(completed.score);
-    byId('scoreIdentity').textContent=profile.name+' · '+countryName(profile.country)+' · '+t(completed.mode==='hard'?'HARD':'HARDER');
+    byId('scoreIdentity').textContent=profile.name+' · '+countryName(profile.country)+' · '+t(completed.mode.toUpperCase());
     byId('postScore').disabled=posting||posted;
     byId('postScore').textContent=t(posting?'Posting…':posted?'Posted':'Post score');
     byId('scoreStatus').textContent=t(scoreStatus);

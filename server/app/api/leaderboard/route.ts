@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const params=new URL(request.url).searchParams;
   const mode=params.get('mode') || 'hard';
   const country=params.get('country') || '';
-  if (!['hard','harder'].includes(mode) || (country && !COUNTRIES.has(country))) return json({error:'invalid'},400);
+  if (!['easy','hard','harder'].includes(mode) || (country && !COUNTRIES.has(country))) return json({error:'invalid'},400);
   // Best completed run per browser identity, then scope to a country. No private IDs leave the server.
   const result=await env.DB.prepare(`WITH best AS (
    SELECT name,country,mode,score,won,days_remaining,created_at,

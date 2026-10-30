@@ -16,10 +16,11 @@ Then open <http://localhost:8000>.
 
 ## Gameplay
 
-- Choose a language and a two-year **Hard** or four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
+- Choose a language and a two-year **Easy** or **Hard** campaign, or a four-year **Harder** campaign, read the quickstart, then press **Start the Session**. Selecting a mode does not start the clock.
 - The gavel animates before play begins; reduced-motion preferences skip the animation.
-- Browse **28 moves per phase in Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
-- Playable moves come first in the carousel. Unavailable moves follow them, with the original order preserved within each group. Capital, days, and prerequisite changes update the order while retaining card focus and matching pagination dots.
+- Browse **28 cards per phase in Easy and Hard** and **56 in Harder**: 84 and 168 phase-specific choices across the campaign. Harder includes every Hard move plus an equal number of additional moves.
+- The **Deck** shows only cards affordable with current capital and days and with their prerequisites met. Unavailable cards fade and shrink out; remaining cards slide into the gaps. Cards return when resources recover. Playing a card resets the deck to its beginning; dots and accessible labels match the visible cards. Pausing keeps the deck visible. Reduced-motion preferences skip movement and exit animations.
+- Easy starts with 70 capital, 55 support and 12 evidence; regenerates 28–34 capital monthly; loses 1 support per month with no added fatigue; has 35% blowback and 40% breakthrough chances; and adds 10 percentage points to success odds (capped at 94%). Every blowback still halves capital. Easy has its own leaderboard.
 - Every move has a success roll. Cards disclose the current success chance, progress rewards, support changes, failure losses, and any evidence cost. Higher support improves the odds; Harder applies an additional eight-percentage-point penalty before the probability bounds.
 - Quiet preparation, research, coalition work, public outreach, pressure, gambles, and compromises provide different costs, durations, odds, and consequences. Failed moves still spend their full listed capital and days.
 - Public support fluctuates after every move and every active-play calendar day, alongside monthly fatigue and events. The dashboard shows the latest net change. Paused and hidden-tab time never generates opinion shifts.
@@ -68,7 +69,7 @@ Live game: <https://articles-of-impeachment-play.proudpeach18.chatgpt.site>
 
 ## Shared leaderboards
 
-Enter a nickname (2–24 characters) and choose a country or territory before starting. After a campaign ends, **Post score** publishes the result. The leaderboard has **Overall** and **By country** views, separate Hard/Harder rankings, and the top 100 best results per browser identity and difficulty. Country names and leaderboard controls follow the selected language. Opening the board pauses the active-play clock.
+Enter a nickname (2–24 characters) and choose a country or territory before starting. After a campaign ends, **Post score** publishes the result. The leaderboard has **Overall** and **By country** views, separate Easy/Hard/Harder rankings, and the top 100 best results per browser identity and difficulty. Country names and leaderboard controls follow the selected language. Opening the board pauses the active-play clock.
 
 Scores reward victory (10,000), evidence (10 each, capped at 75), House votes (10 each, capped at 218), Senate votes (30 each, capped at 67), support (10 each), capital (1 each), and, for wins only, remaining session days (5 each). The API calculates points; it never accepts a supplied score. These are casual, player-reported results, not server-replayed competitive records. Clearing browser cookies or changing devices creates a new identity. Names need not be unique.
 

@@ -53,6 +53,7 @@ const MONTHS = ['January','February','March','April','May','June',
    ========================================================= */
 const S = {
   mode: null,
+  simulated: false,
   turn: 1,
   maxTurns: 24,
   daysMax: 10,
@@ -4732,6 +4733,7 @@ function renderEndTurnSub() {
 
 function render() {
   if (!S.mode) return;
+  if (isCalendarPaused()) { stopDeckMomentum(); deckDrag = null; moveTrack.classList.remove('is-dragging'); }
   renderPauseLock();
 
   document.getElementById('vEvidence').textContent = Math.round(S.evidence);
@@ -4767,12 +4769,13 @@ function render() {
 
   renderMoves();
 
-  document.getElementById('endTurn').disabled = S.over || isCalendarPaused();
+  document.getElementById('endTurn').disabled = S.over || isCalendarPaused() || S.simulated;
 
   renderCalendar();
   renderEndTurnSub();
   renderFeed();
   renderCalendarClock();
+  window.Simulator?.render();
 }
 
 
@@ -4853,7 +4856,7 @@ function scheduleCarouselUpdate() {
 
 function updateCarouselControls() {
   const cards = Array.from(moveTrack.children);
-  const paused = isCalendarPaused();
+  const paused = isCalendarPaused() || S.simulated;
   const left = carouselPosition();
   const selected = carouselTarget?.index ?? nearestMoveIndex();
   document.getElementById('movesPrev').disabled = paused || selected <= 0;
@@ -4884,12 +4887,13 @@ function updateCarouselControls() {
   });
 }
 
-function scrollToMove(index) {
-  if (isCalendarPaused()) return;
+function scrollToMove(index, source = 'manual') {
+  if (isCalendarPaused() || (S.simulated && source !== 'simulation')) return;
+  stopDeckMomentum();
   const cards = Array.from(moveTrack.children);
   if (!cards.length) return;
   index = clamp(index, 0, cards.length - 1);
-  if (index !== (carouselTarget?.index ?? nearestMoveIndex())) window.GameAudio?.play('shuffle', {gesture: true});
+  if (index !== (carouselTarget?.index ?? nearestMoveIndex())) window.GameAudio?.play('shuffle', {gesture: !S.simulated});
   clearTimeout(carouselSettleTimer);
   carouselTarget = { index, left: moveDestination(cards[index]) };
   moveTrack.dataset.selectedIndex = String(index);
@@ -4974,6 +4978,7 @@ function renderMoves() {
   const changed = phaseChanged || actions.length !== previousCards.length || actions.some((action, i) => action.id !== previousCards[i]?.dataset.moveId);
   const shouldReset = phaseChanged || deckResetRequested || (changed && !actions.some(a => a.id === selectedId));
   if (changed) {
+    stopDeckMomentum();
     settleCarousel();
     if (!phaseChanged) previousCards.filter(card => !actions.some(a => a.id === card.dataset.moveId)).forEach(animateDeckExit);
     moveTrack.replaceChildren(...actions.map(action => deckCards.get(action.id)));
@@ -5005,13 +5010,14 @@ function renderMoves() {
     dot.onclick = () => scrollToMove(index);
     const locked = Boolean(action.requires && !action.requires());
     const affordable = S.capital >= action.cost && S.daysLeft >= action.days;
-    const disabled = S.over || paused || locked || !affordable;
+    const disabled = S.over || paused || S.simulated || locked || !affordable;
     // Preserve a sensible focus target when the selected move becomes disabled.
     if (disabled && document.activeElement === button) moveTrack.focus({ preventScroll: true });
     button.disabled = disabled;
     let status = 'Ready to play';
     if (S.over) status = 'Campaign ended';
     else if (paused) status = 'Paused — resume the clock to play';
+    else if (S.simulated) status = 'Simulation is playing';
     else if (locked) status = action.lockedMsg;
     else if (!affordable) {
       const needs = [];
@@ -5065,15 +5071,15 @@ moveTrack.addEventListener('scroll', () => {
 moveTrack.addEventListener('scrollend', () => {
   if (!carouselTarget || Math.abs(carouselPosition() - carouselTarget.left) <= 2) settleCarousel();
 });
-// Hand control back immediately when the player swipes or scrolls directly.
-for (const eventName of ['pointerdown', 'touchstart', 'wheel']) {
-  moveTrack.addEventListener(eventName, () => {
+// Trackpads retain native wheel inertia; pointer swipes use the physics below.
+moveTrack.addEventListener('wheel', () => {
+    if (isCalendarPaused() || S.simulated) return;
+    stopDeckMomentum();
     delete moveTrack.dataset.selectedIndex;
     settleCarousel();
-  }, { passive: true });
-}
+}, { passive: true });
 moveTrack.addEventListener('keydown', event => {
-  if (isCalendarPaused()) return;
+  if (isCalendarPaused() || S.simulated) return;
   if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
     event.preventDefault();
@@ -5089,31 +5095,76 @@ moveTrack.addEventListener('keydown', event => {
     if (card && !card.disabled && !carouselTarget) card.click();
   }
 });
-window.addEventListener('resize', settleCarousel);
+window.addEventListener('resize', () => { stopDeckMomentum(); settleCarousel(); });
 if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).observe(moveTrack);
 
-// Touch keeps native momentum scrolling. A mouse can also drag the deck.
+// Pointer physics: preserve release velocity, coast with exponential friction,
+// then center the nearest card. The same model supports mouse, pen and touch.
 let deckDrag = null, deckDragMoved = false;
+let deckMomentum = null, deckMomentumFrame = null;
+function stopDeckMomentum() {
+  if (deckMomentumFrame !== null) cancelAnimationFrame(deckMomentumFrame);
+  deckMomentumFrame = null; deckMomentum = null;
+  moveTrack.classList.remove('is-coasting');
+}
+function stepDeckMomentum(now) {
+  deckMomentumFrame = null;
+  if (!deckMomentum) return;
+  if (isCalendarPaused() || S.simulated) { stopDeckMomentum(); return; }
+  const dt = Math.min(32, Math.max(0, now - deckMomentum.lastTime));
+  deckMomentum.lastTime = now;
+  const decay = Math.exp(-dt / 300);
+  const before = moveTrack.scrollLeft;
+  const limit = Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth);
+  const next = clamp(before + deckMomentum.velocity * 300 * (1 - decay), carouselIsRTL() ? -limit : 0, carouselIsRTL() ? 0 : limit);
+  moveTrack.scrollLeft = next;
+  deckMomentum.velocity *= decay;
+  if (Math.abs(deckMomentum.velocity) < .035 || (dt > 0 && Math.abs(next - before) < .1)) {
+    stopDeckMomentum(); scrollToMove(nearestMoveIndex());
+  } else deckMomentumFrame = requestAnimationFrame(stepDeckMomentum);
+}
 moveTrack.addEventListener('pointerdown', event => {
-  if (isCalendarPaused()) return;
-  deckDragMoved = false;
-  if (event.pointerType === 'mouse' && event.button === 0) deckDrag = {x: event.clientX, left: moveTrack.scrollLeft, id: event.pointerId};
+  if (isCalendarPaused() || S.simulated || event.button !== 0 || event.isPrimary === false) return;
+  deckDragMoved = Boolean(deckMomentum); // A tap first catches a moving deck.
+  stopDeckMomentum();
+  if (deckDragMoved) moveTrack.classList.add('is-dragging');
+  moveTrack.scrollTo({left: moveTrack.scrollLeft, behavior: 'instant'});
+  delete moveTrack.dataset.selectedIndex;
+  settleCarousel();
+  deckDrag = {x:event.clientX,y:event.clientY,left:moveTrack.scrollLeft,lastX:event.clientX,lastTime:performance.now(),velocity:0,id:event.pointerId};
 });
 moveTrack.addEventListener('pointermove', event => {
-  if (!deckDrag || isCalendarPaused()) return;
+  if (!deckDrag || event.pointerId !== deckDrag.id || isCalendarPaused() || S.simulated) return;
   const delta = event.clientX - deckDrag.x;
-  if (Math.abs(delta) > 6) {
+  const vertical = event.clientY - deckDrag.y;
+  if (!deckDragMoved && Math.abs(vertical) > 10 && Math.abs(vertical) > Math.abs(delta)) { deckDrag = null; return; }
+  if (!deckDragMoved && Math.abs(delta) > 6) {
     deckDragMoved = true;
-    moveTrack.setPointerCapture(event.pointerId);
+    moveTrack.setPointerCapture?.(event.pointerId);
     moveTrack.classList.add('is-dragging');
   }
-  if (deckDragMoved) moveTrack.scrollLeft = deckDrag.left - delta;
+  if (deckDragMoved) {
+    event.preventDefault();
+    const now = performance.now(), dt = Math.max(4, now - deckDrag.lastTime);
+    const velocity = clamp((deckDrag.lastX - event.clientX) / dt, -3.2, 3.2);
+    deckDrag.velocity = deckDrag.velocity * .35 + velocity * .65;
+    deckDrag.lastX = event.clientX; deckDrag.lastTime = now;
+    const limit = Math.max(0, moveTrack.scrollWidth - moveTrack.clientWidth);
+    moveTrack.scrollLeft = clamp(deckDrag.left - delta, carouselIsRTL() ? -limit : 0, carouselIsRTL() ? 0 : limit);
+  }
 });
-function finishDeckDrag() {
+function finishDeckDrag(event) {
   if (!deckDrag) return;
+  if (event && event.pointerId !== deckDrag.id) return;
+  const velocity = performance.now() - deckDrag.lastTime > 90 ? 0 : deckDrag.velocity;
   deckDrag = null;
+  const coast = deckDragMoved && event?.type !== 'pointercancel' && Math.abs(velocity) > .08 && !isCalendarPaused() && !S.simulated && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (coast) moveTrack.classList.add('is-coasting');
   moveTrack.classList.remove('is-dragging');
-  if (deckDragMoved) scrollToMove(nearestMoveIndex());
+  if (coast) {
+    deckMomentum = {velocity, lastTime:performance.now()};
+    deckMomentumFrame = requestAnimationFrame(stepDeckMomentum);
+  } else if (deckDragMoved) scrollToMove(nearestMoveIndex());
   // Suppress the click immediately following a drag, then restore keyboard play.
   setTimeout(() => { deckDragMoved = false; }, 0);
 }
@@ -5162,6 +5213,7 @@ function renderPauseLock() {
   app.inert = paused || S.over;
   app.classList.toggle('is-paused', paused);
   if (paused && !dialog.open) {
+    stopDeckMomentum();
     deckDrag = null; deckDragMoved = false;
     moveTrack.classList.remove('is-dragging');
     // Stop a smooth scroll already in flight without changing the chosen card.
@@ -5255,7 +5307,11 @@ function syncCalendarClock() {
   }
   const previous = CALENDAR_CLOCK.lastNow;
   CALENDAR_CLOCK.lastNow = now;
-  if (previous !== null) consumeActiveCalendarTime(Math.max(0, now - previous));
+  if (previous !== null) {
+    const elapsed = Math.max(0, now - previous) * (S.simulated ? window.Simulator?.speed || 1 : 1);
+    consumeActiveCalendarTime(elapsed);
+    if (!S.over && elapsed > 0) window.Simulator?.advance(elapsed);
+  }
   renderCalendarClock();
 }
 
@@ -5304,7 +5360,8 @@ renderCalendarClock();
 /* =========================================================
    GAME FLOW
    ========================================================= */
-function doAction(action) {
+function doAction(action, source = 'manual') {
+  if (S.simulated && source !== 'simulation') return;
   if (isCalendarPaused()) return;
   const previousTurn = S.turn;
   const previousPhase = S.phase;
@@ -5315,7 +5372,7 @@ function doAction(action) {
   if (action.requires && !action.requires()) return;
   if (S.capital < action.cost || S.daysLeft < action.days) return;
 
-  window.GameAudio?.play('card', {gesture: true});
+  window.GameAudio?.play('card', {gesture: !S.simulated});
   deckResetRequested = true;
   S.capital -= action.cost;
   S.daysLeft -= action.days;
@@ -5391,7 +5448,8 @@ function resolveTurnEvents() {
 
 function endTurn(source = 'manual') {
   if (S.over || !S.mode) return;
-  if (source === 'manual') {
+  if (S.simulated && source === 'manual') return;
+  if (source === 'manual' || source === 'simulation') {
     if (isCalendarPaused()) return;
     const previousTurn = S.turn;
     syncCalendarClock();
@@ -5400,7 +5458,7 @@ function endTurn(source = 'manual') {
     // Adjourn deliberately skips the current month's unused time.
     CALENDAR_CLOCK.elapsedMs = 0;
     CALENDAR_CLOCK.lastNow = performance.now();
-    window.GameAudio?.play('adjourn', {gesture: true});
+    window.GameAudio?.play('adjourn', {gesture: !S.simulated});
   }
 
   // Finish in the final month instead of displaying a phantom extra month.
@@ -5446,6 +5504,7 @@ function finish(won, headline, body) {
   lastVerdict = { won, headline, body };
   S.over = true;
   stopCalendarClock();
+  window.Simulator?.stop();
   window.GameAudio?.stop();
   render();
   window.GameAudio?.play(won ? 'victory' : 'defeat');
@@ -5455,21 +5514,25 @@ function finish(won, headline, body) {
   vt.textContent = t(headline);
   vt.className = 'verdict ' + (won ? 'win' : 'lose');
   document.getElementById('verdictBody').textContent = t(body);
-  window.Leaderboards?.onFinish(S, won);
+  if (S.simulated) window.Simulator?.renderResult();
+  else window.Leaderboards?.onFinish(S, won);
   overlay.classList.add('show');
   document.getElementById('app').inert = true;
-  overlay.querySelector('button').focus();
+  overlay.querySelector('button:not([hidden]):not(:disabled)').focus();
 }
 
 /* =========================================================
    START
    ========================================================= */
-function startGame(modeId) {
+function startGame(modeId, {simulation = false} = {}) {
   const m = MODES[modeId];
   if (!m) return;
   resetCalendarClock();
+  window.Simulator?.stop();
 
   S.mode = modeId;
+  S.simulated = simulation;
+  document.getElementById('postScore').hidden = simulation;
   S.turn = 1;
   S.maxTurns = m.months;
   S.daysMax = m.daysPerMonth;
@@ -5500,6 +5563,7 @@ function startGame(modeId) {
   log('The calendar is live: 12 seconds of active play costs one session day. Moves also spend their listed days.', 'sys');
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sys');
 
+  if (simulation) window.Simulator?.start();
   render();
   startCalendarClock();
   document.getElementById('clockPause').focus();
@@ -5524,22 +5588,25 @@ function selectMode(modeId) {
     button.setAttribute('aria-pressed', String(button.dataset.mode === modeId));
   });
   document.getElementById('startButton').disabled = false;
+  document.getElementById('watchButton').disabled = false;
   renderStartHint();
 }
-function beginSession() {
+function beginSession(simulation = false) {
   if (!selectedMode || startingSession || S.mode) return;
-  if (window.Leaderboards && !window.Leaderboards.prepareProfile()) return;
+  if (!simulation && window.Leaderboards && !window.Leaderboards.prepareProfile()) return;
   startingSession = true;
   const button = document.getElementById('startButton');
   button.disabled = true;
+  document.getElementById('watchButton').disabled = true;
   button.classList.add('striking');
   document.querySelectorAll('#startScreen [data-mode], #startScreen select, #startScreen input').forEach(el => { el.disabled = true; });
   renderStartHint();
   const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 740;
-  window.GameAudio?.play('gavel', {gesture: true, delay: delay ? .42 : 0});
-  setTimeout(() => startGame(selectedMode), delay);
+  window.GameAudio?.play('intro', {gesture: true, delay: delay ? .42 : 0});
+  setTimeout(() => startGame(selectedMode, {simulation}), delay);
 }
-document.getElementById('startButton').addEventListener('click', beginSession);
+document.getElementById('startButton').addEventListener('click', () => beginSession(false));
+document.getElementById('watchButton').addEventListener('click', () => beginSession(true));
 document.addEventListener('languagechange', () => {
   // Treat translation as a pause boundary, preserving the partial day.
   CALENDAR_CLOCK.lastNow = null;
@@ -5549,6 +5616,7 @@ document.addEventListener('languagechange', () => {
   if (lastVerdict) {
     document.getElementById('verdictText').textContent = t(lastVerdict.headline);
     document.getElementById('verdictBody').textContent = t(lastVerdict.body);
+    if (S.simulated) window.Simulator?.renderResult();
   }
   renderStartHint();
 });

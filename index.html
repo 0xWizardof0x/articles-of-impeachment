@@ -55,6 +55,11 @@
   </section>
 
   <main>
+    <section id="simulationBar" aria-label="Simulation controls" data-i18n-aria="Simulation controls" hidden>
+      <div class="simulation-copy"><span class="simulation-label"><i aria-hidden="true"></i><span data-i18n="Watching simulation">Watching simulation</span></span><span id="simulationStatus" role="status"></span></div>
+      <label class="simulation-speed"><span data-i18n="Speed">Speed</span><select id="simulationSpeed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+      <button type="button" id="stopSimulation" data-i18n="Exit">Exit</button>
+    </section>
     <div id="phaseBanner">
       <span class="phase-name" id="phaseName">—</span>
       <span class="objective" id="objective"></span>
@@ -196,6 +201,8 @@
       <svg class="gavel-scene" viewBox="0 0 90 72" aria-hidden="true"><g class="gavel"><rect x="41" y="13" width="9" height="40" rx="3" transform="rotate(-42 45 17)"/><rect x="26" y="9" width="33" height="18" rx="4" transform="rotate(-42 43 18)"/></g><rect class="gavel-block" x="21" y="58" width="47" height="7" rx="3"/><path class="gavel-impact" d="M14 48l-6-5m67 5 6-5M45 52v-7"/></svg>
       <span id="startButtonText" data-i18n="Start the Session">Start the Session</span>
     </button>
+    <button type="button" id="watchButton" disabled><span aria-hidden="true">▶</span><span data-i18n="Watch Simulation">Watch Simulation</span></button>
+    <p class="watch-note" data-i18n="No profile needed. Watch the selected difficulty play itself.">No profile needed. Watch the selected difficulty play itself.</p>
     <p id="startHint" role="status"></p>
     </div>
   </div>
@@ -269,6 +276,7 @@
 <script src="i18n.js"></script>
 <script src="sound.js"></script>
 <script src="game.js"></script>
+<script src="simulation.js"></script>
 <script src="leaderboards.js"></script>
 </body>
 </html>

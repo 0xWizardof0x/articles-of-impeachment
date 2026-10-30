@@ -44,6 +44,8 @@ main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 #actions::-webkit-scrollbar { display: none; }
 #actions[hidden] { display: none; }
 #actions.is-dragging { scroll-snap-type: none; scroll-behavior: auto; cursor: grabbing; }
+#actions { touch-action: pan-y; overscroll-behavior-x: contain; }
+#actions.is-coasting { scroll-snap-type: none; scroll-behavior: auto; }
 #actions .action { flex: 0 0 var(--card-width); width: var(--card-width); height: var(--card-height); min-height: 0; padding: 0; margin-inline-end: -62px; scroll-snap-align: center; border: 0; border-radius: 14px; background: none; box-shadow: none; transition: none; transform: none; cursor: pointer; overflow: visible; }
 #actions .action:last-child { margin-inline-end: 0; }
 .card-face { width: 100%; height: 100%; display: flex; flex-direction: column; padding: 18px 21px 14px; border: 1px solid #596052; border-radius: 14px; position: relative; overflow: hidden; background: linear-gradient(145deg, #2c3640, #1b2530 55%, #202a29); box-shadow: 0 14px 25px #0007, inset 0 0 0 4px #ffffff04; transform-origin: center; backface-visibility: hidden; transition: border-color 180ms, background 180ms, box-shadow 180ms; }
@@ -497,6 +499,39 @@ button:focus-visible, select:focus-visible { outline: 2px solid #a7f2e8; outline
   .empty-deck-seal { width: 43px; height: 43px; border-radius: 12px; }
   .empty-deck-seal svg { width: 34px; height: 34px; }
   #deckAdjournSlot #endTurn { min-height: 64px; padding: 9px 7px; }
+}
+
+/* Spectator mode keeps its controls separate from automated game actions. */
+#simulationBar { order: 0; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid #6dcfc05c; border-radius: 10px; background: linear-gradient(110deg,#173a3e,#162a38); }
+#simulationBar[hidden] { display: none; }
+.simulation-copy { flex: 1; min-width: 0; text-align: start; }
+.simulation-label { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #9ee5d9; letter-spacing: .6px; }
+.simulation-label i { width: 5px; height: 5px; border-radius: 50%; background: #8fe6ca; box-shadow: 0 0 8px #8fe6ca80; }
+#simulationStatus { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2df; font-size: 12px; margin-top: 3px; }
+.simulation-speed { display: flex; align-items: center; gap: 6px; color: #bed0d7; font-size: 10px; }
+#simulationSpeed, #stopSimulation { min-height: 34px; border: 1px solid #91b4bf80; border-radius: 7px; padding: 5px 8px; color: #eef0d7; background: #142832; font: inherit; font-size: 11px; cursor: pointer; }
+#simulationSpeed:focus-visible, #stopSimulation:focus-visible { outline: 2px solid #ebd18c; outline-offset: 2px; }
+.is-simulation #actions { touch-action: pan-y; pointer-events: none; }
+.is-simulation #actions .action:disabled { opacity: 1; cursor: default; }
+.is-simulation #actions .action.simulation-choice .card-face { border-color: #9df3d3; box-shadow: 0 0 0 2px #8ef2cc55,0 0 35px #8ef2cc25,0 14px 26px #0009; }
+.is-simulation .action.simulation-choice .play-card { visibility: visible; opacity: 1; background: linear-gradient(110deg,#70bcaa,#b3ead7); color: #132c29; }
+.is-simulation .carousel-arrow { visibility: hidden; }
+.is-simulation .carousel-bottom { display: none; }
+#watchButton { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 42px; margin: 9px 0 0; border: 1px solid #91ddc783; border-radius: 9px; color: #b8f1de; background: linear-gradient(110deg,#1d4143,#1c303d); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; transition: transform 180ms,background 180ms; }
+#watchButton:hover:not(:disabled) { background: linear-gradient(110deg,#2d5a54,#264653); transform: translateY(-2px); }
+#watchButton:disabled { opacity: .4; cursor: not-allowed; }
+.watch-note { color: #9ab2bd; font-size: 10px; line-height: 1.4; margin: 7px 4px 0; }
+@media (max-width:600px) {
+  #simulationBar { padding: 5px 8px; gap: 6px; min-height: 43px; flex-shrink: 0; }
+  .simulation-label { font-size: 8px; letter-spacing: 0; }
+  #simulationStatus { font-size: 10px; margin-top: 2px; }
+  .simulation-speed { gap: 3px; }
+  .simulation-speed > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  #simulationSpeed, #stopSimulation { min-height: 31px; padding: 4px 6px; font-size: 10px; }
+  .is-simulation #phaseBanner .objective { display: none; }
+  .is-simulation #phaseBanner { min-height: 16px; }
+  .is-simulation #adjournDock, .is-simulation #adjournDock #endTurn { min-height: 44px; }
+  .is-simulation #adjournDock #endTurn { padding-block: 5px; }
 }
 
 /* Pause and campaign selection. */

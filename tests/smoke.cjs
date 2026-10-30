@@ -16,7 +16,7 @@ class Element {
     this.classList = { add: k => this.classes.add(k), remove: k => this.classes.delete(k), contains: k => this.classes.has(k), toggle: (k,v) => v ? this.classes.add(k) : this.classes.delete(k) };
     this.sub = new Map();
   }
-  addEventListener() {}
+  addEventListener(name, callback) { (this.listeners ||= {})[name] ||= []; this.listeners[name].push(callback); }
   setAttribute(k,v) { this.attrs[k] = v; }
   getAttribute(k) { return this.attrs[k]; }
   appendChild(el) { if(el.parentElement) el.parentElement.children=el.parentElement.children.filter(child=>child!==el); el.parentElement=this; el.offsetLeft = this.children.length * 192; this.children.push(el); }
@@ -54,11 +54,11 @@ const context = vm.createContext({document,Intl,console,Event:class {constructor
   localStorage: {getItem:()=>null,setItem(){}},
   performance:{now:()=>now}, window:{addEventListener(){},matchMedia:()=>({matches:reduced})},
   MutationObserver:class{observe(){}}, HTMLDialogElement:class{},
-  requestAnimationFrame:()=>1, clearTimeout:id=>timers.delete(id),
+  requestAnimationFrame:()=>1, cancelAnimationFrame(){}, clearTimeout:id=>timers.delete(id),
   setTimeout:(fn,ms)=>{const id=callbacks.push({fn,ms});timers.set(id,fn);return id;},
   setInterval:()=>99,clearInterval(){}
 });
-for (const file of ['locales.js','leaderboard-locales.js','i18n.js','game.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+for (const file of ['locales.js','leaderboard-locales.js','i18n.js','game.js','simulation.js']) vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 const run = code => vm.runInContext(code,context);
 context.assert = assert;
 // Inspect all player-facing message paths, including both sides of random branches.
@@ -315,4 +315,56 @@ soundCues.length=0;S.over=false;finish(false,'THE TERM ENDS','');assert.deepEqua
 `);
 run(`S.mode=null;selectedMode='hard';startingSession=false;`);reduced=true;run('beginSession()');
 assert.equal(callbacks.at(-1).ms,0);
+// Pointer release carries velocity, loses momentum, then settles in LTR/RTL.
+reduced=false;
+run(`startGame('hard');CALENDAR_CLOCK.lastNow=null;moveTrack.scrollLeft=200;
+const pointer=(type,x)=>({type,clientX:x,clientY:100,button:0,pointerId:1,isPrimary:true,preventDefault(){}});
+moveTrack.listeners.pointerdown[0](pointer('pointerdown',300));`);
+now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',220));`);
+now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',140));moveTrack.listeners.pointerup[0](pointer('pointerup',140));
+assert.ok(deckMomentum && deckMomentum.velocity>0,'a flick continues after release');
+const releasedAt=moveTrack.scrollLeft,initialVelocity=deckMomentum.velocity;
+stepDeckMomentum(performance.now()+16);assert.ok(moveTrack.scrollLeft>releasedAt);assert.ok(deckMomentum.velocity<initialVelocity);
+for(let time=performance.now()+32;deckMomentum && time<performance.now()+3000;time+=16)stepDeckMomentum(time);
+assert.equal(deckMomentum,null,'friction eventually settles');
+document.documentElement.dir='rtl';moveTrack.scrollLeft=-300;deckDragMoved=false;
+moveTrack.listeners.pointerdown[0](pointer('pointerdown',100));`);
+now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',180));moveTrack.listeners.pointerup[0](pointer('pointerup',180));
+assert.ok(deckMomentum.velocity<0);const rtlAt=moveTrack.scrollLeft;stepDeckMomentum(performance.now()+16);assert.ok(moveTrack.scrollLeft<rtlAt);
+CALENDAR_CLOCK.manuallyPaused=true;const stoppedAt=moveTrack.scrollLeft;stepDeckMomentum(performance.now()+32);assert.equal(deckMomentum,null);assert.equal(moveTrack.scrollLeft,stoppedAt);
+CALENDAR_CLOCK.manuallyPaused=false;document.documentElement.dir='ltr';deckDragMoved=false;`);
+reduced=true;
+run(`moveTrack.listeners.pointerdown[0](pointer('pointerdown',300));`);now+=20;
+run(`moveTrack.listeners.pointermove[0](pointer('pointermove',200));moveTrack.listeners.pointerup[0](pointer('pointerup',200));assert.equal(deckMomentum,null,'reduced motion skips coasting');`);
+// Spectator mode uses the real rules, blocks manual actions and never posts.
+run(`
+['Simulation controls','Watching simulation','Speed','Exit','Watch Simulation','No profile needed. Watch the selected difficulty play itself.','Simulation is playing','Next move','Preparing the campaign…','Simulation complete','Rebuilding capital · adjourning','Reading the outcome…','New month · reassessing','Reassessing available moves…','Simulation · scores are not submitted.'].forEach(verifyMessage);
+verifyMessage(msg\`Next: \${ACTIONS.investigation[0].name}\`);verifyMessage(msg\`Simulation complete · \${3} moves · \${2} adjournments\`);
+window.Leaderboards={prepareProfile(){throw Error('Watch requires no profile');},onFinish(){throw Error('Simulation must not reach the leaderboard');}};
+S.mode=null;selectedMode='easy';startingSession=false;soundCues.length=0;beginSession(true);assert.equal(soundCues[0],'intro');
+`);
+callbacks.at(-1).fn();
+run(`assert.equal(S.simulated,true);assert.equal(document.getElementById('simulationBar').hidden,false);
+CALENDAR_CLOCK.lastNow=null;const watchBefore=JSON.stringify(S),watchScroll=moveTrack.scrollLeft;
+doAction(orderedActions()[0]);endTurn();scrollToMove(5);
+assert.equal(JSON.stringify(S),watchBefore,'spectators cannot play or adjourn');assert.equal(moveTrack.scrollLeft,watchScroll);
+toggleCalendarPause();const watchPaused=JSON.stringify(S);window.Simulator.advance(60000);consumeActiveCalendarTime(60000);
+assert.equal(JSON.stringify(S),watchPaused,'pause freezes clock and decisions');toggleCalendarPause();
+document.hidden=true;window.Simulator.advance(60000);assert.equal(JSON.stringify(S),watchPaused);document.hidden=false;
+const speedControl=document.getElementById('simulationSpeed');
+CALENDAR_CLOCK.lastNow=performance.now()-12000;
+speedControl.value='4';speedControl.listeners.change[0]({target:speedControl});
+assert.equal(window.Simulator.speed,4,'speed selection survives a calendar re-render');assert.equal(speedControl.value,'4');
+`);
+for (const mode of ['easy','hard','harder']) for (const seed of [721,927]) {
+  context.watchMode=mode;context.watchSeed=seed;
+  run(`var simulationRng=watchSeed;Math.random=()=>{simulationRng=(Math.imul(simulationRng,1664525)+1013904223)>>>0;return simulationRng/4294967296;};startGame(watchMode,{simulation:true});
+  speedControl.value='4';speedControl.listeners.change[0]({target:speedControl});`);
+  let ticks=0;
+  while(!run('S.over') && ticks++<10000){now+=100;run('syncCalendarClock()');}
+  assert.ok(run('S.over'),mode+' simulation reaches a real verdict');
+  run(`assert.ok(document.getElementById('postScore').hidden);assert.ok(document.getElementById('scoreIdentity').textContent.includes('Simulation'));
+  var endSnapshot=JSON.stringify(S);window.Simulator.advance(600000);assert.equal(JSON.stringify(S),endSnapshot,'completed simulation stays stopped');`);
+}
+console.log('PASS: momentum + friction + pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
 console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

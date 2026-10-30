@@ -75,7 +75,7 @@ window.GameAudio = (() => {
   }
 
   function voice(source, at, duration, level, filter, recorded = false) {
-    if (voices.size >= 32) {
+    if (voices.size >= 48) {
       const oldest = voices.values().next().value;
       try { oldest.source.stop(); } catch { /* Already ended. */ }
       oldest.source.disconnect(); oldest.gain.disconnect(); oldest.filter?.disconnect(); voices.delete(oldest);
@@ -139,8 +139,8 @@ window.GameAudio = (() => {
         tone(hz, offset, duration, level, 'pulse');
         tone(hz * 2, offset, Math.min(.18, duration), level * .32, 'sine');
       };
-      const phrase = (notes, beats, tempo = 172, shift = 0, level = .17) => {
-        let offset = 0;
+      const phrase = (notes, beats, tempo = 172, shift = 0, level = .17, start = 0) => {
+        let offset = start;
         notes.forEach((note, i) => {
           const length = beats[i] * 60 / tempo;
           chip(note + shift, offset, Math.max(.07, length * .92 + .08), level);
@@ -157,6 +157,10 @@ window.GameAudio = (() => {
         case 'shuffle': if (!sample('slide',0,.75)) rustle(0,.09,.30,2400); break;
         case 'card': if (!sample('card',0,.95)) { rustle(0,.08,.34,2200); knock(.02,.35,1.5); } break;
         case 'gavel': knock(0,.95,.88); knock(.135,.25,1.05); bass(38,0,.17,.25); break;
+        case 'intro':
+          knock(0,.9,.88); knock(.135,.22,1.05);
+          phrase(chief.slice(0,6),chiefBeats.slice(0,6),168,0,.16,.18);
+          bass(50,.18,.5,.16); bass(57,.18 + 2 * 60 / 168,.5,.14); break;
         case 'success': phrase([74,78,81,86],[.25,.25,.25,.7],190); bass(50,0,.36); break;
         case 'setback': phrase([69,65,62],[.4,.3,.7],180,0,.15); bass(38,0,.30,.18); break;
         case 'breakthrough': phrase([74,78,81,86,90],[.25,.25,.25,.5,.9],180); bass(50,0,.4); bass(57,.4,.4); break;
@@ -174,8 +178,10 @@ window.GameAudio = (() => {
           phrase(chief,chiefBeats,184,12,.14);
           [50,57,57,50].forEach((n,i)=>bass(n,i * 2 * 60 / 184,.45,.13)); break;
         case 'victory':
-          phrase([74,78,81,86,85,81,86,90],[.25,.25,.5,.75,.25,.5,.5,1.5],166);
-          [50,57,62].forEach((n,i)=>bass(n,i*.5,.5)); break;
+          phrase(chief,chiefBeats,144,12,.18);
+          [50,57,57,50].forEach((n,i)=>bass(n,i * 2 * 60 / 144,.65,.18));
+          [74,78,81,86].forEach((n,i)=>chip(n,8 * 60 / 144 + i*.045,.85,.10));
+          bass(38,8 * 60 / 144,.85,.20); break;
         case 'defeat': phrase([74,69,65,62],[.75,.75,.75,1.5],132,0,.15); bass(38,0,.65,.17); break;
         default: return false;
       }

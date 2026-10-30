@@ -30,6 +30,7 @@
     return true;
   }
   function onFinish(state, won) {
+    if(state.simulated) return;
     if(completed) return;
     const daysRemaining=Math.max(0,(state.maxTurns-state.turn)*state.daysMax+state.daysLeft);
     completed={...profile,runId:crypto.randomUUID(),mode:state.mode,won,evidence:state.evidence,house:state.house,senate:state.senate,support:state.support,capital:state.capital,daysRemaining};
@@ -54,7 +55,7 @@
     } finally {clearTimeout(timeout);}
   }
   async function postScore() {
-    if(!completed||posting||posted) return;
+    if(S.simulated||!completed||posting||posted) return;
     posting=true;scoreStatus='';renderResult();
     try {
       const data=await api('/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(completed)});

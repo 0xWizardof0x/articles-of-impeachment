@@ -38,7 +38,7 @@ function setup({saved = null, supported = true, blocked = false, pending = false
   assert.equal(await s.audio.play('gavel',{gesture:true,delay:.42}),true);
   assert.equal(s.contexts.length,1);
   assert.ok(s.nodes[0].startAt >= .42,'gavel follows the visual strike');
-  for (const cue of ['select','shuffle','card','success','setback','breakthrough','blowback','phase','adjourn','pause','resume','victory','defeat']) {
+  for (const cue of ['intro','select','shuffle','card','success','setback','breakthrough','blowback','phase','adjourn','pause','resume','victory','defeat']) {
     const before=s.nodes.length; assert.equal(await s.audio.play(cue),true,cue); assert.ok(s.nodes.length>before,cue+' schedules audio');
     s.nodes.slice(before).forEach(n=>{assert.ok(n.stopAt > n.startAt && n.stopAt-n.startAt<1,'every voice has a bounded lifetime'); n.onended();});
   }
@@ -61,13 +61,13 @@ function setup({saved = null, supported = true, blocked = false, pending = false
     const start=recorded.nodes.length;await recorded.audio.play(cue);
     assert.ok(recorded.nodes.slice(start).some(n=>n.buffer?.recorded),cue+' uses bundled Foley');
   }
-  for(const [cue,notes,tempo,shift] of [['pause',[69,71,73,74,73,71],156,0],['resume',[69,71,73,74,73,71,69,71,69,66,64,62],184,12]]) {
+  for(const [cue,notes,tempo,shift] of [['intro',[69,71,73,74,73,71],168,0],['pause',[69,71,73,74,73,71],156,0],['resume',[69,71,73,74,73,71,69,71,69,66,64,62],184,12],['victory',[69,71,73,74,73,71,69,71,69,66,64,62],144,12]]) {
     recorded.audio.stop();const start=recorded.nodes.length;await recorded.audio.play(cue);
-    const lead=recorded.nodes.slice(start).filter(n=>n.wave?.pulse);
+    const lead=recorded.nodes.slice(start).filter(n=>n.wave?.pulse).slice(0,notes.length);
     assert.deepEqual(lead.map(n=>Math.round(69+12*Math.log2(n.frequency.changes[0].value/440))),notes.map(n=>n+shift),'recognizable Hail to the Chief melody');
     assert.ok(Math.abs(lead[2].startAt-lead[1].startAt-.75*60/tempo)<1e-8,'dotted rhythm retained');
     assert.ok(lead.at(-1).stopAt>1.5,'pause/resume are melodic phrases, not clicks');
   }
   recorded.audio.stop();assert.ok(recorded.nodes.every(n=>n.disconnected),'all sample and melody voices clean up');
-  console.log('PASS: recorded Foley with offline fallback; Hail to the Chief pitches/rhythm; 14 bounded cues; gesture-only unlock; mute/hidden cleanup; stale cancellation; no game RNG.');
+  console.log('PASS: recorded Foley with offline fallback; opening/conviction/pause/resume Hail to the Chief melodies; 15 bounded cues; gesture-only unlock; mute/hidden cleanup; stale cancellation; no game RNG.');
 })().catch(error => {console.error(error);process.exitCode=1;});

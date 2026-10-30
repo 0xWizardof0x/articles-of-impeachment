@@ -44,8 +44,10 @@ main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 #actions::-webkit-scrollbar { display: none; }
 #actions[hidden] { display: none; }
 #actions.is-dragging { scroll-snap-type: none; scroll-behavior: auto; cursor: grabbing; }
-#actions { touch-action: pan-y; overscroll-behavior-x: contain; -webkit-touch-callout: none; }
-#actions .action { touch-action: pan-y; }
+#actions { overflow-x: auto; touch-action: pan-x pan-y pinch-zoom; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; -webkit-touch-callout: none; }
+#actions .action { touch-action: pan-x pan-y pinch-zoom; }
+#actions.is-scroll-locked { overflow-x: hidden; touch-action: none; }
+#actions.is-scroll-locked .action { touch-action: none; }
 #actions.is-coasting { scroll-snap-type: none; scroll-behavior: auto; }
 #actions .action { flex: 0 0 var(--card-width); width: var(--card-width); height: var(--card-height); min-height: 0; padding: 0; margin-inline-end: -62px; scroll-snap-align: center; border: 0; border-radius: 14px; background: none; box-shadow: none; transition: none; transform: none; cursor: pointer; overflow: visible; }
 #actions .action:last-child { margin-inline-end: 0; }

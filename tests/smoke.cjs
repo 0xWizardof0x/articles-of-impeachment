@@ -16,7 +16,7 @@ class Element {
     this.classList = { add: k => this.classes.add(k), remove: k => this.classes.delete(k), contains: k => this.classes.has(k), toggle: (k,v) => v ? this.classes.add(k) : this.classes.delete(k) };
     this.sub = new Map();
   }
-  addEventListener(name, callback) { (this.listeners ||= {})[name] ||= []; this.listeners[name].push(callback); }
+  addEventListener(name, callback, options) { (this.listeners ||= {})[name] ||= []; this.listeners[name].push(callback); (this.listenerOptions ||= {})[name]=options; }
   setAttribute(k,v) { this.attrs[k] = v; }
   getAttribute(k) { return this.attrs[k]; }
   appendChild(el) { if(el.parentElement) el.parentElement.children=el.parentElement.children.filter(child=>child!==el); el.parentElement=this; el.offsetLeft = this.children.length * 192; this.children.push(el); }
@@ -353,12 +353,22 @@ moveTrack.listeners.pointerdown[0](pointer('pointerdown',300));`);
 now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',220));
 const cancelAt=moveTrack.scrollLeft;moveTrack.listeners.pointercancel[0](pointer('pointercancel',220));
 assert.equal(moveTrack.scrollLeft,cancelAt);assert.equal(carouselTarget,null,'touch cancellation never jumps to a card');
-const duplicate=pointer('pointermove',220);duplicate.timeStamp=performance.now();
-moveTrack.listeners.pointerdown[0]({...pointer('pointerdown',300),pointerType:'touch',timeStamp:performance.now()});`);
-now+=20;run(`moveTrack.listeners.pointermove[0]({...pointer('pointermove',220),pointerType:'touch',timeStamp:performance.now()});`);
-now+=10;run(`moveTrack.listeners.pointermove[0]({...pointer('pointermove',220),pointerType:'touch',timeStamp:performance.now()});
-moveTrack.listeners.pointerup[0]({...pointer('pointerup',220),pointerType:'touch',timeStamp:performance.now()});
-assert.ok(deckMomentum && deckMomentum.velocity>0,'stationary terminal touch events do not erase swipe velocity');stopDeckMomentum();
+// Real touch pointers bypass the mouse controller entirely. Passive observers
+// must never prevent a pan or write a competing scroll position.
+deckDragMoved=false;const nativeStart=moveTrack.scrollLeft;
+const touchPointer=(type,x)=>({...pointer(type,x),pointerType:'touch',preventDefault(){throw Error('Touch pan was blocked');}});
+moveTrack.listeners.pointerdown[0](touchPointer('pointerdown',300));
+moveTrack.listeners.pointermove[0](touchPointer('pointermove',220));
+moveTrack.listeners.pointercancel[0](touchPointer('pointercancel',220));
+assert.equal(deckDrag,null);assert.equal(deckMomentum,null);assert.equal(moveTrack.scrollLeft,nativeStart);
+const touchEvent=x=>({touches:[{clientX:x,clientY:100}],preventDefault(){throw Error('Touch pan was blocked');}});
+for(const type of ['touchstart','touchmove','touchend','touchcancel'])assert.equal(moveTrack.listenerOptions[type].passive,true);
+moveTrack.listeners.touchstart[0](touchEvent(300));moveTrack.listeners.touchmove[0](touchEvent(220));
+assert.equal(moveTrack.scrollLeft,nativeStart,'JS leaves touch movement to native scrolling');
+moveTrack.scrollLeft=nativeStart+120;moveTrack.listeners.scroll[0]();moveTrack.listeners.touchend[0]();
+assert.equal(moveTrack.scrollLeft,nativeStart+120,'touch end preserves the browser scroll position');assert.equal(deckMomentum,null,'JS never adds a second momentum controller');
+const beforeSwipeClick=JSON.stringify(S);moveTrack.children[0].onclick({detail:1});assert.equal(JSON.stringify(S),beforeSwipeClick,'the synthetic click after a swipe cannot play a card');
+toggleCalendarPause();assert.ok(moveTrack.classList.contains('is-scroll-locked'),'pause disables native horizontal scroll');toggleCalendarPause();assert.ok(!moveTrack.classList.contains('is-scroll-locked'));
 document.documentElement.dir='rtl';moveTrack.scrollLeft=-300;deckDragMoved=false;
 moveTrack.listeners.pointerdown[0](pointer('pointerdown',100));`);
 now+=20;run(`moveTrack.listeners.pointermove[0](pointer('pointermove',180));moveTrack.listeners.pointerup[0](pointer('pointerup',180));
@@ -398,5 +408,5 @@ for (const mode of ['easy','hard','harder']) for (const seed of [721,927]) {
   run(`assert.ok(document.getElementById('postScore').hidden);assert.ok(document.getElementById('scoreIdentity').textContent.includes('Simulation'));
   var endSnapshot=JSON.stringify(S);window.Simulator.advance(600000);assert.equal(JSON.stringify(S),endSnapshot,'completed simulation stays stopped');`);
 }
-console.log('PASS: post-move shuffle, fresh available head, persistent order, <1s animation, no game RNG; free momentum + friction + touch-cancel/terminal events + pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
+console.log('PASS: post-move shuffle, fresh available head, persistent order, <1s animation, no game RNG; mouse/pen momentum + friction; passive native touch, no pointer capture/preventDefault, swipe-click suppression; pause/RTL/reduced motion; six complete watched campaigns across all difficulties; no manual input or leaderboard submissions.');
 console.log('PASS: Easy mode; available-only Deck, reset on play, exit cleanup, reduced motion, focus, dots, RTL; 28/56 moves per phase, stochastic outcomes, exact blowback halving, live support polling; 7 complete catalogs, all action/event/outcome messages, one-shot start, 12-second clock, paused/hidden time, and state-preserving language changes.');

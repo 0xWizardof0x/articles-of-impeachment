@@ -4752,7 +4752,8 @@ function renderEndTurnSub() {
 
 function render() {
   if (!S.mode) return;
-  if (isCalendarPaused()) { stopDeckMomentum(); stopDeckShuffle(); deckDrag = null; moveTrack.classList.remove('is-dragging'); }
+  moveTrack.classList.toggle('is-scroll-locked', isCalendarPaused() || S.simulated);
+  if (isCalendarPaused()) { stopDeckMomentum(); stopDeckShuffle(); deckDrag = null; deckTouch = null; moveTrack.classList.remove('is-dragging'); }
   renderPauseLock();
 
   document.getElementById('vEvidence').textContent = Math.round(S.evidence);
@@ -5114,6 +5115,8 @@ function renderMoves() {
 document.getElementById('movesPrev').addEventListener('click', () => scrollMoves(-1));
 document.getElementById('movesNext').addEventListener('click', () => scrollMoves(1));
 moveTrack.addEventListener('scroll', () => {
+  lastDeckScrollAt = performance.now();
+  if (deckTouch && Math.abs(moveTrack.scrollLeft - deckTouch.left) > 4) deckTouch.moved = true;
   clearTimeout(carouselSettleTimer);
   carouselSettleTimer = setTimeout(settleCarousel, 180);
   scheduleCarouselUpdate();
@@ -5121,7 +5124,7 @@ moveTrack.addEventListener('scroll', () => {
 moveTrack.addEventListener('scrollend', () => {
   if (!carouselTarget || Math.abs(carouselPosition() - carouselTarget.left) <= 2) settleCarousel();
 });
-// Trackpads retain native wheel inertia; pointer swipes use the physics below.
+// Trackpads and touch retain browser-native inertia; mouse/pen use the physics below.
 moveTrack.addEventListener('wheel', () => {
     if (isCalendarPaused() || S.simulated) return;
     stopDeckMomentum();
@@ -5148,8 +5151,33 @@ moveTrack.addEventListener('keydown', event => {
 window.addEventListener('resize', () => { stopDeckMomentum(); settleCarousel(); });
 if ('ResizeObserver' in window) new ResizeObserver(scheduleCarouselUpdate).observe(moveTrack);
 
-// Pointer physics: preserve release velocity and coast with exponential friction.
-// Free swipes rest without snapping. Mouse, pen and touch share the same model.
+// Touch scrolling belongs to the browser's compositor, including its momentum.
+// Passive observers only suppress a synthetic card click after a real swipe.
+let deckTouch = null, lastDeckScrollAt = -Infinity;
+moveTrack.addEventListener('touchstart', event => {
+  if (isCalendarPaused() || S.simulated || event.touches.length !== 1) return;
+  stopDeckMomentum(); stopDeckShuffle();
+  deckDrag = null; deckDragMoved = false;
+  moveTrack.classList.remove('is-dragging');
+  const touch = event.touches[0];
+  deckTouch = {x:touch.clientX, y:touch.clientY, left:moveTrack.scrollLeft,
+    moved: !carouselTarget && performance.now() - lastDeckScrollAt < 100};
+  settleCarousel();
+}, {passive:true});
+moveTrack.addEventListener('touchmove', event => {
+  if (!deckTouch || event.touches.length !== 1) return;
+  const touch = event.touches[0];
+  if (Math.abs(touch.clientX - deckTouch.x) > 6) deckTouch.moved = true;
+}, {passive:true});
+function finishDeckTouch() {
+  if (deckTouch?.moved) suppressDeckClickUntil = performance.now() + 500;
+  deckTouch = null;
+}
+moveTrack.addEventListener('touchend', finishDeckTouch, {passive:true});
+moveTrack.addEventListener('touchcancel', finishDeckTouch, {passive:true});
+
+// Mouse and pen preserve release velocity with exponential friction.
+// Touch pointers never enter this controller or receive pointer capture.
 let deckDrag = null, deckDragMoved = false;
 let suppressDeckClickUntil = 0;
 let deckMomentum = null, deckMomentumFrame = null;
@@ -5176,7 +5204,7 @@ function stepDeckMomentum(now) {
   } else deckMomentumFrame = requestAnimationFrame(stepDeckMomentum);
 }
 moveTrack.addEventListener('pointerdown', event => {
-  if (isCalendarPaused() || S.simulated || event.button !== 0 || event.isPrimary === false) return;
+  if (event.pointerType === 'touch' || isCalendarPaused() || S.simulated || event.button !== 0 || event.isPrimary === false) return;
   deckDragMoved = Boolean(deckMomentum); // A tap first catches a moving deck.
   stopDeckMomentum();
   stopDeckShuffle();
@@ -5188,7 +5216,7 @@ moveTrack.addEventListener('pointerdown', event => {
   deckDrag = {x:event.clientX,y:event.clientY,left:moveTrack.scrollLeft,lastTime:now,velocity:0,id:event.pointerId,samples:[{x:event.clientX,time:now}]};
 });
 moveTrack.addEventListener('pointermove', event => {
-  if (!deckDrag || event.pointerId !== deckDrag.id || isCalendarPaused() || S.simulated) return;
+  if (event.pointerType === 'touch' || !deckDrag || event.pointerId !== deckDrag.id || isCalendarPaused() || S.simulated) return;
   const delta = event.clientX - deckDrag.x;
   const vertical = event.clientY - deckDrag.y;
   if (!deckDragMoved && Math.abs(vertical) > 10 && Math.abs(vertical) > Math.abs(delta)) { deckDrag = null; return; }
@@ -5212,6 +5240,7 @@ moveTrack.addEventListener('pointermove', event => {
   }
 });
 function finishDeckDrag(event) {
+  if (event?.pointerType === 'touch') return;
   if (!deckDrag) return;
   if (event && event.pointerId !== deckDrag.id) return;
   const now = Number.isFinite(event?.timeStamp) ? event.timeStamp : performance.now();
@@ -5614,6 +5643,7 @@ function startGame(modeId, {simulation = false} = {}) {
   movePhaseKey = '';
   deckOrderKey = '';
   deckShuffleRequested = false;
+  deckTouch = null; lastDeckScrollAt = -Infinity;
   stopDeckMomentum(); stopDeckShuffle();
 
   document.getElementById('startScreen').classList.remove('show');

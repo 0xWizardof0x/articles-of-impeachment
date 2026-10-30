@@ -9,6 +9,40 @@ window.GameAudio = (() => {
   let context, master, noiseBuffer, pulseWave, resuming;
   const samples = new Map();
   const sampleFiles = {slide: 'card-slide.wav', card: 'card-place.wav', wood: 'gavel.wav', knock: 'knock.wav'};
+  // Audio owns its randomness: changing sounds must never change a game roll.
+  let variationSeed = (Date.now() ^ Math.trunc(performance.now() * 1000)) >>> 0;
+  try {
+    const seed = new Uint32Array(1);
+    window.crypto?.getRandomValues(seed);
+    variationSeed ^= seed[0];
+  } catch { /* The clock seed works without crypto. */ }
+  const pitchBags = new Map();
+  const pitchSteps = {
+    select: [-3,-1,0,2,4,5], shuffle: [-3,-2,-1,0,1,2,3],
+    card: [-3,-2,-1,0,1,2,3], gavel: [-2,-1,0,1,2],
+    success: [-2,0,2,4,5], setback: [-3,-2,0,1,3],
+    breakthrough: [-2,0,2,4,5], blowback: [-3,-2,-1,0,1,2],
+    phase: [-2,0,2,3,5], adjourn: [-3,-1,0,2,4],
+    pause: [-2,-1,0,1,2], resume: [-2,-1,0,1,2], defeat: [-3,-2,0,1,3]
+  };
+  function pitchFor(name) {
+    const steps = pitchSteps[name];
+    if (!steps) return 1; // Opening and conviction retain their signature key.
+    let bag = pitchBags.get(name);
+    if (!bag) { bag = {remaining: [], last: null}; pitchBags.set(name, bag); }
+    if (!bag.remaining.length) {
+      bag.remaining = [...steps];
+      for (let i = bag.remaining.length - 1; i > 0; i--) {
+        variationSeed = (Math.imul(variationSeed, 1664525) + 1013904223) >>> 0;
+        const j = Math.floor(variationSeed / 4294967296 * (i + 1));
+        [bag.remaining[i], bag.remaining[j]] = [bag.remaining[j], bag.remaining[i]];
+      }
+      const end = bag.remaining.length - 1;
+      if (bag.remaining[end] === bag.last) [bag.remaining[0], bag.remaining[end]] = [bag.remaining[end], bag.remaining[0]];
+    }
+    bag.last = bag.remaining.pop();
+    return 2 ** (bag.last / 12);
+  }
   let enabled = true, generation = 0, lastShuffle = -Infinity;
   try { enabled = localStorage.getItem('aoi-sound') !== 'off'; } catch { /* Optional preference. */ }
 
@@ -75,7 +109,8 @@ window.GameAudio = (() => {
   }
 
   function voice(source, at, duration, level, filter, recorded = false) {
-    if (voices.size >= 48) {
+    // Includes future Web Audio notes in the opening, not just sounding notes.
+    if (voices.size >= 112) {
       const oldest = voices.values().next().value;
       try { oldest.source.stop(); } catch { /* Already ended. */ }
       oldest.source.disconnect(); oldest.gain.disconnect(); oldest.filter?.disconnect(); voices.delete(oldest);
@@ -106,23 +141,25 @@ window.GameAudio = (() => {
       if (name === 'shuffle' && requested - lastShuffle < 85) return false;
       if (name === 'shuffle') lastShuffle = requested;
       const at = context.currentTime + .012 + Math.max(0, delay);
+      const pitch = pitchFor(name);
       const tone = (frequency, offset, duration, level = .2, type = 'sine', end = frequency) => {
         const oscillator = context.createOscillator();
         if (type === 'pulse') oscillator.setPeriodicWave(pulseWave);
         else oscillator.type = type;
-        oscillator.frequency.setValueAtTime(frequency, at + offset);
-        oscillator.frequency.exponentialRampToValueAtTime(end, at + offset + duration);
+        oscillator.frequency.setValueAtTime(frequency * pitch, at + offset);
+        oscillator.frequency.exponentialRampToValueAtTime(end * pitch, at + offset + duration);
         voice(oscillator, at + offset, duration, level);
       };
       const rustle = (offset, duration, level, frequency) => {
         const source = context.createBufferSource(); source.buffer = noiseBuffer;
         const filter = context.createBiquadFilter(); filter.type = 'bandpass';
-        filter.frequency.value = frequency; filter.Q.value = .8;
+        filter.frequency.value = frequency * pitch; filter.Q.value = .8;
         voice(source, at + offset, duration, level, filter);
       };
       const sample = (key, offset, level = .8, rate = 1) => {
         const buffer = samples.get(key);
         if (!buffer) return false;
+        rate *= pitch;
         const source = context.createBufferSource(); source.buffer = buffer; source.playbackRate.value = rate;
         voice(source, at + offset, Math.min(1.5, buffer.duration / rate), level, undefined, true);
         return true;
@@ -157,10 +194,24 @@ window.GameAudio = (() => {
         case 'shuffle': if (!sample('slide',0,.75)) rustle(0,.09,.30,2400); break;
         case 'card': if (!sample('card',0,.95)) { rustle(0,.08,.34,2200); knock(.02,.35,1.5); } break;
         case 'gavel': knock(0,.95,.88); knock(.135,.25,1.05); bass(38,0,.17,.25); break;
-        case 'intro':
-          knock(0,.9,.88); knock(.135,.22,1.05);
-          phrase(chief.slice(0,6),chiefBeats.slice(0,6),168,0,.16,.18);
-          bass(50,.18,.5,.16); bass(57,.18 + 2 * 60 / 168,.5,.14); break;
+        case 'intro': {
+          // A four-bar opening ceremony, distinct from both pause and victory.
+          // The second pass lifts an octave over a marching bass/snare groove.
+          const beat = 60 / 156, start = .46;
+          knock(0,.9,.88); knock(.135,.22,1.05); bass(38,0,.22,.20);
+          [.20,.27,.34].forEach((offset,i) => rustle(offset,.045,.07 + i*.025,2100));
+          phrase(chief,chiefBeats,156,0,.16,start);
+          phrase(chief,chiefBeats,156,12,.18,start + 8*beat);
+          [50,57,54,57,50,57,54,50].forEach((note,i) => bass(note,start + i*2*beat,.45,.16));
+          for (let i = 0; i < 8; i++) {
+            rustle(start + (i*2+1)*beat,.07,i < 4 ? .09 : .13,2200);
+          }
+          [0,4,8,12].forEach(i => bass(38,start + i*beat,.14,.13));
+          const finale = start + 16*beat;
+          [74,78,81,86].forEach((note,i) => chip(note,finale + i*.055,.90,.11));
+          bass(38,finale,.90,.22); knock(finale,.55,.88);
+          break;
+        }
         case 'success': phrase([74,78,81,86],[.25,.25,.25,.7],190); bass(50,0,.36); break;
         case 'setback': phrase([69,65,62],[.4,.3,.7],180,0,.15); bass(38,0,.30,.18); break;
         case 'breakthrough': phrase([74,78,81,86,90],[.25,.25,.25,.5,.9],180); bass(50,0,.4); bass(57,.4,.4); break;
